@@ -5,7 +5,8 @@
   "scripts": {
     "serve": "vue-cli-service serve --skip-plugins @vue/cli-plugin-eslint",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "start": "npm run build && serve -s dist" // 빌드 후 dist 폴더 서빙
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",
