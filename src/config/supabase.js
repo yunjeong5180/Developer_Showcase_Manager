@@ -1,10 +1,10 @@
+import { createClient } from '@supabase/supabase-js'
+
 // Supabase 프로젝트 설정
 const supabaseUrl = 'https://gjuwbcfuadlwvxrxbgui.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqdXdiY2Z1YWRsd3Z4cnhiZ3VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2NDUxMzYsImV4cCI6MjA2NjIyMTEzNn0.VxjQtPM47TSijZbXK4htyoVavODwOa7gdyrSwLc1-7s'
 
-// Supabase 클라이언트 생성 (싱글톤 패턴)
-import { createClient } from '@supabase/supabase-js'
-
+// Supabase 클라이언트 생성
 let supabaseInstance = null
 
 function getSupabaseClient() {
@@ -13,7 +13,8 @@ function getSupabaseClient() {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
-        detectSessionInUrl: false
+        detectSessionInUrl: true, // OAuth 콜백 처리를 위해 true로 변경
+        redirectTo: `${window.location.origin}/auth/callback`
       }
     })
   }
@@ -22,9 +23,9 @@ function getSupabaseClient() {
 
 export const supabase = getSupabaseClient()
 
-// 사용자 관련 API 함수들
+// 인증 관련 API 함수들
 export const authAPI = {
-  // 이메일 중복 체크
+  // 기존 이메일 중복 체크
   async checkEmailExists(email) {
     try {
       const { data, error } = await supabase
@@ -34,7 +35,6 @@ export const authAPI = {
         .single()
 
       if (error && error.code === 'PGRST116') {
-        // 데이터가 없음 (중복 아님)
         return false
       }
 
@@ -49,12 +49,11 @@ export const authAPI = {
     }
   },
 
-  // 회원가입 (이메일 확인 우회 버전)
+  // 기존 회원가입
   async signUp(userData) {
     try {
       console.log('회원가입 시도:', userData.email)
 
-      // 1. Supabase Auth로 인증 계정 생성
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: userData.email.toLowerCase().trim(),
         password: userData.password,
@@ -62,8 +61,7 @@ export const authAPI = {
           data: {
             name: userData.name
           },
-          // 이메일 확인 우회
-          emailRedirectTo: undefined
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       })
 
@@ -72,23 +70,6 @@ export const authAPI = {
         return {
           success: false,
           error: `회원가입 실패: ${authError.message}`
-        }
-      }
-
-      // 2. 회원가입 직후 이메일 확인 상태 업데이트
-      if (authData.user && !authData.user.email_confirmed_at) {
-        try {
-          // SQL 함수 대신 직접 쿼리 실행
-          const { error: updateError } = await supabase
-            .from('auth.users')
-            .update({ email_confirmed_at: new Date().toISOString() })
-            .eq('id', authData.user.id)
-
-          if (updateError) {
-            console.warn('이메일 확인 업데이트 실패:', updateError)
-          }
-        } catch (updateError) {
-          console.warn('이메일 확인 업데이트 실패, 무시:', updateError)
         }
       }
 
@@ -111,8 +92,8 @@ export const authAPI = {
     }
   },
 
-  // 로그인 (응답 형식 통일)
-  async signIn(email, password) {
+  // 기존 로그인
+  async signIn(email, password, rememberMe = false) {
     try {
       console.log('로그인 시도:', email)
 
@@ -120,9 +101,6 @@ export const authAPI = {
         email: email.toLowerCase().trim(),
         password: password
       })
-
-      // 디버깅용 로그
-      console.log('Supabase 응답:', { data, error })
 
       if (error) {
         console.error('Supabase 로그인 오류:', error.message)
@@ -142,6 +120,15 @@ export const authAPI = {
         }
       }
 
+      // Remember me 기능
+      if (rememberMe) {
+        localStorage.setItem('rememberUser', 'true')
+        localStorage.setItem('userEmail', email)
+      } else {
+        localStorage.removeItem('rememberUser')
+        localStorage.removeItem('userEmail')
+      }
+
       console.log('로그인 성공:', data.user.email)
       return {
         success: true,
@@ -151,7 +138,8 @@ export const authAPI = {
           user: {
             email: data.user.email,
             name: data.user.user_metadata?.name || 'User',
-            id: data.user.id
+            id: data.user.id,
+            provider: data.user.app_metadata?.provider || 'email'
           }
         }
       }
@@ -165,15 +153,178 @@ export const authAPI = {
     }
   },
 
+  // 소셜 로그인 - GitHub
+  async signInWithGitHub() {
+    try {
+      console.log('GitHub 로그인 시도')
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'user:email'
+        }
+      })
+
+      if (error) {
+        console.error('GitHub 로그인 오류:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+
+      console.log('GitHub 로그인 리디렉션 시작')
+      return {
+        success: true,
+        data: data
+      }
+    } catch (error) {
+      console.error('GitHub 로그인 예외:', error)
+      return {
+        success: false,
+        error: `GitHub 로그인 중 오류가 발생했습니다: ${error.message}`
+      }
+    }
+  },
+
+  // 소셜 로그인 - Google
+  async signInWithGoogle() {
+    try {
+      console.log('Google 로그인 시도')
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'email profile'
+        }
+      })
+
+      if (error) {
+        console.error('Google 로그인 오류:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+
+      console.log('Google 로그인 리디렉션 시작')
+      return {
+        success: true,
+        data: data
+      }
+    } catch (error) {
+      console.error('Google 로그인 예외:', error)
+      return {
+        success: false,
+        error: `Google 로그인 중 오류가 발생했습니다: ${error.message}`
+      }
+    }
+  },
+
+  // 비밀번호 재설정 요청
+  async resetPassword(email) {
+    try {
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      })
+
+      if (error) {
+        console.error('비밀번호 재설정 요청 오류:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+
+      return {
+        success: true,
+        message: '비밀번호 재설정 링크가 이메일로 전송되었습니다.'
+      }
+    } catch (error) {
+      console.error('비밀번호 재설정 예외:', error)
+      return {
+        success: false,
+        error: `비밀번호 재설정 요청 중 오류가 발생했습니다: ${error.message}`
+      }
+    }
+  },
+
+  // 비밀번호 업데이트
+  async updatePassword(newPassword) {
+    try {
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (error) {
+        console.error('비밀번호 업데이트 오류:', error)
+        return {
+          success: false,
+          error: error.message
+        }
+      }
+
+      return {
+        success: true,
+        message: '비밀번호가 성공적으로 변경되었습니다.'
+      }
+    } catch (error) {
+      console.error('비밀번호 업데이트 예외:', error)
+      return {
+        success: false,
+        error: `비밀번호 변경 중 오류가 발생했습니다: ${error.message}`
+      }
+    }
+  },
+
+  // 현재 세션 가져오기
+  async getSession() {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession()
+
+      if (error) {
+        console.error('세션 가져오기 오류:', error)
+        return null
+      }
+
+      return session
+    } catch (error) {
+      console.error('세션 가져오기 예외:', error)
+      return null
+    }
+  },
+
   // 로그아웃
   async signOut() {
     try {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
+
+      // Remember me 정보도 제거
+      localStorage.removeItem('rememberUser')
+      localStorage.removeItem('userEmail')
+
       return { success: true }
     } catch (error) {
       console.error('로그아웃 오류:', error)
       return { success: false, error: error.message }
     }
+  },
+
+  // 인증 상태 변화 리스너
+  onAuthStateChange(callback) {
+    return supabase.auth.onAuthStateChange(callback)
+  },
+
+  // Remember me 체크
+  shouldRememberUser() {
+    return localStorage.getItem('rememberUser') === 'true'
+  },
+
+  // 저장된 이메일 가져오기
+  getRememberedEmail() {
+    return localStorage.getItem('userEmail') || ''
   }
 }
