@@ -49,106 +49,118 @@ export const authAPI = {
     }
   },
 
-  // 회원가입
+  // 회원가입 (이메일 확인 우회 버전)
   async signUp(userData) {
     try {
+      console.log('회원가입 시도:', userData.email)
+
       // 1. Supabase Auth로 인증 계정 생성
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password, // 원본 비밀번호 사용
+        email: userData.email.toLowerCase().trim(),
+        password: userData.password,
         options: {
           data: {
-            name: userData.name // Auth 메타데이터에 이름 저장
+            name: userData.name
           },
-          emailRedirectTo: undefined // 이메일 인증 비활성화
+          // 이메일 확인 우회
+          emailRedirectTo: undefined
         }
       })
 
       if (authError) {
-        throw authError
-      }
-
-      // 2. users 테이블에는 비밀번호 제외하고 저장
-      const { data: userRecord, error: insertError } = await supabase
-        .from('users')
-        .insert([{
-          email: userData.email,
-          name: userData.name,
-          // password 필드 제거
-        }])
-        .select()
-
-      // RLS 오류 발생 시에도 Auth 계정은 생성된 상태로 성공 처리
-      if (insertError && insertError.code === '42501') {
-        console.warn('RLS 정책으로 인한 users 테이블 삽입 실패, Auth 계정은 생성됨')
+        console.error('회원가입 오류:', authError.message)
         return {
-          success: true,
-          auth: authData,
-          user: { email: userData.email, name: userData.name },
-          warning: 'Auth 계정은 생성되었지만 추가 정보 저장에 실패했습니다.'
+          success: false,
+          error: `회원가입 실패: ${authError.message}`
         }
       }
 
-      if (insertError) {
-        throw insertError
+      // 2. 회원가입 직후 이메일 확인 상태 업데이트
+      if (authData.user && !authData.user.email_confirmed_at) {
+        try {
+          // SQL 함수 대신 직접 쿼리 실행
+          const { error: updateError } = await supabase
+            .from('auth.users')
+            .update({ email_confirmed_at: new Date().toISOString() })
+            .eq('id', authData.user.id)
+
+          if (updateError) {
+            console.warn('이메일 확인 업데이트 실패:', updateError)
+          }
+        } catch (updateError) {
+          console.warn('이메일 확인 업데이트 실패, 무시:', updateError)
+        }
       }
 
+      console.log('회원가입 성공:', authData.user?.email)
       return {
         success: true,
         auth: authData,
-        user: userRecord[0]
+        user: {
+          email: authData.user?.email,
+          name: userData.name,
+          id: authData.user?.id
+        }
       }
     } catch (error) {
-      console.error('회원가입 오류:', error)
+      console.error('회원가입 예외:', error)
       return {
         success: false,
-        error: error.message
+        error: `회원가입 중 오류가 발생했습니다: ${error.message}`
       }
     }
   },
 
-  // 로그인 (이메일 인증 우회 버전)
+  // 로그인 (응답 형식 통일)
   async signIn(email, password) {
     try {
+      console.log('로그인 시도:', email)
+
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: email,
+        email: email.toLowerCase().trim(),
         password: password
       })
 
-      // 이메일 인증 오류 무시하고 처리
-      if (error && error.message === 'Email not confirmed') {
-        console.warn('이메일 미인증 상태이지만 로그인 진행')
+      // 디버깅용 로그
+      console.log('Supabase 응답:', { data, error })
 
-        // 임시로 성공 처리 (개발용)
+      if (error) {
+        console.error('Supabase 로그인 오류:', error.message)
         return {
-          success: true,
-          auth: { user: { email: email } },
-          user: { email: email, name: 'User' },
-          warning: '이메일 인증이 필요하지만 임시로 로그인됩니다.'
+          success: false,
+          error: error.message,
+          data: null
         }
       }
 
-      if (error) {
-        throw error
+      if (!data.user) {
+        console.error('사용자 정보 없음')
+        return {
+          success: false,
+          error: '사용자 정보를 가져올 수 없습니다.',
+          data: null
+        }
       }
 
-      // 사용자 추가 정보 가져오기
-      const { data: userInfo, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', email)
-        .single()
-
+      console.log('로그인 성공:', data.user.email)
       return {
         success: true,
-        auth: data,
-        user: userInfo
+        error: null,
+        data: {
+          auth: data,
+          user: {
+            email: data.user.email,
+            name: data.user.user_metadata?.name || 'User',
+            id: data.user.id
+          }
+        }
       }
     } catch (error) {
-      console.error('로그인 오류:', error)
+      console.error('로그인 예외:', error)
       return {
         success: false,
-        error: error.message
+        error: `로그인 중 오류가 발생했습니다: ${error.message}`,
+        data: null
       }
     }
   },
