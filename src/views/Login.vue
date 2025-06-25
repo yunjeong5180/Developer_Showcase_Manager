@@ -6,7 +6,6 @@
         <p>포트폴리오 관리 시스템에 로그인하세요</p>
       </div>
 
-      <!-- 이메일 로그인 폼 -->
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
           <label for="email">이메일</label>
@@ -32,7 +31,6 @@
           />
         </div>
 
-        <!-- Remember Me 체크박스 -->
         <div class="form-options">
           <label class="remember-me">
             <input type="checkbox" v-model="rememberMe">
@@ -55,7 +53,6 @@
         </button>
       </form>
 
-      <!-- 소셜 로그인 버튼들 -->
       <div class="social-login-section">
         <div class="social-buttons-row">
           <button
@@ -101,30 +98,16 @@ export default {
     }
   },
   mounted() {
-    // Remember Me 기능 - 저장된 이메일 복원
+    // '로그인 상태 유지'를 선택했던 사용자의 이메일을 자동으로 채워주는 기능
     const savedEmail = localStorage.getItem('userEmail')
-    const rememberUser = localStorage.getItem('rememberUser')
+    const rememberUser = localStorage.getItem('rememberUser') === 'true'
 
-    if (rememberUser === 'true' && savedEmail) {
+    if (rememberUser && savedEmail) {
       this.email = savedEmail
       this.rememberMe = true
     }
-
-    // 이미 로그인된 경우 대시보드로 리디렉션
-    this.checkExistingSession()
   },
   methods: {
-    async checkExistingSession() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session) {
-          this.$router.push('/dashboard')
-        }
-      } catch (error) {
-        console.error('세션 확인 오류:', error)
-      }
-    },
-
     async handleLogin() {
       if (!this.email || !this.password) {
         this.error = "이메일과 비밀번호를 입력해주세요"
@@ -135,36 +118,32 @@ export default {
       this.error = ""
 
       try {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        // '로그인 상태 유지' 선택 여부를 localStorage에 저장
+        if (this.rememberMe) {
+          localStorage.setItem('rememberUser', 'true')
+          localStorage.setItem('userEmail', this.email)
+        } else {
+          localStorage.setItem('rememberUser', 'false')
+          localStorage.removeItem('userEmail')
+        }
+
+        // Supabase로 로그인 시도
+        const { error } = await supabase.auth.signInWithPassword({
           email: this.email,
           password: this.password
         })
 
         if (error) {
           this.error = this.getErrorMessage(error.message)
+          // 실패 시 rememberUser 설정을 초기화 할 수 있음 (선택사항)
+          localStorage.removeItem('rememberUser')
+          localStorage.removeItem('userEmail')
           return
         }
 
-        // Remember Me 기능
-        if (this.rememberMe) {
-          localStorage.setItem('rememberUser', 'true')
-          localStorage.setItem('userEmail', this.email)
-        } else {
-          localStorage.removeItem('rememberUser')
-          localStorage.removeItem('userEmail')
-        }
-
-        // 사용자 정보 저장
-        localStorage.setItem('user', JSON.stringify(data.user))
-
-        // 2FA 확인 필요한지 체크 (실제 구현에서는 서버에서 확인)
-        const needs2FA = false // 데모용으로 false
-
-        if (needs2FA) {
-          this.$router.push('/two-factor-auth?mode=verify')
-        } else {
-          this.$router.push('/dashboard')
-        }
+        // 성공 시 App.vue의 onAuthStateChange 리스너가 감지하여 대시보드로 이동시킴
+        // 따라서 여기서 라우터 이동 코드를 제거해도 됨 (있어도 문제는 없음)
+        this.$router.push('/dashboard')
 
       } catch (error) {
         console.error('로그인 오류:', error)
@@ -174,52 +153,36 @@ export default {
       }
     },
 
-    async signInWithGitHub() {
+    async handleSocialLogin(provider) {
       this.loading = true
       this.error = ""
+      // 소셜 로그인은 항상 '상태 유지'로 간주
+      localStorage.setItem('rememberUser', 'true')
 
       try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'github',
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback`
-          }
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: provider,
+          options: { redirectTo: `${window.location.origin}/auth/callback` }
         })
 
         if (error) {
-          this.error = "GitHub 로그인 중 오류가 발생했습니다"
-          console.error('GitHub 로그인 오류:', error)
+          this.error = `${provider} 로그인 중 오류가 발생했습니다`
+          console.error(`${provider} 로그인 오류:`, error)
         }
       } catch (error) {
-        console.error('GitHub 로그인 오류:', error)
-        this.error = "GitHub 로그인 중 오류가 발생했습니다"
+        console.error(`${provider} 로그인 오류:`, error)
+        this.error = `${provider} 로그인 중 오류가 발생했습니다`
       } finally {
         this.loading = false
       }
     },
 
-    async signInWithGoogle() {
-      this.loading = true
-      this.error = ""
+    signInWithGitHub() {
+      this.handleSocialLogin('github')
+    },
 
-      try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback`
-          }
-        })
-
-        if (error) {
-          this.error = "Google 로그인 중 오류가 발생했습니다"
-          console.error('Google 로그인 오류:', error)
-        }
-      } catch (error) {
-        console.error('Google 로그인 오류:', error)
-        this.error = "Google 로그인 중 오류가 발생했습니다"
-      } finally {
-        this.loading = false
-      }
+    signInWithGoogle() {
+      this.handleSocialLogin('google')
     },
 
     getErrorMessage(error) {
@@ -239,6 +202,7 @@ export default {
 </script>
 
 <style scoped>
+/* 스타일 코드는 기존과 동일합니다. */
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -379,31 +343,6 @@ export default {
   transform: none;
 }
 
-/* 구분선 */
-.divider {
-  text-align: center;
-  margin: 25px 0;
-  position: relative;
-}
-
-.divider::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: #e9ecef;
-}
-
-.divider span {
-  background: white;
-  padding: 0 15px;
-  color: #6c757d;
-  font-size: 0.9rem;
-}
-
-/* 소셜 로그인 섹션 */
 .social-login-section {
   margin-bottom: 25px;
 }
@@ -465,17 +404,14 @@ export default {
   transition: transform 0.3s ease;
 }
 
-/* GitHub 버튼의 이미지를 하얀색으로 */
 .github-btn .social-logo {
   filter: brightness(0) invert(1);
 }
 
-/* 버튼 호버 시 이미지 확대 */
 .social-btn:hover:not(:disabled) .social-logo {
   transform: scale(1.2);
 }
 
-/* 버튼 활성화 효과 */
 .social-btn:active {
   transform: translateY(-1px);
 }
@@ -498,7 +434,6 @@ export default {
   text-decoration: underline;
 }
 
-/* 반응형 */
 @media (max-width: 480px) {
   .login-card {
     padding: 30px 20px;
