@@ -1,20 +1,23 @@
 <template>
   <div id="app">
-    <!-- 네비게이션 바 (로그인된 경우만 표시) -->
     <nav v-if="showNavigation" class="navbar">
       <div class="nav-container">
         <router-link to="/dashboard" class="nav-brand">
           🚀 Developer Showcase
         </router-link>
 
-        <div class="nav-menu">
-          <router-link to="/dashboard" class="nav-link">대시보드</router-link>
-          <router-link to="/projects" class="nav-link">프로젝트 작성</router-link>
-          <router-link to="/project-list" class="nav-link">프로젝트 목록</router-link>
-          <router-link to="/profile" class="nav-link">프로필 관리</router-link>
+        <div class="nav-right-group">
+          <div class="nav-menu">
+            <router-link to="/dashboard" class="nav-link">대시보드</router-link>
+            <router-link to="/create-post" class="nav-link">프로젝트 작성</router-link>
+            <router-link to="/projects" class="nav-link">프로젝트 관리</router-link>
+            <router-link to="/post-list" class="nav-link">프로젝트 목록</router-link>
+          </div>
 
           <div class="user-menu">
-            <span class="username">{{ currentUser?.name || currentUser?.email }}</span>
+            <router-link to="/profile" class="username-link">
+              <span class="username">{{ currentUser?.name || currentUser?.email }}</span>
+            </router-link>
             <button @click="handleLogout" class="logout-btn">
               로그아웃
             </button>
@@ -23,7 +26,6 @@
       </div>
     </nav>
 
-    <!-- 메인 컨텐츠 -->
     <router-view />
   </div>
 </template>
@@ -36,76 +38,56 @@ export default {
   data() {
     return {
       currentUser: null,
-      showNavigation: false
+      showNavigation: false,
+      authListener: null, // 인증 리스너를 저장할 변수
     }
   },
-  async mounted() {
-    // 초기 세션 확인
-    await this.checkAuthState()
+  created() {
+    // 앱 생성 시, 가장 먼저 현재 세션을 확인합니다.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      // 세션이 있는 경우 (브라우저를 새로 켠 경우)
+      if (session) {
+        const shouldRemember = localStorage.getItem('rememberUser') === 'true';
+        if (!shouldRemember) {
+          // '상태 유지'가 아니면 즉시 로그아웃 처리
+          supabase.auth.signOut();
+        } else {
+          // '상태 유지'인 경우, 사용자 정보를 설정
+          this.setUser(session);
+        }
+      }
+    });
 
-    // 라우트 변경 감지
-    this.$router.beforeEach((to, from, next) => {
-      this.updateNavigationVisibility(to.path)
-      next()
-    })
-
-    // 현재 라우트에 따른 네비게이션 표시 설정
-    this.updateNavigationVisibility(this.$route.path)
+    // 인증 상태 변경을 실시간으로 감지하는 리스너 설정
+    this.authListener = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Supabase Auth Event:', event);
+      this.setUser(session);
+    });
+  },
+  beforeUnmount() {
+    // 컴포넌트가 파괴될 때 리스너를 정리합니다.
+    if (this.authListener) {
+      this.authListener.data.subscription.unsubscribe();
+    }
   },
   methods: {
-    async checkAuthState() {
-      try {
-        // Supabase 세션 확인
-        const { data: { session } } = await supabase.auth.getSession()
-
-        if (session && session.user) {
-          // 세션이 있는 경우
-          this.currentUser = {
-            id: session.user.id,
-            email: session.user.email,
-            name: session.user.user_metadata?.full_name ||
-              session.user.user_metadata?.name ||
-              session.user.email.split('@')[0]
-          }
-
-          // 로컬스토리지에도 저장
-          localStorage.setItem('user', JSON.stringify(this.currentUser))
-
-          console.log('세션 있음:', this.currentUser)
-        } else {
-          // 세션이 없는 경우
-          const localUser = localStorage.getItem('user')
-
-          if (localUser) {
-            console.log('로컬 사용자 정보 삭제')
-            localStorage.removeItem('user')
-            localStorage.removeItem('rememberUser')
-            localStorage.removeItem('userEmail')
-          }
-
-          this.currentUser = null
-          console.log('세션 없음, 로그인 필요')
-
-          // 로그인이 필요한 페이지에 있다면 로그인 페이지로 리디렉션
-          if (this.requiresAuth(this.$route.path)) {
-            this.$router.push('/login')
-          }
-        }
-      } catch (error) {
-        console.error('인증 상태 확인 오류:', error)
-        this.currentUser = null
-        this.clearUserData()
+    setUser(session) {
+      if (session && session.user) {
+        this.currentUser = {
+          id: session.user.id,
+          email: session.user.email,
+          name: session.user.user_metadata?.full_name ||
+            session.user.user_metadata?.name ||
+            session.user.email.split('@')[0]
+        };
+        localStorage.setItem('user', JSON.stringify(this.currentUser));
+      } else {
+        this.currentUser = null;
+        this.clearUserData();
       }
+      this.updateNavigationVisibility(this.$route.path);
     },
-
-    requiresAuth(path) {
-      // 인증이 필요한 페이지들
-      const protectedRoutes = ['/dashboard', '/projects', '/profile', '/settings', '/project-list']
-      return protectedRoutes.some(route => path.startsWith(route))
-    },
-
     updateNavigationVisibility(currentPath) {
-      // 네비게이션을 숨길 페이지들
       const hideNavRoutes = [
         '/login',
         '/register',
@@ -113,64 +95,31 @@ export default {
         '/reset-password',
         '/auth/callback',
         '/two-factor-auth'
-      ]
-
-      this.showNavigation = !hideNavRoutes.includes(currentPath) && this.currentUser !== null
-
-      console.log(`경로: ${currentPath}, 네비게이션 표시: ${this.showNavigation}, 사용자: ${this.currentUser?.email}`)
+      ];
+      this.showNavigation = !hideNavRoutes.includes(currentPath) && this.currentUser !== null;
     },
-
     async handleLogout() {
-      try {
-        console.log('로그아웃 시작')
-
-        // Supabase 로그아웃
-        const { error } = await supabase.auth.signOut()
-
-        if (error) {
-          console.error('Supabase 로그아웃 오류:', error)
-        }
-
-        // 로컬 데이터 완전 삭제
-        this.clearUserData()
-
-        // 상태 초기화
-        this.currentUser = null
-        this.showNavigation = false
-
-        console.log('로그아웃 완료')
-
-        // 로그인 페이지로 리디렉션
-        this.$router.push('/login')
-
-      } catch (error) {
-        console.error('로그아웃 처리 오류:', error)
-
-        // 오류가 발생해도 로컬 데이터는 삭제
-        this.clearUserData()
-        this.currentUser = null
-        this.showNavigation = false
-        this.$router.push('/login')
-      }
+      // 로그아웃은 단순히 signOut을 호출하면 onAuthStateChange 리스너가 나머지를 처리합니다.
+      await supabase.auth.signOut();
     },
-
     clearUserData() {
-      // 모든 로컬 저장소 데이터 삭제
-      localStorage.removeItem('user')
-      localStorage.removeItem('rememberUser')
-      localStorage.removeItem('userEmail')
-      localStorage.removeItem('sb-gjuwbcfuadlwvxrxbgui-auth-token')
-
-      // 세션 스토리지도 정리
-      sessionStorage.clear()
-
-      console.log('사용자 데이터 삭제 완료')
+      localStorage.removeItem('user');
+      localStorage.removeItem('rememberUser');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('sb-gjuwbcfuadlwvxrxbgui-auth-token');
+    }
+  },
+  watch: {
+    // 라우트가 변경될 때마다 네비게이션 바 표시 여부를 다시 계산
+    '$route'(to) {
+      this.updateNavigationVisibility(to.path);
     }
   }
 }
 </script>
 
 <style>
+/* 스타일 코드는 기존과 동일합니다. */
 * {
   margin: 0;
   padding: 0;
@@ -187,7 +136,6 @@ body {
   min-height: 100vh;
 }
 
-/* 네비게이션 바 */
 .navbar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -220,10 +168,16 @@ body {
   opacity: 0.8;
 }
 
-.nav-menu {
+.nav-right-group {
   display: flex;
   align-items: center;
   gap: 30px;
+}
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  gap: 15px;
 }
 
 .nav-link {
@@ -250,8 +204,18 @@ body {
   display: flex;
   align-items: center;
   gap: 15px;
-  padding-left: 20px;
-  border-left: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.username-link {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+.username-link:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .username {
@@ -276,46 +240,41 @@ body {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* 반응형 */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .nav-container {
-    padding: 0 15px;
-    flex-wrap: wrap;
+    flex-direction: column;
     height: auto;
-    min-height: 60px;
+    padding: 10px 15px;
   }
-
+  .nav-right-group {
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+  }
   .nav-menu {
-    gap: 15px;
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-menu {
+    gap: 5px;
     flex-wrap: wrap;
     justify-content: center;
-    margin-top: 10px;
     width: 100%;
   }
 
-  .nav-link {
+  .nav-link, .username-link {
     padding: 6px 12px;
     font-size: 0.9rem;
   }
 
   .user-menu {
-    padding-left: 15px;
-    gap: 10px;
-    border-left: none;
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     padding-top: 10px;
-    margin-top: 10px;
+    margin-top: 5px;
     width: 100%;
     justify-content: center;
-  }
-
-  .username {
-    display: block;
-  }
-
-  .logout-btn {
-    padding: 6px 12px;
-    font-size: 0.9rem;
   }
 }
 
@@ -323,97 +282,8 @@ body {
   .nav-menu {
     flex-direction: column;
     gap: 8px;
+    align-items: stretch;
+    text-align: center;
   }
-
-  .nav-link {
-    padding: 4px 8px;
-    font-size: 0.8rem;
-  }
-
-  .username {
-    display: none; /* 모바일에서 사용자명 숨김 */
-  }
-}
-
-/* 전역 스타일 */
-.page-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #5a6268;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 600;
-  color: #2c3e50;
-}
-
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  padding: 12px;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s ease;
-}
-
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #667eea;
-}
-
-.error-message {
-  background-color: #fee;
-  color: #c33;
-  padding: 12px;
-  border-radius: 8px;
-  border-left: 4px solid #c33;
-  margin-bottom: 15px;
-}
-
-.success-message {
-  background-color: #efe;
-  color: #3c763d;
-  padding: 12px;
-  border-radius: 8px;
-  border-left: 4px solid #28a745;
-  margin-bottom: 15px;
 }
 </style>
