@@ -23,10 +23,10 @@
     <div class="quick-actions">
       <h2>빠른 작업</h2>
       <div class="action-buttons">
-        <router-link to="/create-post" class="action-btn primary">
+        <router-link to="/projects" class="action-btn primary">
           ✏️ 새 프로젝트 추가
         </router-link>
-        <router-link to="/post-list" class="action-btn">
+        <router-link to="/project-list" class="action-btn">
           📋 프로젝트 관리
         </router-link>
         <router-link to="/profile" class="action-btn">
@@ -40,15 +40,11 @@
       <div class="activity-list">
         <div class="activity-item">
           <span class="activity-time">2시간 전</span>
-          <span class="activity-text"
-            >"Todo App" 프로젝트를 업데이트했습니다.</span
-          >
+          <span class="activity-text">"Todo App" 프로젝트를 업데이트했습니다.</span>
         </div>
         <div class="activity-item">
           <span class="activity-time">1일 전</span>
-          <span class="activity-text"
-            >"Vue Portfolio" 프로젝트를 추가했습니다.</span
-          >
+          <span class="activity-text">"Vue Portfolio" 프로젝트를 추가했습니다.</span>
         </div>
         <div class="activity-item">
           <span class="activity-time">3일 전</span>
@@ -198,5 +194,34 @@ export default {
 
 .activity-text {
   color: #495057;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 20px 15px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 2rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .activity-item {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .activity-time {
+    min-width: auto;
+    font-weight: 600;
+  }
 }
 </style>

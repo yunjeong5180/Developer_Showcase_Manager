@@ -652,6 +652,10 @@ export default {
 
 /* 반응형 */
 @media (max-width: 768px) {
+  .profile {
+    padding: 20px;
+  }
+
   .profile-container {
     grid-template-columns: 1fr;
     gap: 30px;
