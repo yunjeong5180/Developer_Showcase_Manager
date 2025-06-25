@@ -6,7 +6,6 @@
     </div>
 
     <div class="profile-container">
-      <!-- 프로필 사진 섹션 -->
       <div class="profile-photo-section">
         <div class="photo-container">
           <img
@@ -31,7 +30,6 @@
         <p class="profile-role">{{ profileForm.title || "개발자" }}</p>
       </div>
 
-      <!-- 기본 정보 폼 -->
       <div class="profile-form-section">
         <form @submit.prevent="handleSubmit" class="profile-form">
           <div class="form-section">
@@ -198,7 +196,6 @@
             </div>
           </div>
 
-          <!-- 저장 버튼 -->
           <div class="form-actions">
             <button type="submit" class="btn-save" :disabled="isSaving">
               {{ isSaving ? "저장 중..." : "프로필 저장" }}
@@ -208,7 +205,6 @@
       </div>
     </div>
 
-    <!-- 미리보기 섹션 -->
     <div class="preview-section">
       <h3>포트폴리오 미리보기</h3>
       <div class="portfolio-preview">
@@ -287,7 +283,7 @@ export default {
       },
       newSkill: "",
       isSaving: false,
-      defaultAvatar: "https://via.placeholder.com/150/42b883/ffffff?text=👤"
+      defaultAvatar: "https://placehold.co/150x150/42b883/ffffff?text=👤"
     };
   },
   methods: {
