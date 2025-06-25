@@ -9,8 +9,9 @@
 
         <div class="nav-menu">
           <router-link to="/dashboard" class="nav-link">대시보드</router-link>
-          <!-- <router-link to="/projects" class="nav-link">프로젝트</router-link> -->
-          <router-link to="/profile" class="nav-link">프로필</router-link>
+          <router-link to="/projects" class="nav-link">프로젝트 작성</router-link>
+          <router-link to="/project-list" class="nav-link">프로젝트 목록</router-link>
+          <router-link to="/profile" class="nav-link">프로필 관리</router-link>
 
           <div class="user-menu">
             <span class="username">{{ currentUser?.name || currentUser?.email }}</span>
@@ -99,7 +100,7 @@ export default {
 
     requiresAuth(path) {
       // 인증이 필요한 페이지들
-      const protectedRoutes = ['/dashboard', '/projects', '/profile', '/settings']
+      const protectedRoutes = ['/dashboard', '/projects', '/profile', '/settings', '/project-list']
       return protectedRoutes.some(route => path.startsWith(route))
     },
 
@@ -279,10 +280,17 @@ body {
 @media (max-width: 768px) {
   .nav-container {
     padding: 0 15px;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 60px;
   }
 
   .nav-menu {
     gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 10px;
+    width: 100%;
   }
 
   .nav-link {
@@ -293,10 +301,16 @@ body {
   .user-menu {
     padding-left: 15px;
     gap: 10px;
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 10px;
+    margin-top: 10px;
+    width: 100%;
+    justify-content: center;
   }
 
   .username {
-    display: none; /* 모바일에서 사용자명 숨김 */
+    display: block;
   }
 
   .logout-btn {
@@ -307,13 +321,17 @@ body {
 
 @media (max-width: 480px) {
   .nav-menu {
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 8px;
   }
 
   .nav-link {
     padding: 4px 8px;
     font-size: 0.8rem;
+  }
+
+  .username {
+    display: none; /* 모바일에서 사용자명 숨김 */
   }
 }
 
