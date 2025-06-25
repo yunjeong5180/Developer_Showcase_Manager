@@ -8,6 +8,9 @@ import AuthCallback from "../views/AuthCallback.vue";
 import ForgotPassword from "../views/ForgotPassword.vue";
 import ResetPassword from "../views/ResetPassword.vue";
 import TwoFactorAuth from "../views/TwoFactorAuth.vue";
+// 새로 추가되는 컴포넌트들
+import CreatePost from "../views/CreatePost.vue";
+import PostList from "../views/PostList.vue";
 import { supabase } from '@/config/supabase';
 
 // 인증 확인 함수
@@ -41,6 +44,13 @@ async function redirectIfAuthenticated(to, from, next) {
   console.log('로그인 페이지 접근 확인:', to.path);
 
   try {
+    // 비밀번호 재설정에서 온 경우 세션 체크 무시
+    if (from.path === '/reset-password') {
+      console.log('비밀번호 재설정에서 온 접근, 세션 체크 무시하고 로그인 페이지 표시');
+      next();
+      return;
+    }
+
     const { data: { session } } = await supabase.auth.getSession();
 
     if (session && session.user) {
@@ -83,7 +93,7 @@ const routes = [
     path: "/reset-password",
     name: "ResetPassword",
     component: ResetPassword,
-    beforeEnter: redirectIfAuthenticated,
+    // 비밀번호 재설정은 로그인하지 않은 상태에서도 접근 가능
   },
   {
     path: "/two-factor-auth",
@@ -107,6 +117,19 @@ const routes = [
     path: "/projects",
     name: "Projects",
     component: Projects,
+    beforeEnter: requireAuth,
+  },
+  // 새로 추가된 라우트들
+  {
+    path: "/create-post",
+    name: "CreatePost",
+    component: CreatePost,
+    beforeEnter: requireAuth,
+  },
+  {
+    path: "/post-list",
+    name: "PostList",
+    component: PostList,
     beforeEnter: requireAuth,
   },
   {
