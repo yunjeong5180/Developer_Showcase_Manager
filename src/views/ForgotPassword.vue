@@ -1,71 +1,56 @@
 <template>
   <div class="forgot-password-container">
     <div class="forgot-password-card">
-      <div class="header">
-        <h1>비밀번호 찾기</h1>
-        <p>가입할 때 사용한 이메일 주소를 입력하세요.</p>
-        <p>비밀번호 재설정 링크를 보내드립니다.</p>
+      <!-- Header -->
+      <div class="forgot-header">
+        <h1>🔐 비밀번호를 잊으셨나요?</h1>
+        <p>이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다.</p>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="forgot-password-form" v-if="!isEmailSent">
+      <!-- Form -->
+      <form @submit.prevent="handleForgotPassword" class="forgot-form">
+        <!-- Email Input -->
         <div class="form-group">
           <label for="email">이메일 주소</label>
           <input
             id="email"
             v-model="email"
             type="email"
-            placeholder="example@email.com"
             required
+            placeholder="이메일을 입력하세요"
             :disabled="loading"
-            class="form-input"
+            @input="clearMessages"
           />
         </div>
 
-        <button
-          type="submit"
-          class="submit-button"
-          :disabled="loading || !isEmailValid"
-        >
-          <span v-if="loading">전송 중...</span>
-          <span v-else>재설정 링크 전송</span>
-        </button>
-
+        <!-- Error Message -->
         <div v-if="error" class="error-message">
           {{ error }}
         </div>
+
+        <!-- Success Message -->
+        <div v-if="success" class="success-message">
+          {{ success }}
+        </div>
+
+        <!-- Submit Button -->
+        <button
+          type="submit"
+          :disabled="loading || !email"
+          class="forgot-btn"
+        >
+          {{ loading ? '전송 중...' : '재설정 링크 보내기' }}
+        </button>
       </form>
 
-      <!-- 이메일 전송 완료 화면 -->
-      <div v-if="isEmailSent" class="success-screen">
-        <div class="success-icon">📧</div>
-        <h2>이메일을 확인하세요</h2>
-        <p>
-          <strong>{{ email }}</strong>로 비밀번호 재설정 링크를 보냈습니다.
-        </p>
-        <p>
-          이메일을 확인하고 링크를 클릭하여 새 비밀번호를 설정하세요.
-        </p>
-
-        <div class="action-buttons">
-          <button @click="resendEmail" class="resend-button" :disabled="loading">
-            <span v-if="loading">재전송 중...</span>
-            <span v-else>이메일 다시 보내기</span>
-          </button>
-
-          <router-link to="/login" class="back-to-login">
-            로그인 페이지로 돌아가기
-          </router-link>
+      <!-- Navigation Links -->
+      <div class="navigation-links">
+        <div class="back-to-login">
+          <router-link to="/login">← 로그인으로 돌아가기</router-link>
         </div>
-      </div>
-
-      <!-- 하단 링크들 -->
-      <div class="footer-links" v-if="!isEmailSent">
-        <router-link to="/login" class="back-link">
-          ← 로그인 페이지로 돌아가기
-        </router-link>
-
-        <div class="help-text">
-          <p>계정이 없으신가요? <router-link to="/signup">회원가입하기</router-link></p>
+        <div class="register-link">
+          <span>계정이 없으신가요? </span>
+          <router-link to="/register">회원가입</router-link>
         </div>
       </div>
     </div>
@@ -81,60 +66,53 @@ export default {
     return {
       email: '',
       loading: false,
-      error: '',
-      isEmailSent: false
-    }
-  },
-  computed: {
-    isEmailValid() {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-      return emailRegex.test(this.email)
+      error: null,
+      success: null
     }
   },
   methods: {
-    async handleSubmit() {
-      if (!this.isEmailValid) {
+    clearMessages() {
+      this.error = null
+      this.success = null
+    },
+
+    async handleForgotPassword() {
+      if (!this.email) {
+        this.error = '이메일 주소를 입력해주세요.'
+        return
+      }
+
+      // 이메일 형식 검증
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(this.email)) {
         this.error = '올바른 이메일 주소를 입력해주세요.'
         return
       }
 
       this.loading = true
-      this.error = ''
+      this.error = null
+      this.success = null
 
       try {
+        console.log('비밀번호 재설정 요청:', this.email)
+
         const result = await authAPI.resetPassword(this.email)
 
         if (result.success) {
-          this.isEmailSent = true
+          this.success = result.message
+          console.log('비밀번호 재설정 이메일 전송 성공')
+
+          // 성공 메시지를 5초간 보여준 후 로그인 페이지로 이동
+          setTimeout(() => {
+            this.$router.push('/login')
+          }, 5000)
         } else {
-          this.error = result.error || '이메일 전송에 실패했습니다.'
+          this.error = result.error || '비밀번호 재설정 요청 중 오류가 발생했습니다.'
+          console.error('비밀번호 재설정 실패:', result.error)
         }
       } catch (error) {
-        console.error('비밀번호 재설정 요청 오류:', error)
-        this.error = '오류가 발생했습니다. 다시 시도해주세요.'
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async resendEmail() {
-      this.loading = true
-      this.error = ''
-
-      try {
-        const result = await authAPI.resetPassword(this.email)
-
-        if (result.success) {
-          // 재전송 완료 알림
-          this.$nextTick(() => {
-            alert('이메일을 다시 보냈습니다. 받은편지함을 확인해주세요.')
-          })
-        } else {
-          this.error = result.error || '이메일 재전송에 실패했습니다.'
-        }
-      } catch (error) {
-        console.error('이메일 재전송 오류:', error)
-        this.error = '재전송 중 오류가 발생했습니다.'
+        console.error('비밀번호 재설정 예외:', error)
+        this.error = '네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
       } finally {
         this.loading = false
       }
@@ -155,84 +133,67 @@ export default {
 
 .forgot-password-card {
   background: white;
-  border-radius: 15px;
+  border-radius: 20px;
   padding: 40px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 450px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
 }
 
-.header {
+.forgot-header {
   text-align: center;
   margin-bottom: 30px;
 }
 
-.header h1 {
-  color: #333;
+.forgot-header h1 {
+  color: #2c3e50;
   margin-bottom: 15px;
-  font-size: 2rem;
+  font-size: 1.6rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.header p {
-  color: #666;
+.forgot-header p {
+  color: #6c757d;
+  margin: 0;
   line-height: 1.5;
-  margin-bottom: 8px;
+  font-size: 0.95rem;
 }
 
-.forgot-password-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.forgot-form {
+  margin-bottom: 25px;
 }
 
 .form-group {
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 20px;
 }
 
 .form-group label {
+  display: block;
   margin-bottom: 8px;
-  color: #333;
-  font-weight: 500;
+  color: #2c3e50;
+  font-weight: 600;
 }
 
-.form-input {
-  padding: 12px 16px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
+.form-group input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 1rem;
   transition: border-color 0.3s ease;
+  box-sizing: border-box;
 }
 
-.form-input:focus {
+.form-group input:focus {
   outline: none;
   border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.form-input:disabled {
-  background-color: #f8f9fa;
-  cursor: not-allowed;
-}
-
-.submit-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 14px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.3s ease;
-  margin-top: 10px;
-}
-
-.submit-button:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.submit-button:disabled {
-  opacity: 0.6;
+.form-group input:disabled {
+  background: #f8f9fa;
   cursor: not-allowed;
 }
 
@@ -240,115 +201,82 @@ export default {
   background-color: #fee;
   color: #c33;
   padding: 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   border-left: 4px solid #c33;
   font-size: 14px;
-}
-
-/* 성공 화면 */
-.success-screen {
-  text-align: center;
-}
-
-.success-icon {
-  font-size: 4rem;
-  margin-bottom: 20px;
-}
-
-.success-screen h2 {
-  color: #333;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-}
-
-.success-screen p {
-  color: #666;
-  line-height: 1.6;
   margin-bottom: 15px;
 }
 
-.success-screen strong {
-  color: #333;
+.success-message {
+  background-color: #f0f9e9;
+  color: #4a7c44;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid #4caf50;
+  font-size: 14px;
+  margin-bottom: 15px;
+  line-height: 1.4;
 }
 
-.action-buttons {
-  margin-top: 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.resend-button {
-  background: #28a745;
+.forgot-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 12px 20px;
-  border-radius: 8px;
+  border-radius: 10px;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.resend-button:hover:not(:disabled) {
-  background: #218838;
-}
-
-.resend-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.back-to-login {
-  color: #667eea;
-  text-decoration: none;
-  font-weight: 500;
-  padding: 12px;
-  border: 2px solid #667eea;
-  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
-.back-to-login:hover {
-  background: #667eea;
-  color: white;
+.forgot-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
 }
 
-/* 하단 링크들 */
-.footer-links {
-  margin-top: 30px;
+.forgot-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.navigation-links {
   text-align: center;
 }
 
-.back-link {
+.back-to-login {
+  margin-bottom: 15px;
+}
+
+.back-to-login a {
   color: #667eea;
   text-decoration: none;
-  font-weight: 500;
-  display: inline-block;
-  margin-bottom: 15px;
+  font-size: 0.9rem;
+  font-weight: 600;
   transition: color 0.3s ease;
 }
 
-.back-link:hover {
+.back-to-login a:hover {
   color: #5a6fd8;
+  text-decoration: underline;
 }
 
-.help-text {
-  padding-top: 15px;
-  border-top: 1px solid #e1e5e9;
+.register-link {
+  font-size: 0.9rem;
+  color: #6c757d;
 }
 
-.help-text p {
-  color: #666;
-  font-size: 14px;
-}
-
-.help-text a {
+.register-link a {
   color: #667eea;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
+  transition: color 0.3s ease;
 }
 
-.help-text a:hover {
+.register-link a:hover {
+  color: #5a6fd8;
   text-decoration: underline;
 }
 
@@ -358,12 +286,12 @@ export default {
     padding: 30px 20px;
   }
 
-  .header h1 {
-    font-size: 1.5rem;
+  .forgot-header h1 {
+    font-size: 1.4rem;
   }
 
-  .action-buttons {
-    gap: 12px;
+  .forgot-header p {
+    font-size: 0.9rem;
   }
 }
 </style>

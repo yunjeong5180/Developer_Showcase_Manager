@@ -1,77 +1,67 @@
 <template>
-  <div class="reset-password-container">
-    <div class="reset-password-card">
-      <div class="reset-header">
-        <h1>🔐 비밀번호 재설정</h1>
-        <p>새로운 비밀번호를 설정하세요</p>
+  <div class="login-container">
+    <div class="login-card">
+      <!-- Header -->
+      <div class="login-header">
+        <h1>비밀번호 재설정</h1>
+        <p>새로운 비밀번호를 입력해주세요.</p>
       </div>
 
-      <form @submit.prevent="handleResetPassword" class="reset-form">
+      <!-- Form -->
+      <form @submit.prevent="handleResetPassword" class="login-form">
+        <!-- New Password Input -->
         <div class="form-group">
           <label for="newPassword">새 비밀번호</label>
           <input
-            type="password"
             id="newPassword"
             v-model="newPassword"
+            type="password"
+            required
             placeholder="새 비밀번호를 입력하세요"
             :disabled="loading"
-            required
-            @input="checkPasswordStrength"
+            minlength="8"
           />
-
-          <!-- 비밀번호 강도 표시기 -->
-          <div class="password-strength" v-if="newPassword">
-            <div class="strength-bar">
-              <div
-                class="strength-fill"
-                :class="passwordStrength.level"
-                :style="{ width: passwordStrength.percentage + '%' }"
-              ></div>
-            </div>
-            <span class="strength-text" :class="passwordStrength.level">
-              {{ passwordStrength.text }}
-            </span>
-          </div>
         </div>
 
+        <!-- Confirm Password Input -->
         <div class="form-group">
           <label for="confirmPassword">비밀번호 확인</label>
           <input
-            type="password"
             id="confirmPassword"
             v-model="confirmPassword"
+            type="password"
+            required
             placeholder="비밀번호를 다시 입력하세요"
             :disabled="loading"
-            required
+            minlength="8"
           />
-
-          <!-- 비밀번호 일치 여부 표시 -->
-          <div v-if="confirmPassword" class="password-match">
-            <span v-if="passwordsMatch" class="match-success">✅ 비밀번호가 일치합니다</span>
-            <span v-else class="match-error">❌ 비밀번호가 일치하지 않습니다</span>
-          </div>
         </div>
 
+        <!-- Error Message -->
         <div v-if="error" class="error-message">
           {{ error }}
         </div>
 
+        <!-- Success Message -->
         <div v-if="success" class="success-message">
           {{ success }}
         </div>
 
+        <!-- Submit Button -->
         <button
           type="submit"
-          class="reset-btn"
-          :disabled="loading || !isFormValid"
+          :disabled="loading || !newPassword || !confirmPassword"
+          class="login-btn"
         >
-          <span v-if="loading">재설정 중...</span>
-          <span v-else>비밀번호 재설정</span>
+          {{ loading ? '처리 중...' : '비밀번호 변경' }}
         </button>
       </form>
 
-      <div class="back-to-login">
-        <router-link to="/login">← 로그인으로 돌아가기</router-link>
+      <!-- Navigation Links -->
+      <div class="navigation-links">
+        <div class="back-to-login">
+          <router-link to="/login">← 로그인으로 돌아가기</router-link>
+        </div>
       </div>
     </div>
   </div>
@@ -81,115 +71,88 @@
 import { supabase } from '@/config/supabase'
 
 export default {
-  name: "ResetPasswordPage",
+  name: 'ResetPassword',
   data() {
     return {
-      newPassword: "",
-      confirmPassword: "",
+      newPassword: '',
+      confirmPassword: '',
       loading: false,
-      error: "",
-      success: "",
-      passwordStrength: {
-        level: 'weak',
-        text: '약함',
-        percentage: 0
-      }
-    }
-  },
-  computed: {
-    passwordsMatch() {
-      return this.newPassword === this.confirmPassword
-    },
-    isFormValid() {
-      return this.newPassword &&
-        this.confirmPassword &&
-        this.passwordsMatch &&
-        this.newPassword.length >= 6
-    }
-  },
-  mounted() {
-    // URL에서 토큰 확인
-    const urlParams = new URLSearchParams(window.location.search)
-    const token = urlParams.get('token')
-
-    if (!token) {
-      this.error = "유효하지 않은 재설정 링크입니다"
-      setTimeout(() => {
-        this.$router.push('/login')
-      }, 3000)
+      error: null,
+      success: null
     }
   },
   methods: {
-    checkPasswordStrength() {
-      const password = this.newPassword
-      let strength = {
-        level: 'weak',
-        text: '약함',
-        percentage: 20
-      }
-
-      if (password.length >= 8) {
-        strength.percentage = 40
-      }
-
-      if (password.length >= 8 && /[A-Z]/.test(password)) {
-        strength.level = 'medium'
-        strength.text = '보통'
-        strength.percentage = 60
-      }
-
-      if (password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) {
-        strength.percentage = 80
-      }
-
-      if (password.length >= 8 &&
-        /[A-Z]/.test(password) &&
-        /[0-9]/.test(password) &&
-        /[^A-Za-z0-9]/.test(password)) {
-        strength.level = 'strong'
-        strength.text = '강함'
-        strength.percentage = 100
-      }
-
-      this.passwordStrength = strength
-    },
-
     async handleResetPassword() {
-      if (!this.isFormValid) {
-        this.error = "모든 필드를 올바르게 입력해주세요"
+      // 비밀번호 확인 검증
+      if (this.newPassword !== this.confirmPassword) {
+        this.error = '비밀번호가 일치하지 않습니다.'
+        return
+      }
+
+      // 비밀번호 길이 검증
+      if (this.newPassword.length < 8) {
+        this.error = '비밀번호는 최소 8자 이상이어야 합니다.'
         return
       }
 
       this.loading = true
-      this.error = ""
-      this.success = ""
+      this.error = null
+      this.success = null
 
       try {
-        // 실제 환경에서는 Supabase의 updateUser 메서드 사용
-        // const { data, error } = await supabase.auth.updateUser({
-        //   password: this.newPassword
-        // })
+        // Supabase를 통해 비밀번호 업데이트
+        const { error } = await supabase.auth.updateUser({
+          password: this.newPassword
+        })
 
-        // 데모용 성공 처리
-        this.success = "비밀번호가 성공적으로 변경되었습니다"
+        if (error) {
+          // 동일한 비밀번호 오류 처리
+          if (error.message.includes('New password should be different')) {
+            this.error = '이전에 사용했던 비밀번호입니다. 다른 비밀번호를 입력해주세요.'
+            return
+          }
+          throw error
+        }
 
+        // 비밀번호 변경 성공
+        this.success = '비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 다시 로그인해주세요.'
+
+        // 현재 세션 종료 (자동 로그인 방지)
+        await supabase.auth.signOut()
+
+        // 3초 후 로그인 페이지로 리다이렉트
         setTimeout(() => {
           this.$router.push('/login')
-        }, 2000)
+        }, 3000)
 
       } catch (error) {
-        console.error('비밀번호 재설정 오류:', error)
-        this.error = "비밀번호 재설정 중 오류가 발생했습니다"
+        console.error('비밀번호 업데이트 오류:', error)
+        this.error = error.message || '비밀번호 변경 중 오류가 발생했습니다.'
       } finally {
         this.loading = false
       }
+    }
+  },
+  mounted() {
+    // URL에서 access_token 확인
+    const urlParams = new URLSearchParams(window.location.hash.substring(1))
+    const accessToken = urlParams.get('access_token')
+    const type = urlParams.get('type')
+
+    console.log('ResetPassword 페이지 접근:', { type, hasToken: !!accessToken })
+
+    if (!accessToken || type !== 'recovery') {
+      this.error = '유효하지 않은 재설정 링크입니다. 다시 요청해주세요.'
+      setTimeout(() => {
+        this.$router.push('/forgot-password')
+      }, 3000)
     }
   }
 }
 </script>
 
 <style scoped>
-.reset-password-container {
+.login-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -198,32 +161,37 @@ export default {
   padding: 20px;
 }
 
-.reset-password-card {
+.login-card {
   background: white;
   border-radius: 20px;
   padding: 40px;
   width: 100%;
-  max-width: 450px;
+  max-width: 400px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
 }
 
-.reset-header {
+.login-header {
   text-align: center;
   margin-bottom: 30px;
 }
 
-.reset-header h1 {
+.login-header h1 {
   color: #2c3e50;
   margin-bottom: 10px;
-  font-size: 1.8rem;
+  font-size: 1.6rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.reset-header p {
+.login-header p {
   color: #6c757d;
   margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
-.reset-form {
+.login-form {
   margin-bottom: 25px;
 }
 
@@ -258,66 +226,6 @@ export default {
   cursor: not-allowed;
 }
 
-.password-strength {
-  margin-top: 10px;
-}
-
-.strength-bar {
-  width: 100%;
-  height: 4px;
-  background: #e9ecef;
-  border-radius: 2px;
-  overflow: hidden;
-  margin-bottom: 5px;
-}
-
-.strength-fill {
-  height: 100%;
-  transition: all 0.3s ease;
-}
-
-.strength-fill.weak {
-  background: #dc3545;
-}
-
-.strength-fill.medium {
-  background: #ffc107;
-}
-
-.strength-fill.strong {
-  background: #28a745;
-}
-
-.strength-text {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.strength-text.weak {
-  color: #dc3545;
-}
-
-.strength-text.medium {
-  color: #ffc107;
-}
-
-.strength-text.strong {
-  color: #28a745;
-}
-
-.password-match {
-  margin-top: 8px;
-  font-size: 0.9rem;
-}
-
-.match-success {
-  color: #28a745;
-}
-
-.match-error {
-  color: #dc3545;
-}
-
 .error-message {
   background-color: #fee;
   color: #c33;
@@ -329,16 +237,16 @@ export default {
 }
 
 .success-message {
-  background-color: #efe;
-  color: #3c763d;
+  background-color: #f0f9e9;
+  color: #4a7c44;
   padding: 12px;
   border-radius: 8px;
-  border-left: 4px solid #28a745;
+  border-left: 4px solid #4caf50;
   font-size: 14px;
   margin-bottom: 15px;
 }
 
-.reset-btn {
+.login-btn {
   width: 100%;
   padding: 15px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -351,26 +259,26 @@ export default {
   transition: all 0.3s ease;
 }
 
-.reset-btn:hover:not(:disabled) {
+.login-btn:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
 }
 
-.reset-btn:disabled {
-  opacity: 0.6;
+.login-btn:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
   transform: none;
 }
 
-.back-to-login {
+.navigation-links {
   text-align: center;
-  margin-top: 20px;
 }
 
 .back-to-login a {
   color: #667eea;
   text-decoration: none;
   font-size: 0.9rem;
+  font-weight: 600;
   transition: color 0.3s ease;
 }
 
@@ -381,8 +289,12 @@ export default {
 
 /* 반응형 */
 @media (max-width: 480px) {
-  .reset-password-card {
+  .login-card {
     padding: 30px 20px;
+  }
+
+  .login-header h1 {
+    font-size: 1.4rem;
   }
 }
 </style>

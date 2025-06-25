@@ -28,7 +28,24 @@ export default {
   },
   async mounted() {
     try {
-      // URL 해시에서 세션 정보 추출 및 처리
+      console.log('AuthCallback 시작')
+
+      // URL 해시에서 파라미터 추출
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const type = hashParams.get('type')
+      const accessToken = hashParams.get('access_token')
+
+      console.log('URL 파라미터:', { type, hasToken: !!accessToken })
+
+      // 비밀번호 재설정 타입이면 즉시 리다이렉트 (세션 확인 없이)
+      if (type === 'recovery' && accessToken) {
+        console.log('비밀번호 재설정 타입 감지, 즉시 /reset-password로 리다이렉트')
+        // URL 해시를 유지하면서 리다이렉트
+        this.$router.push('/reset-password' + window.location.hash)
+        return
+      }
+
+      // 일반 OAuth 로그인인 경우에만 세션 확인
       const { data, error } = await supabase.auth.getSession()
 
       if (error) {
@@ -38,9 +55,9 @@ export default {
       }
 
       if (data.session) {
-        console.log('OAuth 로그인 성공:', data.session.user.email)
+        console.log('OAuth 세션 확인됨:', data.session.user.email)
 
-        // 사용자 정보 저장
+        // 일반 소셜 로그인 처리
         const userData = {
           email: data.session.user.email,
           name: data.session.user.user_metadata?.full_name ||
@@ -52,12 +69,16 @@ export default {
         }
 
         localStorage.setItem('user', JSON.stringify(userData))
+        console.log('사용자 정보 저장 완료, 대시보드로 이동')
 
         // 대시보드로 리디렉션
         this.$router.push('/dashboard')
       } else {
         console.log('세션이 없습니다. 로그인 페이지로 리디렉션합니다.')
-        this.$router.push('/login')
+        this.error = '로그인 세션을 찾을 수 없습니다.'
+        setTimeout(() => {
+          this.$router.push('/login')
+        }, 2000)
       }
     } catch (error) {
       console.error('OAuth 콜백 처리 예외:', error)
@@ -109,11 +130,13 @@ export default {
 .callback-container h2 {
   color: #333;
   margin-bottom: 10px;
+  font-size: 1.5rem;
 }
 
 .callback-container p {
   color: #666;
   margin-bottom: 20px;
+  font-size: 1rem;
 }
 
 .error-message {
@@ -127,11 +150,13 @@ export default {
 .error-message h3 {
   color: #c33;
   margin-bottom: 10px;
+  font-size: 1.3rem;
 }
 
 .error-message p {
   color: #c33;
   margin-bottom: 15px;
+  font-size: 0.9rem;
 }
 
 .retry-btn {
@@ -142,9 +167,22 @@ export default {
   text-decoration: none;
   display: inline-block;
   transition: background 0.3s ease;
+  font-weight: 600;
 }
 
 .retry-btn:hover {
   background: #5a6fd8;
+  transform: translateY(-1px);
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .callback-container {
+    padding: 30px 20px;
+  }
+
+  .callback-container h2 {
+    font-size: 1.3rem;
+  }
 }
 </style>
