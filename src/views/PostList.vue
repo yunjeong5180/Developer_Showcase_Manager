@@ -10,7 +10,6 @@
       </router-link>
     </div>
 
-    <!-- 프로젝트 목록 -->
     <div v-if="projects.length > 0" class="projects-grid">
       <div
         v-for="project in projects"
@@ -58,7 +57,6 @@
       </div>
     </div>
 
-    <!-- 빈 상태 -->
     <div v-else class="empty-state">
       <div class="empty-icon">📝</div>
       <h3>아직 등록된 프로젝트가 없습니다</h3>
@@ -68,7 +66,6 @@
       </router-link>
     </div>
 
-    <!-- 프로젝트 상세 모달 -->
     <div v-if="selectedProject" class="modal-overlay" @click="closeModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
@@ -153,7 +150,7 @@ export default {
           id: 1,
           title: "Todo List App",
           description: "Vue.js와 Firebase를 사용한 실시간 할 일 관리 애플리케이션입니다. 사용자가 쉽게 할 일을 추가, 수정, 삭제할 수 있으며 실시간으로 동기화됩니다.",
-          image: "https://via.placeholder.com/400x250/42b883/ffffff?text=Todo+App",
+          image: "https://placehold.co/400x250/42b883/ffffff?text=Todo+App",
           projectUrl: "https://todo-app-demo.com",
           githubUrl: "https://github.com/user/todo-app",
           startDate: "2024-01-15",
@@ -165,7 +162,7 @@ export default {
           id: 2,
           title: "E-Commerce Platform",
           description: "React와 Node.js로 구현한 풀스택 온라인 쇼핑몰 플랫폼입니다. 상품 관리, 주문 처리, 결제 시스템을 포함합니다.",
-          image: "https://via.placeholder.com/400x250/764ba2/ffffff?text=E-Commerce",
+          image: "https://placehold.co/400x250/764ba2/ffffff?text=E-Commerce",
           projectUrl: "https://shop-demo.com",
           githubUrl: "https://github.com/user/ecommerce",
           startDate: "2024-04-01",
@@ -177,7 +174,7 @@ export default {
           id: 3,
           title: "Weather Dashboard",
           description: "OpenWeather API를 활용한 실시간 날씨 정보 대시보드입니다. 차트와 그래프로 날씨 데이터를 시각화합니다.",
-          image: "https://via.placeholder.com/400x250/667eea/ffffff?text=Weather",
+          image: "https://placehold.co/400x250/667eea/ffffff?text=Weather",
           projectUrl: "https://weather-dashboard.com",
           githubUrl: "https://github.com/user/weather-app",
           startDate: "2023-11-10",
@@ -189,7 +186,7 @@ export default {
           id: 4,
           title: "Portfolio Website",
           description: "개인 포트폴리오 웹사이트입니다. 반응형 디자인과 다크모드를 지원하며, 애니메이션 효과가 적용되어 있습니다.",
-          image: "https://via.placeholder.com/400x250/f093fb/ffffff?text=Portfolio",
+          image: "https://placehold.co/400x250/f093fb/ffffff?text=Portfolio",
           projectUrl: "https://my-portfolio.com",
           githubUrl: "https://github.com/user/portfolio",
           startDate: "2023-08-01",
@@ -201,7 +198,7 @@ export default {
           id: 5,
           title: "Task Management Tool",
           description: "팀 협업을 위한 태스크 관리 도구입니다. 칸반 보드 스타일의 UI와 실시간 협업 기능을 제공합니다.",
-          image: "https://via.placeholder.com/400x250/4ecdc4/ffffff?text=Task+Tool",
+          image: "https://placehold.co/400x250/4ecdc4/ffffff?text=Task+Tool",
           projectUrl: "https://task-manager.com",
           githubUrl: "https://github.com/user/task-manager",
           startDate: "2024-02-01",
@@ -242,7 +239,7 @@ export default {
       });
     },
     handleImageError(event) {
-      event.target.src = "https://via.placeholder.com/400x250/e9ecef/6c757d?text=No+Image";
+      event.target.src = "https://placehold.co/400x250/e9ecef/6c757d?text=No+Image";
     }
   }
 };
