@@ -40,6 +40,7 @@ export default {
       currentUser: null,
       showNavigation: false,
       authListener: null, // 인증 리스너를 저장할 변수
+      isSignupInProgress: false, // 🆕 회원가입 진행 중 플래그
     }
   },
   created() {
@@ -50,9 +51,11 @@ export default {
         const shouldRemember = localStorage.getItem('rememberUser') === 'true';
         if (!shouldRemember) {
           // '상태 유지'가 아니면 즉시 로그아웃 처리
+          console.log('상태 유지 안함, 자동 로그아웃')
           supabase.auth.signOut();
         } else {
           // '상태 유지'인 경우, 사용자 정보를 설정
+          console.log('상태 유지 모드, 사용자 세션 설정')
           this.setUser(session);
         }
       }
@@ -60,7 +63,33 @@ export default {
 
     // 인증 상태 변경을 실시간으로 감지하는 리스너 설정
     this.authListener = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Supabase Auth Event:', event);
+      console.log('Supabase Auth Event:', event, 'Route:', this.$route?.path);
+
+      // 🚨 회원가입 이벤트인 경우 자동 로그인 방지
+      if (event === 'SIGNED_UP') {
+        console.log('회원가입 이벤트 감지, 자동 로그인 방지')
+        this.isSignupInProgress = true
+        // 즉시 로그아웃하여 자동 로그인 방지
+        setTimeout(() => {
+          supabase.auth.signOut()
+          this.isSignupInProgress = false
+        }, 100)
+        return
+      }
+
+      // 🚨 회원가입 진행 중이면 세션 설정하지 않음
+      if (this.isSignupInProgress) {
+        console.log('회원가입 진행 중, 세션 설정 무시')
+        return
+      }
+
+      // 회원가입 페이지에서 오는 세션 변경은 무시
+      if (this.$route?.path === '/signup') {
+        console.log('회원가입 페이지에서 오는 세션 변경 무시')
+        return
+      }
+
+      // 일반적인 로그인/로그아웃 처리
       this.setUser(session);
     });
   },
@@ -73,15 +102,18 @@ export default {
   methods: {
     setUser(session) {
       if (session && session.user) {
+        console.log('사용자 세션 설정:', session.user.email)
         this.currentUser = {
           id: session.user.id,
           email: session.user.email,
-          name: session.user.user_metadata?.full_name ||
+          name: session.user.user_metadata?.nickname ||
+            session.user.user_metadata?.full_name ||
             session.user.user_metadata?.name ||
             session.user.email.split('@')[0]
         };
         localStorage.setItem('user', JSON.stringify(this.currentUser));
       } else {
+        console.log('사용자 세션 해제')
         this.currentUser = null;
         this.clearUserData();
       }
@@ -91,6 +123,7 @@ export default {
       const hideNavRoutes = [
         '/login',
         '/register',
+        '/signup', // 🆕 추가
         '/forgot-password',
         '/reset-password',
         '/auth/callback',
@@ -99,8 +132,11 @@ export default {
       this.showNavigation = !hideNavRoutes.includes(currentPath) && this.currentUser !== null;
     },
     async handleLogout() {
+      console.log('수동 로그아웃 시도')
       // 로그아웃은 단순히 signOut을 호출하면 onAuthStateChange 리스너가 나머지를 처리합니다.
       await supabase.auth.signOut();
+      // 로그인 페이지로 이동
+      this.$router.push('/login')
     },
     clearUserData() {
       localStorage.removeItem('user');
@@ -111,8 +147,13 @@ export default {
   },
   watch: {
     // 라우트가 변경될 때마다 네비게이션 바 표시 여부를 다시 계산
-    '$route'(to) {
+    '$route'(to, from) {
       this.updateNavigationVisibility(to.path);
+
+      // 🆕 회원가입 페이지를 떠날 때 플래그 초기화
+      if (from.path === '/signup') {
+        this.isSignupInProgress = false
+      }
     }
   }
 }

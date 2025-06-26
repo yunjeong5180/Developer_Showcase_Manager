@@ -3,7 +3,7 @@ import Login from "../views/Login.vue";
 import Dashboard from "../views/Dashboard.vue";
 import Projects from "../views/Projects.vue";
 import Profile from "../views/Profile.vue";
-import Register from "../views/Register.vue";
+import Signup from "../views/Signup.vue"; // ✅ Register → Signup 변경
 import AuthCallback from "../views/AuthCallback.vue";
 import ForgotPassword from "../views/ForgotPassword.vue";
 import ResetPassword from "../views/ResetPassword.vue";
@@ -78,10 +78,15 @@ const routes = [
     beforeEnter: redirectIfAuthenticated, // 이미 로그인된 경우 대시보드로
   },
   {
-    path: "/register",
-    name: "Register",
-    component: Register,
+    path: "/signup", // ✅ register → signup 변경
+    name: "Signup",
+    component: Signup, // ✅ Register → Signup 변경
     beforeEnter: redirectIfAuthenticated,
+  },
+  // ✅ 하위 호환성을 위한 register 경로 추가 (선택사항)
+  {
+    path: "/register",
+    redirect: "/signup"
   },
   {
     path: "/forgot-password",
