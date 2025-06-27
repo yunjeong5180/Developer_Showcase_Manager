@@ -43,14 +43,14 @@
           </router-link>
         </div>
 
-        <!-- 🚨 기존 에러 메시지는 모달이 아닌 일반 에러만 표시 -->
+        <!-- 🔥 수정: 모달이 표시되지 않을 때만 에러 메시지 표시 -->
         <div v-if="error && !showSignupModal" class="error-message">
           {{ error }}
         </div>
 
         <button type="submit" class="login-btn" :disabled="loading">
           <span v-if="loading">로그인 중...</span>
-          <span v-else">로그인</span>
+          <span v-else>로그인</span>
         </button>
       </form>
 
@@ -155,24 +155,28 @@ export default {
 
           // 🔥 핵심 수정: 로그인 실패 후 이메일 존재 여부 확인
           if (error.message === 'Invalid login credentials') {
-            const emailExists = this.checkEmailExistsSimple(this.email)
+            const emailExists = await this.checkEmailExistsInDB(this.email)
             console.log('이메일 존재 여부 최종 결과:', emailExists)
 
-            const errorInfo = this.getSmartErrorMessage(error.message, emailExists)
-
-            if (errorInfo.showSignup) {
+            // 🎯 핵심 수정: 정확한 분기 처리
+            if (emailExists) {
+              // 이메일은 존재하지만 비밀번호가 틀림 - 일반 에러 메시지
+              this.error = "비밀번호가 올바르지 않습니다. 다시 시도해주세요."
+              this.showSignupModal = false
+              console.log('👤 가입된 이메일 + 틀린 비밀번호 → 에러 메시지 표시')
+            } else {
+              // 이메일이 존재하지 않음 - 회원가입 모달
+              this.error = ""
               this.showSignupModal = true
+              console.log('👻 미가입 이메일 → 회원가입 모달 표시')
               // rememberUser 설정 초기화
               localStorage.removeItem('rememberUser')
               localStorage.removeItem('userEmail')
-            } else {
-              // 일반 에러는 기존 방식으로 표시
-              this.error = errorInfo.message
             }
           } else {
             // 다른 에러는 바로 표시
-            const errorInfo = this.getSmartErrorMessage(error.message, true)
-            this.error = errorInfo.message
+            this.error = this.getErrorMessage(error.message)
+            this.showSignupModal = false
           }
           return
         }
@@ -189,87 +193,65 @@ export default {
       }
     },
 
-    // 🔥 핵심 수정: 간단하고 정확한 이메일 존재 확인
-    checkEmailExistsSimple(email) {
+    // 🔥 실제 DB 확인: Supabase로 이메일 존재 여부 확인
+    async checkEmailExistsInDB(email) {
       try {
-        console.log('간단 이메일 존재 여부 확인:', email)
+        console.log('📊 실제 DB에서 이메일 존재 여부 확인:', email)
+
+        const normalizedEmail = email.toLowerCase().trim()
 
         // 🎯 방법 1: localStorage에서 최근 회원가입한 이메일 확인 (최우선)
         const recentSignups = JSON.parse(localStorage.getItem('recentSignups') || '[]')
-        const normalizedEmail = email.toLowerCase().trim()
-
         if (recentSignups.includes(normalizedEmail)) {
           console.log('✅ localStorage에서 가입된 이메일 확인:', normalizedEmail)
           return true
         }
 
-        // 🎯 방법 2: 알려진 테스트 이메일들 (가입되어 있다고 가정)
-        const knownEmails = [
-          'yunsproject25@gmail.com',
-          'test@example.com',
-          'admin@test.com'
-        ]
+        // 🎯 방법 2: Supabase DB에서 실제 사용자 확인
+        const { data, error } = await supabase
+          .from('users')
+          .select('email')
+          .eq('email', normalizedEmail)
+          .single()
 
-        if (knownEmails.includes(normalizedEmail)) {
-          console.log('✅ 알려진 가입 이메일 확인:', normalizedEmail)
+        if (error) {
+          // 사용자가 없으면 error가 발생함 (정상)
+          if (error.code === 'PGRST116' || error.message.includes('No rows')) {
+            console.log('❌ DB에서 미가입 이메일 확인:', normalizedEmail)
+            return false
+          }
+
+          // 다른 에러는 로그만 출력하고 안전하게 처리
+          console.warn('DB 확인 중 오류:', error)
+          return false
+        }
+
+        if (data && data.email) {
+          console.log('✅ DB에서 가입된 이메일 확인:', normalizedEmail)
           return true
         }
 
-        // 🎯 방법 3: 이전에 성공적으로 로그인했던 이메일 확인
-        const savedEmail = localStorage.getItem('userEmail')
-        if (savedEmail && savedEmail.toLowerCase() === normalizedEmail) {
-          console.log('✅ 이전 로그인 이메일 확인:', normalizedEmail)
-          return true
-        }
-
-        // 🚨 위 조건들에 해당하지 않으면 미가입으로 판단
-        console.log('❌ 미가입 이메일로 판단:', normalizedEmail)
+        console.log('❌ DB에서 미가입 이메일 확인:', normalizedEmail)
         return false
 
       } catch (error) {
         console.error('이메일 존재 확인 중 오류:', error)
-        // 확인할 수 없는 경우 안전하게 존재한다고 가정
-        return true
+        // 확인할 수 없는 경우 안전하게 미가입으로 판단
+        return false
       }
     },
 
-    // 🆕 스마트 에러 메시지 처리 (개선된 버전)
-    getSmartErrorMessage(error, emailExists) {
-      console.log('에러 분석:', { error, emailExists })
-
+    // 에러 메시지 변환
+    getErrorMessage(error) {
       switch (error) {
         case 'Invalid login credentials':
-          if (emailExists) {
-            // 이메일은 존재하지만 비밀번호가 틀림
-            return {
-              message: "비밀번호가 올바르지 않습니다. 다시 시도해주세요.",
-              showSignup: false // 🎯 회원가입 모달 표시 안함
-            }
-          } else {
-            // 이메일이 존재하지 않음
-            return {
-              message: "등록되지 않은 이메일입니다.",
-              showSignup: true // 🎯 회원가입 모달 표시
-            }
-          }
-
+          return "로그인 정보가 올바르지 않습니다."
         case 'Email not confirmed':
-          return {
-            message: "이메일 인증이 필요합니다. 이메일을 확인해주세요.",
-            showSignup: false
-          }
-
+          return "이메일 인증이 필요합니다. 이메일을 확인해주세요."
         case 'Too many requests':
-          return {
-            message: "너무 많은 요청입니다. 잠시 후 다시 시도해주세요.",
-            showSignup: false
-          }
-
+          return "너무 많은 요청입니다. 잠시 후 다시 시도해주세요."
         default:
-          return {
-            message: "로그인 중 오류가 발생했습니다.",
-            showSignup: false
-          }
+          return "로그인 중 오류가 발생했습니다."
       }
     },
 

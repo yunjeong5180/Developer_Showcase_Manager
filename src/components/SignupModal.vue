@@ -21,23 +21,20 @@
 
       <!-- 모달 아이콘 -->
       <div class="modal-icon">
-        🚀
+        {{ modalConfig.icon }}
       </div>
 
       <!-- 모달 제목 -->
       <h2 class="modal-title">
-        아직 계정이 없으신가요?
+        {{ modalConfig.title }}
       </h2>
 
       <!-- 모달 메시지 -->
-      <p class="modal-message">
-        입력하신 이메일로 등록된 계정을 찾을 수 없습니다.<br>
-        <strong>Developer Showcase</strong>에 가입하여<br>
-        포트폴리오를 관리해보세요!
+      <p class="modal-message" v-html="modalConfig.message">
       </p>
 
-      <!-- 혜택 리스트 -->
-      <div class="benefits-list">
+      <!-- 혜택 리스트 (로그인 모드에서만 표시) -->
+      <div v-if="mode === 'login'" class="benefits-list">
         <div class="benefit-item">
           <span class="benefit-icon">📝</span>
           <span class="benefit-text">포트폴리오 관리</span>
@@ -52,33 +49,45 @@
         </div>
       </div>
 
+      <!-- 정보 박스 (비밀번호 찾기 모드에서만 표시) -->
+      <div v-if="mode === 'forgotPassword'" class="info-box">
+        <div class="info-item">
+          <span class="info-icon">💡</span>
+          <span>비밀번호 재설정은 가입된 회원만 이용할 수 있습니다</span>
+        </div>
+        <div class="info-item">
+          <span class="info-icon">🚀</span>
+          <span>먼저 회원가입을 완료해주세요</span>
+        </div>
+      </div>
+
       <!-- 액션 버튼들 -->
       <div class="modal-actions">
         <button
           class="signup-btn"
           @click="goToSignup"
         >
-          <span class="btn-icon">✨</span>
-          지금 회원가입하기
+          <span class="btn-icon">{{ modalConfig.primaryButtonIcon }}</span>
+          {{ modalConfig.primaryButtonText }}
         </button>
 
         <button
           class="cancel-btn"
           @click="closeModal"
         >
-          나중에 하기
+          {{ modalConfig.cancelButtonText }}
         </button>
       </div>
 
-      <!-- 추가 정보 -->
+      <!-- 모달 푸터 -->
       <div class="modal-footer">
         <p class="footer-text">
-          이미 계정이 있으신가요?
+          {{ modalConfig.footerText }}
           <button
             class="link-btn"
-            @click="retryLogin"
+            @click="handleRetry"
           >
-            다시 로그인하기
+            {{ modalConfig.footerButtonText }}
           </button>
         </p>
       </div>
@@ -97,9 +106,48 @@ export default {
     email: {
       type: String,
       default: ''
+    },
+    // 🆕 추가: 모달 모드 (login: 로그인 실패, forgotPassword: 비밀번호 찾기)
+    mode: {
+      type: String,
+      default: 'login', // 'login' | 'forgotPassword'
+      validator: (value) => ['login', 'forgotPassword'].includes(value)
     }
   },
-  emits: ['close', 'goToSignup', 'retryLogin'],
+  emits: ['close', 'goToSignup', 'retryLogin', 'retryReset'],
+
+  computed: {
+    // 🔥 모드에 따른 모달 설정
+    modalConfig() {
+      if (this.mode === 'forgotPassword') {
+        return {
+          icon: '🔒',
+          title: '등록되지 않은 이메일',
+          message: `<strong>${this.email}</strong>은 아직 회원가입되지 않은 이메일입니다.<br>
+                   비밀번호 재설정을 위해서는 먼저 <strong>Developer Showcase</strong>에 가입해주세요!`,
+          primaryButtonIcon: '📝',
+          primaryButtonText: '회원가입하기',
+          cancelButtonText: '나중에 하기',
+          footerText: '이미 계정이 있으신가요?',
+          footerButtonText: '다른 이메일로 시도'
+        }
+      } else {
+        // 기본 로그인 모드
+        return {
+          icon: '🚀',
+          title: '아직 계정이 없으신가요?',
+          message: `입력하신 이메일로 등록된 계정을 찾을 수 없습니다.<br>
+                   <strong>Developer Showcase</strong>에 가입하여<br>
+                   포트폴리오를 관리해보세요!`,
+          primaryButtonIcon: '✨',
+          primaryButtonText: '지금 회원가입하기',
+          cancelButtonText: '나중에 하기',
+          footerText: '이미 계정이 있으신가요?',
+          footerButtonText: '다시 로그인하기'
+        }
+      }
+    }
+  },
 
   // 🔧 라이프사이클 훅
   mounted() {
@@ -120,8 +168,13 @@ export default {
       this.$emit('goToSignup', this.email)
     },
 
-    retryLogin() {
-      this.$emit('retryLogin')
+    // 🔥 모드에 따른 재시도 처리
+    handleRetry() {
+      if (this.mode === 'forgotPassword') {
+        this.$emit('retryReset')
+      } else {
+        this.$emit('retryLogin')
+      }
     },
 
     handleEscape(event) {
@@ -250,7 +303,7 @@ export default {
   font-weight: 600;
 }
 
-/* 혜택 리스트 */
+/* 혜택 리스트 (로그인 모드) */
 .benefits-list {
   display: flex;
   justify-content: space-around;
@@ -279,6 +332,32 @@ export default {
   color: #4a5568;
   font-weight: 600;
   text-align: center;
+}
+
+/* 🆕 정보 박스 (비밀번호 찾기 모드) */
+.info-box {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid #667eea;
+  margin-bottom: 25px;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.info-item:last-child {
+  margin-bottom: 0;
+}
+
+.info-icon {
+  margin-right: 10px;
+  font-size: 1.1rem;
 }
 
 /* 액션 버튼들 */
@@ -384,6 +463,10 @@ export default {
 
   .benefit-icon {
     font-size: 1.2rem;
+  }
+
+  .info-item {
+    font-size: 0.9rem;
   }
 }
 </style>
