@@ -5,8 +5,10 @@
   "scripts": {
     "serve": "vue-cli-service serve --skip-plugins @vue/cli-plugin-eslint",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint",
-    "start": "npm run build && serve -s dist"
+    "build:railway": "NODE_ENV=production vue-cli-service build",
+    "serve:static": "npx serve dist -s -l $PORT",
+    "start": "npx serve dist -s -l $PORT",
+    "lint": "vue-cli-service lint"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.50.0",

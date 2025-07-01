@@ -4,6 +4,7 @@ node_modules
 
 
 # local env files
+# 로컬 환경변수 파일은 Git에 올리면 안됩니다!
 .env.local
 .env.*.local
 
