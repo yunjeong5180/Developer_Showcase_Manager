@@ -7,7 +7,7 @@
     "build": "vue-cli-service build",
     "build:railway": "NODE_ENV=production vue-cli-service build",
     "serve:static": "npx serve dist -s -l $PORT",
-    "start": "npx serve dist -s -l $PORT",
+    "start": "npx serve dist -s -p $PORT",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

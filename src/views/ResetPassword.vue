@@ -78,11 +78,68 @@ export default {
       confirmPassword: '',
       loading: false,
       error: null,
-      success: null
+      success: null,
+      sessionEstablished: false
     }
   },
   methods: {
+    // 🔥 핵심 수정: URL 해시에서 세션 설정
+    async establishSession() {
+      try {
+        console.log('비밀번호 재설정 세션 설정 시작')
+
+        // URL 해시에서 파라미터 추출
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const accessToken = hashParams.get('access_token')
+        const refreshToken = hashParams.get('refresh_token')
+        const type = hashParams.get('type')
+
+        console.log('URL 파라미터:', {
+          type,
+          hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken
+        })
+
+        if (!accessToken || type !== 'recovery') {
+          throw new Error('유효하지 않은 재설정 링크입니다')
+        }
+
+        // 🔥 핵심: Supabase 세션 수동 설정
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        })
+
+        if (error) {
+          console.error('세션 설정 오류:', error)
+          throw error
+        }
+
+        if (data.session) {
+          console.log('세션 설정 성공:', data.session.user.email)
+          this.sessionEstablished = true
+        } else {
+          throw new Error('세션 생성에 실패했습니다')
+        }
+
+      } catch (error) {
+        console.error('세션 설정 실패:', error)
+        this.error = error.message || '세션 설정에 실패했습니다. 비밀번호 재설정을 다시 요청해주세요.'
+
+        // 3초 후 forgot-password 페이지로 리디렉트
+        setTimeout(() => {
+          this.$router.push('/forgot-password')
+        }, 3000)
+      }
+    },
+
     async handleResetPassword() {
+      // 세션이 설정되지 않았으면 먼저 설정
+      if (!this.sessionEstablished) {
+        this.error = '세션이 설정되지 않았습니다. 페이지를 새로고침해주세요.'
+        return
+      }
+
       // 비밀번호 확인 검증
       if (this.newPassword !== this.confirmPassword) {
         this.error = '비밀번호가 일치하지 않습니다.'
@@ -100,24 +157,42 @@ export default {
       this.success = null
 
       try {
+        console.log('비밀번호 업데이트 시작')
+
+        // 🔥 수정: 세션 상태 재확인
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          throw new Error('세션이 만료되었습니다. 비밀번호 재설정을 다시 요청해주세요.')
+        }
+
         // Supabase를 통해 비밀번호 업데이트
         const { error } = await supabase.auth.updateUser({
           password: this.newPassword
         })
 
         if (error) {
+          console.error('비밀번호 업데이트 오류:', error)
+
+          // 세션 관련 에러 처리
+          if (error.message.includes('session missing') || error.message.includes('session')) {
+            throw new Error('세션이 만료되었습니다. 비밀번호 재설정을 다시 요청해주세요.')
+          }
+
           // 동일한 비밀번호 오류 처리
           if (error.message.includes('New password should be different')) {
             this.error = '이전에 사용했던 비밀번호입니다. 다른 비밀번호를 입력해주세요.'
             return
           }
+
           throw error
         }
+
+        console.log('비밀번호 변경 성공')
 
         // 비밀번호 변경 성공
         this.success = '비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 다시 로그인해주세요.'
 
-        // 현재 세션 종료 (자동 로그인 방지)
+        // 🔥 중요: 세션 종료하여 자동 로그인 방지
         await supabase.auth.signOut()
 
         // 3초 후 로그인 페이지로 리다이렉트
@@ -126,27 +201,22 @@ export default {
         }, 3000)
 
       } catch (error) {
-        console.error('비밀번호 업데이트 오류:', error)
+        console.error('비밀번호 업데이트 처리 오류:', error)
         this.error = error.message || '비밀번호 변경 중 오류가 발생했습니다.'
       } finally {
         this.loading = false
       }
     }
   },
-  mounted() {
-    // URL에서 access_token 확인
-    const urlParams = new URLSearchParams(window.location.hash.substring(1))
-    const accessToken = urlParams.get('access_token')
-    const type = urlParams.get('type')
 
-    console.log('ResetPassword 페이지 접근:', { type, hasToken: !!accessToken })
+  // 🔥 핵심: 컴포넌트 마운트 시 세션 설정
+  async mounted() {
+    console.log('ResetPassword 컴포넌트 마운트됨')
+    console.log('현재 URL:', window.location.href)
+    console.log('URL 해시:', window.location.hash)
 
-    if (!accessToken || type !== 'recovery') {
-      this.error = '유효하지 않은 재설정 링크입니다. 다시 요청해주세요.'
-      setTimeout(() => {
-        this.$router.push('/forgot-password')
-      }, 3000)
-    }
+    // 세션 설정
+    await this.establishSession()
   }
 }
 </script>
