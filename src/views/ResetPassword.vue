@@ -123,6 +123,24 @@ export default {
         const hashString = window.location.hash.substring(1) // # 제거
         const hashParams = new URLSearchParams(hashString)
 
+        // 🔥 추가: 에러 체크 먼저 확인
+        const error = hashParams.get('error')
+        const errorCode = hashParams.get('error_code')
+        const errorDescription = hashParams.get('error_description')
+
+        if (error) {
+          console.log('URL에 에러 정보 발견:', { error, errorCode, errorDescription })
+
+          // 에러 타입별 메시지 처리
+          if (errorCode === 'otp_expired' || error === 'access_denied') {
+            throw new Error('비밀번호 재설정 링크가 만료되었습니다. 새로운 재설정 링크를 요청해주세요.')
+          } else if (error === 'invalid_request') {
+            throw new Error('잘못된 재설정 요청입니다. 새로운 재설정 링크를 요청해주세요.')
+          } else {
+            throw new Error(`재설정 링크 오류: ${errorDescription || error}`)
+          }
+        }
+
         this.accessToken = hashParams.get('access_token')
         this.refreshToken = hashParams.get('refresh_token')
         this.tokenType = hashParams.get('type')
