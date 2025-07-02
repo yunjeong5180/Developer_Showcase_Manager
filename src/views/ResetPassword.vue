@@ -7,8 +7,14 @@
         <p>새로운 비밀번호를 입력해주세요.</p>
       </div>
 
+      <!-- 세션 설정 로딩 -->
+      <div v-if="settingUpSession" class="loading-message">
+        <div class="spinner"></div>
+        <p>세션을 설정하고 있습니다...</p>
+      </div>
+
       <!-- Form -->
-      <form @submit.prevent="handleResetPassword" class="login-form">
+      <form v-else @submit.prevent="handleResetPassword" class="login-form">
         <!-- New Password Input -->
         <div class="form-group">
           <label for="newPassword">새 비밀번호</label>
@@ -47,10 +53,19 @@
           {{ success }}
         </div>
 
+        <!-- 디버그 정보 (개발 환경에서만) -->
+        <div v-if="showDebugInfo" class="debug-info">
+          <p><strong>디버그 정보:</strong></p>
+          <p>세션 설정됨: {{ sessionEstablished ? '✅' : '❌' }}</p>
+          <p>URL 해시: {{ urlHash.substring(0, 50) }}...</p>
+          <p>Access Token 있음: {{ hasAccessToken ? '✅' : '❌' }}</p>
+          <p>Type: {{ tokenType }}</p>
+        </div>
+
         <!-- Submit Button -->
         <button
           type="submit"
-          :disabled="loading || !newPassword || !confirmPassword"
+          :disabled="loading || !newPassword || !confirmPassword || !sessionEstablished"
           class="login-btn"
         >
           {{ loading ? '처리 중...' : '비밀번호 변경' }}
@@ -79,7 +94,18 @@ export default {
       loading: false,
       error: null,
       success: null,
-      sessionEstablished: false
+      sessionEstablished: false,
+      settingUpSession: true,
+
+      // 디버그 정보
+      showDebugInfo: process.env.VUE_APP_DEBUG === 'true',
+      urlHash: '',
+      hasAccessToken: false,
+      tokenType: '',
+
+      // 토큰 정보
+      accessToken: '',
+      refreshToken: ''
     }
   },
   methods: {
@@ -88,55 +114,82 @@ export default {
       try {
         console.log('비밀번호 재설정 세션 설정 시작')
 
-        // URL 해시에서 파라미터 추출
-        const hashParams = new URLSearchParams(window.location.hash.substring(1))
-        const accessToken = hashParams.get('access_token')
-        const refreshToken = hashParams.get('refresh_token')
-        const type = hashParams.get('type')
+        // URL 정보 저장 (디버그용)
+        this.urlHash = window.location.hash
+        console.log('전체 URL:', window.location.href)
+        console.log('URL 해시:', window.location.hash)
 
-        console.log('URL 파라미터:', {
-          type,
-          hasAccessToken: !!accessToken,
-          hasRefreshToken: !!refreshToken
+        // 🔥 수정: URL 해시에서 파라미터 추출 (# 제거)
+        const hashString = window.location.hash.substring(1) // # 제거
+        const hashParams = new URLSearchParams(hashString)
+
+        this.accessToken = hashParams.get('access_token')
+        this.refreshToken = hashParams.get('refresh_token')
+        this.tokenType = hashParams.get('type')
+
+        this.hasAccessToken = !!this.accessToken
+
+        console.log('URL 파라미터 추출:', {
+          type: this.tokenType,
+          hasAccessToken: this.hasAccessToken,
+          hasRefreshToken: !!this.refreshToken,
+          accessTokenLength: this.accessToken?.length || 0
         })
 
-        if (!accessToken || type !== 'recovery') {
-          throw new Error('유효하지 않은 재설정 링크입니다')
+        // 유효성 검사
+        if (!this.accessToken || this.tokenType !== 'recovery') {
+          throw new Error('유효하지 않은 재설정 링크입니다. 토큰이 없거나 타입이 올바르지 않습니다.')
         }
 
         // 🔥 핵심: Supabase 세션 수동 설정
+        console.log('Supabase 세션 설정 시도...')
         const { data, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken
+          access_token: this.accessToken,
+          refresh_token: this.refreshToken || this.accessToken // refresh_token이 없으면 access_token 사용
         })
 
         if (error) {
           console.error('세션 설정 오류:', error)
-          throw error
+          throw new Error(`세션 설정 실패: ${error.message}`)
         }
 
-        if (data.session) {
-          console.log('세션 설정 성공:', data.session.user.email)
+        if (data.session && data.session.user) {
+          console.log('세션 설정 성공:', {
+            userEmail: data.session.user.email,
+            sessionValid: !!data.session,
+            expiresAt: data.session.expires_at
+          })
           this.sessionEstablished = true
         } else {
-          throw new Error('세션 생성에 실패했습니다')
+          throw new Error('세션 생성에 실패했습니다. 응답에 세션 정보가 없습니다.')
         }
+
+        // 🔥 추가: 세션 확인
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) {
+          throw new Error('세션 설정 후 확인에 실패했습니다.')
+        }
+
+        console.log('세션 확인 성공:', session.user.email)
 
       } catch (error) {
         console.error('세션 설정 실패:', error)
         this.error = error.message || '세션 설정에 실패했습니다. 비밀번호 재설정을 다시 요청해주세요.'
+        this.sessionEstablished = false
 
-        // 3초 후 forgot-password 페이지로 리디렉트
+        // 5초 후 forgot-password 페이지로 리디렉트
         setTimeout(() => {
           this.$router.push('/forgot-password')
-        }, 3000)
+        }, 5000)
+      } finally {
+        this.settingUpSession = false
       }
     },
 
     async handleResetPassword() {
-      // 세션이 설정되지 않았으면 먼저 설정
+      // 세션이 설정되지 않았으면 에러
       if (!this.sessionEstablished) {
-        this.error = '세션이 설정되지 않았습니다. 페이지를 새로고침해주세요.'
+        this.error = '세션이 설정되지 않았습니다. 페이지를 새로고침하거나 다시 요청해주세요.'
         return
       }
 
@@ -161,8 +214,22 @@ export default {
 
         // 🔥 수정: 세션 상태 재확인
         const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
+        if (!session || !session.user) {
           throw new Error('세션이 만료되었습니다. 비밀번호 재설정을 다시 요청해주세요.')
+        }
+
+        console.log('세션 재확인 성공:', {
+          userEmail: session.user.email,
+          sessionValid: true,
+          expiresAt: session.expires_at
+        })
+
+        // 🔥 수정: 비밀번호 업데이트 전에 토큰 재설정
+        if (this.accessToken) {
+          await supabase.auth.setSession({
+            access_token: this.accessToken,
+            refresh_token: this.refreshToken || this.accessToken
+          })
         }
 
         // Supabase를 통해 비밀번호 업데이트
@@ -174,7 +241,10 @@ export default {
           console.error('비밀번호 업데이트 오류:', error)
 
           // 세션 관련 에러 처리
-          if (error.message.includes('session missing') || error.message.includes('session')) {
+          if (error.message.includes('session missing') ||
+            error.message.includes('session') ||
+            error.message.includes('JWT') ||
+            error.message.includes('expired')) {
             throw new Error('세션이 만료되었습니다. 비밀번호 재설정을 다시 요청해주세요.')
           }
 
@@ -184,7 +254,7 @@ export default {
             return
           }
 
-          throw error
+          throw new Error(error.message)
         }
 
         console.log('비밀번호 변경 성공')
@@ -236,7 +306,7 @@ export default {
   border-radius: 20px;
   padding: 40px;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
 }
 
@@ -249,9 +319,6 @@ export default {
   color: #2c3e50;
   margin-bottom: 10px;
   font-size: 1.6rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .login-header p {
@@ -259,6 +326,31 @@ export default {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-message p {
+  color: #6c757d;
+  margin: 0;
 }
 
 .login-form {
@@ -304,6 +396,7 @@ export default {
   border-left: 4px solid #c33;
   font-size: 14px;
   margin-bottom: 15px;
+  line-height: 1.4;
 }
 
 .success-message {
@@ -314,6 +407,21 @@ export default {
   border-left: 4px solid #4caf50;
   font-size: 14px;
   margin-bottom: 15px;
+  line-height: 1.4;
+}
+
+.debug-info {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.debug-info p {
+  margin: 5px 0;
 }
 
 .login-btn {
@@ -361,6 +469,7 @@ export default {
 @media (max-width: 480px) {
   .login-card {
     padding: 30px 20px;
+    max-width: 450px;
   }
 
   .login-header h1 {
