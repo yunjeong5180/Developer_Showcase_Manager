@@ -158,6 +158,18 @@
         </p>
       </div>
     </div>
+
+    <!-- 모달 -->
+    <div v-if="showModal" class="modal-overlay" @click="handleModalCancel">
+      <div class="modal-content" @click.stop>
+        <h3>{{ modalTitle }}</h3>
+        <p>{{ modalMessage }}</p>
+        <div class="modal-buttons">
+          <button @click="handleModalConfirm" class="modal-btn-primary">확인</button>
+          <button @click="handleModalCancel" class="modal-btn-secondary">취소</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -202,7 +214,13 @@ export default {
       },
 
       // 🆕 이메일 자동 입력 상태
-      isEmailAutoFilled: false
+      isEmailAutoFilled: false,
+
+      // 모달 상태
+      showModal: false,
+      modalTitle: '',
+      modalMessage: '',
+      modalRedirectTo: null
     }
   },
 
@@ -354,7 +372,7 @@ export default {
       return true
     },
 
-    // 🚨 안전한 닉네임 중복 확인 (실제 DB 저장 없음)
+    // 🔄 실제 DB 연동 닉네임 중복 확인
     async checkNicknameDuplicate() {
       if (!this.validateNickname()) return
 
@@ -364,29 +382,33 @@ export default {
       try {
         console.log('닉네임 중복 확인:', this.formData.nickname.trim())
 
-        // 🔒 안전한 방법: 클라이언트 검증만 (실제 DB 저장 없음)
-        const unavailableNicknames = ['admin', 'test', 'administrator', 'root', 'user']
-        const isUnavailable = unavailableNicknames.includes(this.formData.nickname.toLowerCase())
+        // 실제 Supabase에서 닉네임 중복 확인
+        const { data, error } = await authAPI.checkNicknameDuplicate(this.formData.nickname.trim())
 
-        if (isUnavailable) {
-          this.errors.nickname = "사용할 수 없는 닉네임입니다"
+        if (error) {
+          console.error('닉네임 중복 확인 오류:', error)
+          this.errors.nickname = "닉네임 확인 중 오류가 발생했습니다"
+          this.nicknameAvailable = false
+        } else if (data.exists) {
+          this.errors.nickname = "이미 사용 중인 닉네임입니다"
           this.nicknameAvailable = false
         } else {
+          this.errors.nickname = ""
           this.nicknameAvailable = true
         }
 
-        console.log('닉네임 확인 완료 (안전모드):', this.formData.nickname.trim())
+        console.log('닉네임 확인 완료:', this.formData.nickname.trim(), '사용가능:', this.nicknameAvailable)
 
       } catch (error) {
-        console.error('닉네임 중복 확인 오류:', error)
-        // 오류 시에도 진행 허용 (실제 회원가입 시 검증됨)
-        this.nicknameAvailable = true
+        console.error('닉네임 중복 확인 예외:', error)
+        this.errors.nickname = "닉네임 확인 중 오류가 발생했습니다"
+        this.nicknameAvailable = false
       } finally {
         this.nicknameChecking = false
       }
     },
 
-    // 🚨 안전한 이메일 중복 확인 (실제 회원가입 시도 없음)
+    // 🔄 실제 DB 연동 이메일 중복 확인
     async checkEmailDuplicate() {
       if (!this.validateEmail()) return
 
@@ -396,24 +418,27 @@ export default {
       try {
         console.log('이메일 중복 확인:', this.formData.email.trim())
 
-        // 🔒 방법 1: 안전한 클라이언트 검증만
-        const forbiddenEmails = ['admin@test.com', 'test@example.com']
-        const isForbidden = forbiddenEmails.includes(this.formData.email.toLowerCase())
+        // 실제 Supabase에서 이메일 중복 확인
+        const { data, error } = await authAPI.checkEmailDuplicate(this.formData.email.trim())
 
-        if (isForbidden) {
-          this.errors.email = "사용할 수 없는 이메일입니다"
+        if (error) {
+          console.error('이메일 중복 확인 오류:', error)
+          this.errors.email = "이메일 확인 중 오류가 발생했습니다"
+          this.emailAvailable = false
+        } else if (data.exists) {
+          this.errors.email = "이미 가입된 이메일입니다"
           this.emailAvailable = false
         } else {
-          // 실제 프로덕션에서는 서버 API로 안전하게 확인
+          this.errors.email = ""
           this.emailAvailable = true
         }
 
-        console.log('이메일 확인 완료 (안전모드):', this.formData.email.trim())
+        console.log('이메일 확인 완료:', this.formData.email.trim(), '사용가능:', this.emailAvailable)
 
       } catch (error) {
-        console.error('이메일 중복 확인 오류:', error)
-        // 오류 시에도 진행 허용 (실제 회원가입 시 검증됨)
-        this.emailAvailable = true
+        console.error('이메일 중복 확인 예외:', error)
+        this.errors.email = "이메일 확인 중 오류가 발생했습니다"
+        this.emailAvailable = false
       } finally {
         this.emailChecking = false
       }
@@ -467,6 +492,9 @@ export default {
           email: this.formData.email
         })
 
+        // 🔒 RLS 정책으로 인해 사전 중복 확인 불가, 회원가입 시 확인
+        console.log('회원가입 진행 (중복 확인은 회원가입 시 처리)')
+
         // 🚀 실제 회원가입 (한 번만!)
         const result = await authAPI.signUp({
           name: this.formData.name.trim(),
@@ -476,32 +504,11 @@ export default {
         })
 
         if (result.success) {
-          // 🆕 회원가입 성공 시 이메일을 localStorage에 기록
-          const recentSignups = JSON.parse(localStorage.getItem('recentSignups') || '[]')
-          const userEmail = this.formData.email.toLowerCase().trim()
-
-          if (!recentSignups.includes(userEmail)) {
-            recentSignups.push(userEmail)
-            // 최대 10개까지만 저장
-            if (recentSignups.length > 10) {
-              recentSignups.shift()
-            }
-            localStorage.setItem('recentSignups', JSON.stringify(recentSignups))
-            console.log('회원가입한 이메일 기록됨:', userEmail)
-          }
-
-          this.message = {
-            text: result.message || '회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.',
-            type: 'success'
-          }
-
           // 폼 초기화
           this.resetForm()
 
-          // 2초 후 로그인 페이지로 이동
-          setTimeout(() => {
-            this.$router.push('/login')
-          }, 2000)
+          // 모달로 사용자에게 선택권 제공
+          this.showSuccessModal('회원가입 완료', '회원가입이 완료되었습니다! 로그인 페이지로 이동하시겠습니까?', '/login')
         } else {
           this.message = {
             text: this.getErrorMessage(result.error),
@@ -553,6 +560,26 @@ export default {
         default:
           return `회원가입 실패: ${error}`
       }
+    },
+
+    showSuccessModal(title, message, redirectTo) {
+      this.modalTitle = title
+      this.modalMessage = message
+      this.modalRedirectTo = redirectTo
+      this.showModal = true
+      this.message = { text: '', type: '' }
+    },
+
+    handleModalConfirm() {
+      this.showModal = false
+      if (this.modalRedirectTo) {
+        this.$router.push(this.modalRedirectTo)
+      }
+    },
+
+    handleModalCancel() {
+      this.showModal = false
+      this.modalRedirectTo = null
     }
   },
 
@@ -803,6 +830,79 @@ export default {
   text-decoration: underline;
 }
 
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.modal-content h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.modal-content p {
+  color: #6c757d;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-btn-primary, .modal-btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modal-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.modal-btn-secondary {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.modal-btn-secondary:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
 @media (max-width: 480px) {
   .signup-card {
     padding: 30px 20px;
@@ -814,6 +914,20 @@ export default {
 
   .form-group {
     margin-bottom: 20px;
+  }
+
+  .modal-content {
+    padding: 20px;
+    margin: 0 10px;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+  }
+
+  .modal-btn-primary, .modal-btn-secondary {
+    width: 100%;
+    margin-bottom: 10px;
   }
 }
 </style>

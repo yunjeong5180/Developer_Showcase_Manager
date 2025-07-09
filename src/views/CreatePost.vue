@@ -141,6 +141,18 @@
         </div>
       </form>
     </div>
+
+    <!-- 모달 -->
+    <div v-if="showModal" class="modal-overlay" @click="handleModalCancel">
+      <div class="modal-content" @click.stop>
+        <h3>{{ modalTitle }}</h3>
+        <p>{{ modalMessage }}</p>
+        <div class="modal-buttons">
+          <button @click="handleModalConfirm" class="modal-btn-primary">확인</button>
+          <button @click="handleModalCancel" class="modal-btn-secondary">취소</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -162,6 +174,12 @@ export default {
       },
       newTech: "",
       isSubmitting: false,
+      
+      // 모달 상태
+      showModal: false,
+      modalTitle: '',
+      modalMessage: '',
+      modalRedirectTo: null
     };
   },
   methods: {
@@ -178,15 +196,48 @@ export default {
       }
     },
     addTechStack() {
+      console.log('Add tech stack 호출:', this.newTech);
       if (this.newTech.trim() && !this.projectForm.techStack.includes(this.newTech.trim())) {
         this.projectForm.techStack.push(this.newTech.trim());
         this.newTech = "";
+        console.log('기술 스택 추가됨:', this.projectForm.techStack);
+      } else {
+        console.log('기술 스택 추가 실패 - 이미 존재하거나 빈 값');
       }
     },
     removeTechStack(index) {
       this.projectForm.techStack.splice(index, 1);
     },
+    validateForm() {
+      // URL 유효성 검사
+      if (this.projectForm.projectUrl && !this.isValidUrl(this.projectForm.projectUrl)) {
+        alert('유효한 프로젝트 URL을 입력해주세요.');
+        return false;
+      }
+      
+      if (this.projectForm.githubUrl && !this.isValidUrl(this.projectForm.githubUrl)) {
+        alert('유효한 GitHub URL을 입력해주세요.');
+        return false;
+      }
+      
+      return true;
+    },
+    
+    isValidUrl(url) {
+      try {
+        const urlObj = new URL(url);
+        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+      } catch (e) {
+        return false;
+      }
+    },
+
     async handleSubmit() {
+      // 폼 검증
+      if (!this.validateForm()) {
+        return;
+      }
+      
       this.isSubmitting = true;
 
       // 임시 저장 로직 (나중에 API 연동)
@@ -194,10 +245,28 @@ export default {
 
       setTimeout(() => {
         this.isSubmitting = false;
-        alert("프로젝트가 성공적으로 저장되었습니다!");
-        this.$router.push("/post-list");
+        this.showSuccessModal('프로젝트 저장 완료', '프로젝트가 성공적으로 저장되었습니다! 프로젝트 목록 페이지로 이동하시겠습니까?', '/post-list');
       }, 1000);
     },
+
+    showSuccessModal(title, message, redirectTo) {
+      this.modalTitle = title;
+      this.modalMessage = message;
+      this.modalRedirectTo = redirectTo;
+      this.showModal = true;
+    },
+
+    handleModalConfirm() {
+      this.showModal = false;
+      if (this.modalRedirectTo) {
+        this.$router.push(this.modalRedirectTo);
+      }
+    },
+
+    handleModalCancel() {
+      this.showModal = false;
+      this.modalRedirectTo = null;
+    }
   },
 };
 </script>
@@ -410,6 +479,79 @@ export default {
   cursor: not-allowed;
 }
 
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.modal-content h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.modal-content p {
+  color: #6c757d;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-btn-primary, .modal-btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modal-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.modal-btn-secondary {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.modal-btn-secondary:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
 /* 반응형 */
 @media (max-width: 768px) {
   .create-post {
@@ -426,6 +568,20 @@ export default {
 
   .form-actions {
     flex-direction: column;
+  }
+
+  .modal-content {
+    padding: 20px;
+    margin: 0 10px;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+  }
+
+  .modal-btn-primary, .modal-btn-secondary {
+    width: 100%;
+    margin-bottom: 10px;
   }
 }
 </style>
