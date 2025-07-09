@@ -91,6 +91,18 @@
       @goToSignup="goToSignupWithEmail"
       @retryReset="retryPasswordReset"
     />
+
+    <!-- Success Modal - 이메일 전송 완료 후 표시 -->
+    <div v-if="showSuccessModal" class="modal-overlay" @click="handleSuccessModalCancel">
+      <div class="modal-content" @click.stop>
+        <h3>{{ modalTitle }}</h3>
+        <p>{{ modalMessage }}</p>
+        <div class="modal-buttons">
+          <button @click="handleSuccessModalConfirm" class="modal-btn-primary">확인</button>
+          <button @click="handleSuccessModalCancel" class="modal-btn-secondary">취소</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -102,6 +114,7 @@ import {
   logEnvironmentInfo,
   validateEnvironmentConfig,
   getResetPasswordUrl,
+  getCallbackUrl,
   isDevelopment
 } from '@/config/environment'
 
@@ -136,6 +149,10 @@ export default {
       },
       showSignupModal: false,
       emailSentAt: null, // 이메일 전송 시간 추적
+      showSuccessModal: false,
+      modalTitle: '',
+      modalMessage: '',
+      modalRedirectTo: null,
 
       // 🆕 환경 설정 관련
       environmentConfig: {},
@@ -273,11 +290,13 @@ export default {
         console.log('✅ 가입된 이메일 확인됨, 재설정 링크 전송 진행')
 
         // 🔥 환경별 동적 resetTo URL 설정
-        const resetUrl = getResetPasswordUrl() // 헬퍼 함수 사용
-        console.log('🌍 환경별 Reset URL:', resetUrl)
+        // AuthCallback을 거쳐서 reset-password로 가도록 설정
+        const callbackUrl = getCallbackUrl() // 헬퍼 함수 사용
+        console.log('🌍 환경별 Callback URL:', callbackUrl)
+        console.log('📧 이메일 전송 대상:', this.email)
 
         const { error } = await supabase.auth.resetPasswordForEmail(this.email, {
-          redirectTo: resetUrl, // 🔥 동적 URL 사용
+          redirectTo: callbackUrl, // 🔥 callback URL 사용 (Supabase가 여기로 리다이렉트)
           captchaToken: null
         })
 
@@ -292,7 +311,7 @@ export default {
             }
           } else if (error.message.includes('redirectTo') || error.message.includes('redirect')) {
             this.message = {
-              text: `🚨 리디렉트 URL 설정 오류\n\nSupabase Dashboard에서 다음 URL을 Redirect URLs에 추가해주세요:\n${resetUrl}\n\n현재 환경: ${envConfig.environment}`,
+              text: `🚨 리디렉트 URL 설정 오류\n\nSupabase Dashboard에서 다음 URL을 Redirect URLs에 추가해주세요:\n${callbackUrl}\n\n현재 환경: ${envConfig.environment}`,
               type: 'error'
             }
           } else if (error.message.includes('Invalid email')) {
@@ -319,26 +338,25 @@ export default {
 
         // 🆕 환경별 상세한 성공 메시지
         this.message = {
-          text: `✅ 비밀번호 재설정 링크가 ${this.email}로 전송되었습니다.\n\n📬 이메일 확인 안내:\n• 이메일이 도착하는데 최대 10분 소요될 수 있습니다\n• 스팸 메일함도 반드시 확인해주세요\n• 링크는 24시간 후 만료됩니다${envConfig.isDevelopment ? `\n\n🌍 현재 환경: ${envConfig.environment}\n📍 Reset URL: ${resetUrl}` : ''}`,
+          text: `✅ 비밀번호 재설정 링크가 ${this.email}로 전송되었습니다.\n\n📬 이메일 확인 안내:\n• 이메일이 도착하는데 최대 10분 소요될 수 있습니다\n• 스팸 메일함도 반드시 확인해주세요\n• 링크는 24시간 후 만료됩니다${envConfig.isDevelopment ? `\n\n🌍 현재 환경: ${envConfig.environment}\n📍 Callback URL: ${callbackUrl}` : ''}`,
           type: 'success'
         }
 
         // 🔥 추가: 디버깅을 위한 상세 정보 로그
         console.log('이메일 전송 상세 정보:', {
           email: this.email,
-          redirectTo: resetUrl,
+          redirectTo: callbackUrl,
           environment: envConfig.environment,
           timestamp: new Date().toISOString(),
           supabaseProject: 'gjuwbcfuadlwvxrxbgui',
           origin: envConfig.currentOrigin
         })
 
-        // 15초 후 로그인 페이지로 이동
-        setTimeout(() => {
-          if (this.message.type === 'success') {
-            this.$router.push('/login')
-          }
-        }, 15000)
+        // 모달로 사용자에게 선택권 제공
+        this.showSuccessModal = true
+        this.modalTitle = '이메일 전송 완료'
+        this.modalMessage = '비밀번호 재설정 링크가 이메일로 전송되었습니다. 로그인 페이지로 이동하시겠습니까?'
+        this.modalRedirectTo = '/login'
 
       } catch (error) {
         console.error('비밀번호 재설정 처리 오류:', error)
@@ -376,14 +394,14 @@ export default {
 
       try {
         // 🔥 환경별 동적 URL 설정
-        const resetUrl = getResetPasswordUrl()
+        const callbackUrl = getCallbackUrl()
         const envConfig = getEnvironmentConfig()
 
-        console.log('이메일 재전송 - Reset URL:', resetUrl)
+        console.log('이메일 재전송 - Callback URL:', callbackUrl)
 
         // 동일한 이메일로 재전송
         const { error } = await supabase.auth.resetPasswordForEmail(this.email, {
-          redirectTo: resetUrl // 🔥 동적 URL 사용
+          redirectTo: callbackUrl // 🔥 callback URL 사용
         })
 
         if (error) {
@@ -461,6 +479,18 @@ export default {
           emailInput.focus()
         }
       })
+    },
+
+    handleSuccessModalConfirm() {
+      this.showSuccessModal = false
+      if (this.modalRedirectTo) {
+        this.$router.push(this.modalRedirectTo)
+      }
+    },
+
+    handleSuccessModalCancel() {
+      this.showSuccessModal = false
+      this.modalRedirectTo = null
     }
   },
 
@@ -799,6 +829,79 @@ export default {
   text-decoration: underline;
 }
 
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.modal-content h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.modal-content p {
+  color: #6c757d;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-btn-primary, .modal-btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modal-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.modal-btn-secondary {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.modal-btn-secondary:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
 @media (max-width: 480px) {
   .forgot-password-card {
     padding: 30px 20px;
@@ -823,6 +926,20 @@ export default {
 
   .environment-info small {
     font-size: 0.7rem;
+  }
+
+  .modal-content {
+    padding: 20px;
+    margin: 0 10px;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+  }
+
+  .modal-btn-primary, .modal-btn-secondary {
+    width: 100%;
+    margin-bottom: 10px;
   }
 }
 </style>

@@ -60,6 +60,18 @@
         <router-link to="/login">← 로그인으로 돌아가기</router-link>
       </div>
     </div>
+
+    <!-- 모달 -->
+    <div v-if="showModal" class="modal-overlay" @click="handleModalCancel">
+      <div class="modal-content" @click.stop>
+        <h3>{{ modalTitle }}</h3>
+        <p>{{ modalMessage }}</p>
+        <div class="modal-buttons">
+          <button @click="handleModalConfirm" class="modal-btn-primary">확인</button>
+          <button @click="handleModalCancel" class="modal-btn-secondary">취소</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -76,7 +88,11 @@ export default {
       isLoading: true,
       error: null,
       success: null,
-      sessionReady: false
+      sessionReady: false,
+      showModal: false,
+      modalTitle: '',
+      modalMessage: '',
+      modalRedirectTo: null
     }
   },
   computed: {
@@ -113,42 +129,77 @@ export default {
 
         // 에러 체크
         const error = params.get('error')
+        const errorCode = params.get('error_code')
+        const errorDescription = params.get('error_description')
+        
         if (error) {
-          this.debugLog('URL에서 에러 발견:', error, params.get('error_code'))
-          throw new Error(this.getErrorMessage(error, params.get('error_code')))
+          this.debugLog('URL에서 에러 발견:', error, errorCode, errorDescription)
+          
+          // 에러에 따른 메시지 처리
+          if (errorCode === 'otp_expired') {
+            this.showErrorModal('링크 만료', '비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.', '/forgot-password')
+            return
+          }
+          
+          throw new Error(this.getErrorMessage(error, errorCode))
         }
 
         // 토큰 확인
         const accessToken = params.get('access_token')
         const tokenType = params.get('type')
+        const refreshToken = params.get('refresh_token')
 
         this.debugLog('토큰 정보:', {
           hasAccessToken: !!accessToken,
+          hasRefreshToken: !!refreshToken,
           tokenType,
           tokenLength: accessToken?.length || 0
         })
 
         if (!accessToken || tokenType !== 'recovery') {
-          throw new Error('유효하지 않은 재설정 링크입니다.')
+          this.showErrorModal('유효하지 않은 링크', '유효하지 않은 재설정 링크입니다. 새로운 링크를 요청해주세요.', '/forgot-password')
+          return
         }
 
-        // 세션 설정
+        // 현재 세션 확인 (이미 App.vue에서 세션이 설정되었을 수 있음)
+        const { data: { session: currentSession } } = await supabase.auth.getSession()
+        
+        if (currentSession && currentSession.user) {
+          // 이미 세션이 있는 경우
+          this.debugLog('기존 세션 발견:', {
+            userEmail: currentSession.user.email,
+            expiresAt: currentSession.expires_at
+          })
+          this.sessionReady = true
+          this.error = null
+          return
+        }
+        
+        // 세션이 없는 경우에만 설정 시도
         this.debugLog('Supabase 세션 설정 시도...')
-        const { error: sessionError } = await supabase.auth.setSession({
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
-          refresh_token: params.get('refresh_token') || accessToken
+          refresh_token: refreshToken || accessToken
         })
 
         if (sessionError) {
           this.debugLog('세션 설정 오류:', sessionError)
+          
+          // 세션 오류 처리
+          if (sessionError.message.includes('JWT') || sessionError.message.includes('expired') || sessionError.message.includes('session missing')) {
+            this.showErrorModal('링크 만료', '비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.', '/forgot-password')
+            return
+          }
+          
           throw sessionError
         }
 
-        // 세션 확인
+        // 세션 재확인
         const { data: { session } } = await supabase.auth.getSession()
         if (!session) {
           this.debugLog('세션 확인 실패')
-          throw new Error('세션 설정에 실패했습니다.')
+          this.showErrorModal('세션 설정 실패', '세션 설정에 실패했습니다. 새로운 링크를 요청해주세요.', '/forgot-password')
+          return
         }
 
         this.debugLog('세션 설정 성공:', {
@@ -156,12 +207,32 @@ export default {
           expiresAt: session.expires_at
         })
 
+        // 성공적으로 세션이 설정된 경우에만 sessionReady를 true로 설정
         this.sessionReady = true
+        this.error = null
 
       } catch (err) {
         this.debugLog('세션 설정 실패:', err.message)
-        this.error = err.message
-        setTimeout(() => this.$router.push('/forgot-password'), 3000)
+        
+        // 에러 메시지 개선
+        if (err.message.includes('session missing') || err.message.includes('Auth session missing')) {
+          // 이미 세션이 있는지 최종 확인
+          const { data: { session } } = await supabase.auth.getSession()
+          if (session && session.user) {
+            this.debugLog('에러 발생했지만 세션은 유효함')
+            this.sessionReady = true
+            this.error = null
+          } else {
+            this.showErrorModal('링크 만료', '비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.', '/forgot-password')
+          }
+        } else {
+          this.error = this.getErrorMessage(err.message, err.code)
+        }
+        
+        // 에러가 발생해도 폼은 표시하되, sessionReady를 false로 유지
+        if (this.error) {
+          this.sessionReady = false
+        }
       } finally {
         this.isLoading = false
       }
@@ -192,12 +263,12 @@ export default {
         }
 
         this.debugLog('비밀번호 변경 성공')
-        this.success = '비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동합니다.'
-
-        // 세션 종료 및 리디렉트
+        this.debugLog('비밀번호 변경 성공')
+        
+        // 세션 종료 및 모달 표시
         await supabase.auth.signOut()
         this.debugLog('세션 종료 완료, 로그인 페이지로 이동')
-        setTimeout(() => this.$router.push('/login'), 2000)
+        this.showSuccessModal('비밀번호 변경 완료', '비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동하시겠습니까?', '/login')
 
       } catch (err) {
         this.debugLog('비밀번호 업데이트 실패:', err.message)
@@ -230,10 +301,38 @@ export default {
       if (message.includes('session') || message.includes('expired')) {
         return '세션이 만료되었습니다. 다시 시도해주세요.'
       }
-      if (message.includes('same password')) {
-        return '이전과 다른 비밀번호를 입력해주세요.'
+      if (message.includes('same password') || message.includes('different from the old password')) {
+        return '비밀번호는 이전 비밀번호와 달라야 합니다.'
       }
       return '비밀번호 변경 중 오류가 발생했습니다.'
+    },
+
+    showErrorModal(title, message, redirectTo) {
+      this.modalTitle = title
+      this.modalMessage = message
+      this.modalRedirectTo = redirectTo
+      this.showModal = true
+      this.error = null
+    },
+
+    showSuccessModal(title, message, redirectTo) {
+      this.modalTitle = title
+      this.modalMessage = message
+      this.modalRedirectTo = redirectTo
+      this.showModal = true
+      this.success = null
+    },
+
+    handleModalConfirm() {
+      this.showModal = false
+      if (this.modalRedirectTo) {
+        this.$router.push(this.modalRedirectTo)
+      }
+    },
+
+    handleModalCancel() {
+      this.showModal = false
+      this.modalRedirectTo = null
     }
   }
 }
@@ -391,6 +490,79 @@ export default {
   text-decoration: underline;
 }
 
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+}
+
+.modal-content h3 {
+  color: #2c3e50;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.modal-content p {
+  color: #6c757d;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.modal-btn-primary, .modal-btn-secondary {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.modal-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.modal-btn-secondary {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+.modal-btn-secondary:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
 @media (max-width: 480px) {
   .login-card {
     padding: 30px 20px;
@@ -398,6 +570,20 @@ export default {
 
   .login-header h1 {
     font-size: 1.4rem;
+  }
+
+  .modal-content {
+    padding: 20px;
+    margin: 0 10px;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+  }
+
+  .modal-btn-primary, .modal-btn-secondary {
+    width: 100%;
+    margin-bottom: 10px;
   }
 }
 </style>
