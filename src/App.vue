@@ -41,6 +41,7 @@ export default {
       showNavigation: false,
       authListener: null, // 인증 리스너를 저장할 변수
       isSignupInProgress: false, // 🆕 회원가입 진행 중 플래그
+      isPasswordResetInProgress: false, // 🆕 비밀번호 재설정 진행 중 플래그
     }
   },
   created() {
@@ -48,6 +49,19 @@ export default {
     supabase.auth.getSession().then(({ data: { session } }) => {
       // 세션이 있는 경우 (브라우저를 새로 켠 경우)
       if (session) {
+        // 🆕 비밀번호 재설정 중인 경우 자동 로그아웃 방지
+        const currentPath = window.location.pathname;
+        const hashParams = new URLSearchParams(window.location.hash.slice(1));
+        const isPasswordRecovery = hashParams.get('type') === 'recovery' || 
+                                   currentPath === '/reset-password';
+        
+        if (isPasswordRecovery) {
+          console.log('비밀번호 재설정 세션 감지, 세션 유지')
+          this.isPasswordResetInProgress = true;
+          this.setUser(session);
+          return;
+        }
+        
         const shouldRemember = localStorage.getItem('rememberUser') === 'true';
         if (!shouldRemember) {
           // '상태 유지'가 아니면 즉시 로그아웃 처리
@@ -89,6 +103,23 @@ export default {
         return
       }
 
+      // 🆕 비밀번호 재설정 프로세스 중에는 자동 로그아웃 방지
+      if (event === 'PASSWORD_RECOVERY' || 
+          (this.$route?.path === '/reset-password' && event !== 'SIGNED_OUT')) {
+        console.log('비밀번호 재설정 중, 세션 유지')
+        this.isPasswordResetInProgress = true;
+        this.setUser(session);
+        return
+      }
+
+      // 🆕 비밀번호 재설정 완료 후 SIGNED_OUT 이벤트 처리
+      if (event === 'SIGNED_OUT' && this.isPasswordResetInProgress) {
+        console.log('비밀번호 재설정 완료, 플래그 초기화')
+        this.isPasswordResetInProgress = false;
+        this.setUser(session);
+        return
+      }
+
       // 일반적인 로그인/로그아웃 처리
       this.setUser(session);
     });
@@ -103,6 +134,13 @@ export default {
     setUser(session) {
       if (session && session.user) {
         console.log('사용자 세션 설정:', session.user.email)
+        
+        // 🆕 비밀번호 재설정 중에는 currentUser를 설정하지 않음
+        if (this.isPasswordResetInProgress) {
+          console.log('비밀번호 재설정 중, currentUser 설정 건너뛰기')
+          return;
+        }
+        
         this.currentUser = {
           id: session.user.id,
           email: session.user.email,
@@ -153,6 +191,11 @@ export default {
       // 🆕 회원가입 페이지를 떠날 때 플래그 초기화
       if (from.path === '/signup') {
         this.isSignupInProgress = false
+      }
+
+      // 🆕 비밀번호 재설정 페이지를 떠날 때 플래그 초기화
+      if (from.path === '/reset-password') {
+        this.isPasswordResetInProgress = false
       }
     }
   }
