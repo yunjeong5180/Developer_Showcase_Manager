@@ -426,7 +426,11 @@ export default {
           this.errors.email = "이메일 확인 중 오류가 발생했습니다"
           this.emailAvailable = false
         } else if (data.exists) {
-          this.errors.email = "이미 가입된 이메일입니다"
+          if (data.forbidden) {
+            this.errors.email = "사용할 수 없는 이메일입니다"
+          } else {
+            this.errors.email = "이미 가입된 이메일입니다"
+          }
           this.emailAvailable = false
         } else {
           this.errors.email = ""

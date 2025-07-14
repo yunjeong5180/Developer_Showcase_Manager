@@ -115,7 +115,7 @@ export const authAPI = {
       const forbiddenEmails = ['admin@test.com', 'test@example.com']
       if (forbiddenEmails.includes(email.toLowerCase())) {
         return {
-          data: { exists: true },
+          data: { exists: true, forbidden: true },
           error: null
         }
       }
