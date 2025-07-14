@@ -742,6 +742,227 @@ export const authAPI = {
   }
 }
 
+// 프로필 관련 API 함수들
+export const profileAPI = {
+  // 현재 사용자의 프로필 정보 조회
+  async getUserProfile(authUserId) {
+    try {
+      console.log('사용자 프로필 조회:', authUserId)
+
+      const { data, error } = await supabase
+        .from('users')
+        .select(`
+          id,
+          email,
+          name,
+          nickname,
+          title,
+          one_liner,
+          bio,
+          profile_image_url,
+          github_url,
+          linkedin_url,
+          portfolio_url,
+          blog_url,
+          phone,
+          location,
+          skills,
+          created_at,
+          updated_at
+        `)
+        .eq('auth_user_id', authUserId)
+        .single()
+
+      if (error) {
+        console.error('프로필 조회 오류:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: null
+        }
+      }
+
+      console.log('프로필 조회 성공:', data)
+      return {
+        success: true,
+        error: null,
+        data: data
+      }
+
+    } catch (error) {
+      console.error('프로필 조회 예외:', error)
+      return {
+        success: false,
+        error: `프로필 조회 중 오류가 발생했습니다: ${error.message}`,
+        data: null
+      }
+    }
+  },
+
+  // 프로필 정보 업데이트
+  async updateUserProfile(authUserId, profileData) {
+    try {
+      console.log('프로필 업데이트:', authUserId, profileData)
+
+      const updateData = {
+        name: profileData.name?.trim(),
+        title: profileData.title?.trim() || null,
+        one_liner: profileData.oneLiner?.trim() || null,
+        bio: profileData.bio?.trim() || null,
+        profile_image_url: profileData.profileImage || null,
+        github_url: profileData.githubUrl?.trim() || null,
+        linkedin_url: profileData.linkedinUrl?.trim() || null,
+        portfolio_url: profileData.portfolioUrl?.trim() || null,
+        blog_url: profileData.blogUrl?.trim() || null,
+        phone: profileData.phone?.trim() || null,
+        location: profileData.location?.trim() || null,
+        skills: profileData.skills || [],
+        updated_at: new Date().toISOString()
+      }
+
+      const { data, error } = await supabase
+        .from('users')
+        .update(updateData)
+        .eq('auth_user_id', authUserId)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('프로필 업데이트 오류:', error)
+        return {
+          success: false,
+          error: error.message,
+          data: null
+        }
+      }
+
+      console.log('프로필 업데이트 성공:', data)
+      return {
+        success: true,
+        error: null,
+        data: data
+      }
+
+    } catch (error) {
+      console.error('프로필 업데이트 예외:', error)
+      return {
+        success: false,
+        error: `프로필 업데이트 중 오류가 발생했습니다: ${error.message}`,
+        data: null
+      }
+    }
+  },
+
+  // 프로필 이미지 업로드 (Supabase Storage)
+  async uploadProfileImage(authUserId, imageFile) {
+    try {
+      console.log('프로필 이미지 업로드:', authUserId, imageFile.name)
+
+      // 파일 확장자 검증
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+      if (!allowedTypes.includes(imageFile.type)) {
+        return {
+          success: false,
+          error: 'JPG, PNG, WebP 형식의 이미지만 업로드 가능합니다.',
+          data: null
+        }
+      }
+
+      // 파일 크기 검증 (5MB 제한)
+      const maxSize = 5 * 1024 * 1024 // 5MB
+      if (imageFile.size > maxSize) {
+        return {
+          success: false,
+          error: '이미지 크기는 5MB 이하여야 합니다.',
+          data: null
+        }
+      }
+
+      // 고유한 파일명 생성
+      const fileExt = imageFile.name.split('.').pop()
+      const fileName = `${authUserId}/profile.${fileExt}`
+
+      // 기존 파일이 있다면 삭제
+      try {
+        await supabase.storage
+          .from('profile-images')
+          .remove([fileName])
+      } catch (deleteError) {
+        console.log('기존 파일 삭제 시도 (무시 가능):', deleteError.message)
+      }
+
+      // 새 파일 업로드
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(fileName, imageFile, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (uploadError) {
+        console.error('이미지 업로드 오류:', uploadError)
+        return {
+          success: false,
+          error: uploadError.message,
+          data: null
+        }
+      }
+
+      // 공개 URL 생성
+      const { data: urlData } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(fileName)
+
+      console.log('이미지 업로드 성공:', urlData.publicUrl)
+      return {
+        success: true,
+        error: null,
+        data: {
+          path: uploadData.path,
+          publicUrl: urlData.publicUrl
+        }
+      }
+
+    } catch (error) {
+      console.error('이미지 업로드 예외:', error)
+      return {
+        success: false,
+        error: `이미지 업로드 중 오류가 발생했습니다: ${error.message}`,
+        data: null
+      }
+    }
+  },
+
+  // 프로필 이미지 삭제
+  async deleteProfileImage(authUserId) {
+    try {
+      console.log('프로필 이미지 삭제:', authUserId)
+
+      // 가능한 확장자들로 삭제 시도
+      const extensions = ['jpg', 'jpeg', 'png', 'webp']
+      const deletePromises = extensions.map(ext => 
+        supabase.storage
+          .from('profile-images')
+          .remove([`${authUserId}/profile.${ext}`])
+      )
+
+      await Promise.all(deletePromises)
+
+      return {
+        success: true,
+        error: null
+      }
+
+    } catch (error) {
+      console.error('이미지 삭제 예외:', error)
+      return {
+        success: false,
+        error: `이미지 삭제 중 오류가 발생했습니다: ${error.message}`
+      }
+    }
+  }
+}
+
 // 마이그레이션 함수들
 export const migrationAPI = {
   // 기존 auth.users 데이터를 users 테이블로 마이그레이션
