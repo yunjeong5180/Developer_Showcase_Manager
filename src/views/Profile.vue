@@ -197,6 +197,9 @@
                 <button type="button" @click="addSkill" class="add-skill-btn">
                   +
                 </button>
+                <button type="button" @click="openSkillsModal" class="modal-skill-btn">
+                  🛠️ 선택
+                </button>
               </div>
               <div class="skills-list">
                 <span
@@ -204,7 +207,7 @@
                   :key="index"
                   class="skill-tag"
                 >
-                  {{ skill }}
+                  {{ getSkillEmoji(skill) }} {{ skill }}
                   <button
                     type="button"
                     @click="removeSkill(index)"
@@ -255,7 +258,7 @@
               :key="skill"
               class="preview-skill-tag"
             >
-              {{ skill }}
+              {{ getSkillEmoji(skill) }} {{ skill }}
             </span>
           </div>
         </div>
@@ -279,14 +282,26 @@
         </div>
       </div>
     </div>
+
+    <!-- 기술 스택 선택 모달 -->
+    <SkillsModal
+      v-if="showSkillsModal"
+      :initial-skills="profileForm.skills"
+      @save="handleSkillsSelected"
+      @close="showSkillsModal = false"
+    />
   </div>
 </template>
 
 <script>
 import { authAPI, profileAPI } from '@/config/supabase'
+import SkillsModal from '@/components/SkillsModal.vue'
 
 export default {
   name: "ProfilePage",
+  components: {
+    SkillsModal
+  },
   data() {
     return {
       profileForm: {
@@ -313,7 +328,8 @@ export default {
         text: '',
         type: ''
       },
-      defaultAvatar: "https://placehold.co/150x150/42b883/ffffff?text=👤"
+      defaultAvatar: "https://placehold.co/150x150/42b883/ffffff?text=👤",
+      showSkillsModal: false
     };
   },
   
@@ -467,6 +483,77 @@ export default {
     // 기술 스택 삭제
     removeSkill(index) {
       this.profileForm.skills.splice(index, 1)
+    },
+
+    // 기술 스택 모달 열기
+    openSkillsModal() {
+      this.showSkillsModal = true
+    },
+
+    // 모달에서 선택된 기술들 처리
+    handleSkillsSelected(selectedSkills) {
+      this.profileForm.skills = [...selectedSkills]
+      this.showSkillsModal = false
+      
+      // 성공 메시지 표시
+      this.message = {
+        text: `${selectedSkills.length}개의 기술이 선택되었습니다.`,
+        type: 'success'
+      }
+      
+      // 메시지 자동 제거
+      setTimeout(() => {
+        this.message = { text: '', type: '' }
+      }, 2000)
+    },
+
+    // 기술 스택 이모티콘 가져오기
+    getSkillEmoji(skillName) {
+      // 기술 스택 이모티콘 매핑 (SkillsModal과 동일한 데이터)
+      const skillsEmojiMap = {
+        // Frontend
+        'Vue.js': '💚', 'React': '⚛️', 'Angular': '🅰️', 'Svelte': '🔥', 'Next.js': '▲', 'Nuxt.js': '💚',
+        'JavaScript': '🟨', 'TypeScript': '🔷', 'HTML5': '🧡', 'CSS3': '💙', 'Sass': '💗', 'Less': '🔵',
+        'Tailwind CSS': '🌊', 'Bootstrap': '🅱️', 'Material-UI': '🎨', 'Ant Design': '🐜', 'jQuery': '💛',
+        'Alpine.js': '🏔️', 'Stimulus': '⚡', 'Ember.js': '🔥',
+        
+        // Backend
+        'Node.js': '💚', 'Express.js': '🚂', 'NestJS': '🐱', 'Fastify': '⚡', 'Koa.js': '🥥',
+        'Python': '🐍', 'Django': '🎸', 'FastAPI': '🚀', 'Flask': '🌶️', 'Tornado': '🌪️',
+        'Java': '☕', 'Spring Boot': '🍃', 'Spring MVC': '🍃', 'Hibernate': '💤',
+        'C#': '🔷', '.NET Core': '🌐', '.NET Framework': '🌐', 'ASP.NET': '🌐',
+        'PHP': '🐘', 'Laravel': '🎭', 'Symfony': '🎼', 'CodeIgniter': '🔥',
+        'Ruby': '💎', 'Ruby on Rails': '🚄', 'Sinatra': '🎤',
+        'Go': '🐹', 'Gin': '🍸', 'Echo': '📢', 'Rust': '🦀', 'Actix': '🎭',
+        
+        // Database
+        'MySQL': '🐬', 'PostgreSQL': '🐘', 'SQLite': '🪶', 'MariaDB': '🌊',
+        'MongoDB': '🍃', 'Redis': '🔴', 'Cassandra': '💍', 'CouchDB': '🛋️',
+        'Oracle': '🔮', 'MS SQL Server': '🔷', 'DynamoDB': '⚡',
+        'Elasticsearch': '🔍', 'Neo4j': '🕸️', 'InfluxDB': '📈',
+        
+        // DevOps
+        'Docker': '🐳', 'Kubernetes': '☸️', 'Docker Compose': '🐙',
+        'AWS': '☁️', 'Azure': '☁️', 'Google Cloud': '☁️', 'Heroku': '💜', 'Vercel': '▲',
+        'Jenkins': '👨‍🔧', 'GitLab CI/CD': '🦊', 'GitHub Actions': '🤖', 'CircleCI': '⭕',
+        'Terraform': '🏗️', 'Ansible': '🔴', 'Chef': '👨‍🍳', 'Puppet': '🎭',
+        'Nginx': '🌐', 'Apache': '🪶', 'Git': '🌿', 'SVN': '📁',
+        
+        // Mobile
+        'React Native': '📱', 'Flutter': '🦋', 'Ionic': '⚡', 'Cordova': '📱',
+        'Swift': '🍎', 'Objective-C': '🍎', 'Kotlin': '🤖', 'Java Android': '🤖',
+        'Xamarin': '🔷', 'Unity': '🎮', 'Unreal Engine': '🎮',
+        
+        // Other
+        'GraphQL': '📊', 'REST API': '🌐', 'WebSockets': '🔌', 'gRPC': '📡',
+        'Webpack': '📦', 'Vite': '⚡', 'Rollup': '📦', 'Parcel': '📦',
+        'Babel': '🔄', 'ESLint': '🔍', 'Prettier': '💅',
+        'Jest': '🃏', 'Mocha': '☕', 'Cypress': '🌲', 'Selenium': '🤖',
+        'Figma': '🎨', 'Adobe XD': '🎨', 'Sketch': '✏️', 'Photoshop': '🖼️',
+        'Machine Learning': '🤖', 'TensorFlow': '🧠', 'PyTorch': '🔥'
+      }
+      
+      return skillsEmojiMap[skillName] || '🔧'
     },
 
     // URL 유효성 검사
@@ -761,6 +848,22 @@ export default {
 
 .add-skill-btn:hover {
   background: #369870;
+}
+
+.modal-skill-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+}
+
+.modal-skill-btn:hover {
+  background: #0056b3;
 }
 
 .skills-list {
