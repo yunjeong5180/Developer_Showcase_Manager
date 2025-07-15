@@ -140,8 +140,8 @@ export default {
           localStorage.setItem('rememberUser', 'true')
           localStorage.setItem('userEmail', this.email)
         } else {
-          localStorage.setItem('rememberUser', 'false')
-          localStorage.removeItem('userEmail')
+          localStorage.setItem('rememberUser', 'true')  // ✅ 기본적으로 세션 유지
+          localStorage.removeItem('userEmail')  // 이메일만 기억 안함
         }
 
         // Supabase로 로그인 시도

@@ -62,16 +62,8 @@ export default {
           return;
         }
         
-        const shouldRemember = localStorage.getItem('rememberUser') === 'true';
-        if (!shouldRemember) {
-          // '상태 유지'가 아니면 즉시 로그아웃 처리
-          console.log('상태 유지 안함, 자동 로그아웃')
-          supabase.auth.signOut();
-        } else {
-          // '상태 유지'인 경우, 사용자 정보를 설정
-          console.log('상태 유지 모드, 사용자 세션 설정')
-          this.setUser(session);
-        }
+        // 세션이 있으면 바로 사용자 설정 (강제 로그아웃 로직 제거)
+        this.setUser(session);
       }
     });
 
