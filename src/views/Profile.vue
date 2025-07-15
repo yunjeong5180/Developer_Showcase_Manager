@@ -5,7 +5,18 @@
       <p>개인 정보와 포트폴리오 설정을 관리하세요</p>
     </div>
 
-    <div class="profile-container">
+    <!-- 로딩 상태 -->
+    <div v-if="isLoading" class="loading-container">
+      <div class="loading-spinner"></div>
+      <p>프로필 정보를 불러오는 중...</p>
+    </div>
+
+    <!-- 메시지 표시 -->
+    <div v-if="message.text" :class="`message ${message.type}`">
+      {{ message.text }}
+    </div>
+
+    <div v-if="!isLoading" class="profile-container">
       <div class="profile-photo-section">
         <div class="photo-container">
           <img
@@ -42,8 +53,10 @@
                 v-model="profileForm.name"
                 type="text"
                 placeholder="예: 홍길동"
+                :class="{ 'error': errors.name }"
                 required
               />
+              <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
             </div>
 
             <div class="form-group">
@@ -103,7 +116,9 @@
                 v-model="profileForm.githubUrl"
                 type="url"
                 placeholder="https://github.com/username"
+                :class="{ 'error': errors.githubUrl }"
               />
+              <span v-if="errors.githubUrl" class="error-message">{{ errors.githubUrl }}</span>
             </div>
 
             <div class="form-group">
@@ -113,7 +128,9 @@
                 v-model="profileForm.linkedinUrl"
                 type="url"
                 placeholder="https://linkedin.com/in/username"
+                :class="{ 'error': errors.linkedinUrl }"
               />
+              <span v-if="errors.linkedinUrl" class="error-message">{{ errors.linkedinUrl }}</span>
             </div>
 
             <div class="form-group">
@@ -123,7 +140,9 @@
                 v-model="profileForm.portfolioUrl"
                 type="url"
                 placeholder="https://your-website.com"
+                :class="{ 'error': errors.portfolioUrl }"
               />
+              <span v-if="errors.portfolioUrl" class="error-message">{{ errors.portfolioUrl }}</span>
             </div>
 
             <div class="form-group">
@@ -133,7 +152,9 @@
                 v-model="profileForm.blogUrl"
                 type="url"
                 placeholder="https://your-blog.com"
+                :class="{ 'error': errors.blogUrl }"
               />
+              <span v-if="errors.blogUrl" class="error-message">{{ errors.blogUrl }}</span>
             </div>
           </div>
 
@@ -176,6 +197,9 @@
                 <button type="button" @click="addSkill" class="add-skill-btn">
                   +
                 </button>
+                <button type="button" @click="openSkillsModal" class="modal-skill-btn">
+                  🛠️ 선택
+                </button>
               </div>
               <div class="skills-list">
                 <span
@@ -183,7 +207,7 @@
                   :key="index"
                   class="skill-tag"
                 >
-                  {{ skill }}
+                  {{ getSkillEmoji(skill) }} {{ skill }}
                   <button
                     type="button"
                     @click="removeSkill(index)"
@@ -205,7 +229,7 @@
       </div>
     </div>
 
-    <div class="preview-section">
+    <div v-if="!isLoading" class="preview-section">
       <h3>포트폴리오 미리보기</h3>
       <div class="portfolio-preview">
         <div class="preview-header">
@@ -234,7 +258,7 @@
               :key="skill"
               class="preview-skill-tag"
             >
-              {{ skill }}
+              {{ getSkillEmoji(skill) }} {{ skill }}
             </span>
           </div>
         </div>
@@ -258,64 +282,394 @@
         </div>
       </div>
     </div>
+
+    <!-- 기술 스택 선택 모달 -->
+    <SkillsModal
+      v-if="showSkillsModal"
+      :initial-skills="profileForm.skills"
+      @save="handleSkillsSelected"
+      @close="showSkillsModal = false"
+    />
   </div>
 </template>
 
 <script>
+import { authAPI, profileAPI } from '@/config/supabase'
+import SkillsModal from '@/components/SkillsModal.vue'
+
 export default {
   name: "ProfilePage",
+  components: {
+    SkillsModal
+  },
   data() {
     return {
       profileForm: {
-        name: "홍길동",
-        email: "hong@example.com",
-        title: "Frontend Developer",
-        oneLiner: "사용자 경험을 중시하는 프론트엔드 개발자입니다",
-        bio: "3년차 프론트엔드 개발자로, Vue.js와 React를 주로 사용합니다. 사용자 중심의 인터페이스 설계에 관심이 많으며, 깔끔하고 직관적인 웹 애플리케이션을 만드는 것을 좋아합니다.",
+        name: "",
+        email: "",
+        title: "",
+        oneLiner: "",
+        bio: "",
         profileImage: null,
-        githubUrl: "https://github.com/example",
+        githubUrl: "",
         linkedinUrl: "",
         portfolioUrl: "",
         blogUrl: "",
         phone: "",
-        location: "서울, 대한민국",
-        skills: ["Vue.js", "JavaScript", "CSS3", "HTML5", "Git"]
+        location: "",
+        skills: []
       },
       newSkill: "",
       isSaving: false,
-      defaultAvatar: "https://placehold.co/150x150/42b883/ffffff?text=👤"
+      isLoading: true,
+      currentUser: null,
+      errors: {},
+      message: {
+        text: '',
+        type: ''
+      },
+      defaultAvatar: "https://placehold.co/150x150/42b883/ffffff?text=👤",
+      showSkillsModal: false
     };
   },
+  
+  async mounted() {
+    await this.loadUserProfile()
+  },
   methods: {
-    handlePhotoUpload(event) {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
+    // 사용자 프로필 로드
+    async loadUserProfile() {
+      try {
+        this.isLoading = true
+        console.log('프로필 페이지 로드 시작')
+
+        // 현재 로그인된 사용자 정보 가져오기
+        this.currentUser = await authAPI.getCurrentUser()
+        
+        if (!this.currentUser) {
+          console.error('로그인된 사용자 없음')
+          this.$router.push('/login')
+          return
+        }
+
+        console.log('현재 사용자:', this.currentUser.email)
+
+        // 사용자 프로필 정보 조회
+        const result = await profileAPI.getUserProfile(this.currentUser.id)
+        
+        if (result.success && result.data) {
+          // DB에서 가져온 데이터를 폼에 설정
+          const userData = result.data
+          this.profileForm = {
+            name: userData.name || '',
+            email: userData.email || '',
+            title: userData.title || '',
+            oneLiner: userData.one_liner || '',
+            bio: userData.bio || '',
+            profileImage: userData.profile_image_url || null,
+            githubUrl: userData.github_url || '',
+            linkedinUrl: userData.linkedin_url || '',
+            portfolioUrl: userData.portfolio_url || '',
+            blogUrl: userData.blog_url || '',
+            phone: userData.phone || '',
+            location: userData.location || '',
+            skills: userData.skills || []
+          }
+          
+          console.log('프로필 데이터 로드 완료:', this.profileForm)
+        } else {
+          console.warn('프로필 데이터 조회 실패:', result.error)
+          // 기본값으로 현재 사용자 정보 설정
+          this.profileForm.email = this.currentUser.email
+          this.profileForm.name = this.currentUser.user_metadata?.full_name || this.currentUser.user_metadata?.name || ''
+        }
+
+      } catch (error) {
+        console.error('프로필 로드 오류:', error)
+        this.message = {
+          text: '프로필 정보를 불러오는 중 오류가 발생했습니다.',
+          type: 'error'
+        }
+      } finally {
+        this.isLoading = false
+      }
+    },
+
+    // 프로필 사진 업로드 처리
+    async handlePhotoUpload(event) {
+      const file = event.target.files[0]
+      if (!file) return
+
+      try {
+        // 파일 유효성 검사
+        if (!this.validateImageFile(file)) return
+
+        // 미리보기 설정
+        const reader = new FileReader()
         reader.onload = (e) => {
-          this.profileForm.profileImage = e.target.result;
-        };
-        reader.readAsDataURL(file);
+          this.profileForm.profileImage = e.target.result
+        }
+        reader.readAsDataURL(file)
+
+        // 실제 파일은 나중에 저장 시 업로드
+        this.profileImageFile = file
+
+      } catch (error) {
+        console.error('이미지 처리 오류:', error)
+        this.message = {
+          text: '이미지 처리 중 오류가 발생했습니다.',
+          type: 'error'
+        }
       }
     },
+
+    // 이미지 파일 유효성 검사
+    validateImageFile(file) {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+      const maxSize = 5 * 1024 * 1024 // 5MB
+
+      if (!allowedTypes.includes(file.type)) {
+        this.message = {
+          text: 'JPG, PNG, WebP 형식의 이미지만 업로드 가능합니다.',
+          type: 'error'
+        }
+        return false
+      }
+
+      if (file.size > maxSize) {
+        this.message = {
+          text: '이미지 크기는 5MB 이하여야 합니다.',
+          type: 'error'
+        }
+        return false
+      }
+
+      return true
+    },
+
+    // 기술 스택 추가
     addSkill() {
-      if (this.newSkill.trim() && !this.profileForm.skills.includes(this.newSkill.trim())) {
-        this.profileForm.skills.push(this.newSkill.trim());
-        this.newSkill = "";
+      const skill = this.newSkill.trim()
+      
+      if (!skill) {
+        this.message = {
+          text: '기술명을 입력해주세요.',
+          type: 'error'
+        }
+        return
+      }
+
+      if (this.profileForm.skills.includes(skill)) {
+        this.message = {
+          text: '이미 추가된 기술입니다.',
+          type: 'error'
+        }
+        return
+      }
+
+      if (this.profileForm.skills.length >= 20) {
+        this.message = {
+          text: '기술 스택은 최대 20개까지 추가할 수 있습니다.',
+          type: 'error'
+        }
+        return
+      }
+
+      this.profileForm.skills.push(skill)
+      this.newSkill = ""
+      this.message = { text: '', type: '' }
+    },
+
+    // 기술 스택 삭제
+    removeSkill(index) {
+      this.profileForm.skills.splice(index, 1)
+    },
+
+    // 기술 스택 모달 열기
+    openSkillsModal() {
+      this.showSkillsModal = true
+    },
+
+    // 모달에서 선택된 기술들 처리
+    handleSkillsSelected(selectedSkills) {
+      this.profileForm.skills = [...selectedSkills]
+      this.showSkillsModal = false
+      
+      // 성공 메시지 표시
+      this.message = {
+        text: `${selectedSkills.length}개의 기술이 선택되었습니다.`,
+        type: 'success'
+      }
+      
+      // 메시지 자동 제거
+      setTimeout(() => {
+        this.message = { text: '', type: '' }
+      }, 2000)
+    },
+
+    // 기술 스택 이모티콘 가져오기
+    getSkillEmoji(skillName) {
+      // 기술 스택 이모티콘 매핑 (SkillsModal과 동일한 데이터)
+      const skillsEmojiMap = {
+        // Frontend
+        'Vue.js': '💚', 'React': '⚛️', 'Angular': '🅰️', 'Svelte': '🔥', 'Next.js': '▲', 'Nuxt.js': '💚',
+        'JavaScript': '🟨', 'TypeScript': '🔷', 'HTML5': '🧡', 'CSS3': '💙', 'Sass': '💗', 'Less': '🔵',
+        'Tailwind CSS': '🌊', 'Bootstrap': '🅱️', 'Material-UI': '🎨', 'Ant Design': '🐜', 'jQuery': '💛',
+        'Alpine.js': '🏔️', 'Stimulus': '⚡', 'Ember.js': '🔥',
+        
+        // Backend
+        'Node.js': '💚', 'Express.js': '🚂', 'NestJS': '🐱', 'Fastify': '⚡', 'Koa.js': '🥥',
+        'Python': '🐍', 'Django': '🎸', 'FastAPI': '🚀', 'Flask': '🌶️', 'Tornado': '🌪️',
+        'Java': '☕', 'Spring Boot': '🍃', 'Spring MVC': '🍃', 'Hibernate': '💤',
+        'C#': '🔷', '.NET Core': '🌐', '.NET Framework': '🌐', 'ASP.NET': '🌐',
+        'PHP': '🐘', 'Laravel': '🎭', 'Symfony': '🎼', 'CodeIgniter': '🔥',
+        'Ruby': '💎', 'Ruby on Rails': '🚄', 'Sinatra': '🎤',
+        'Go': '🐹', 'Gin': '🍸', 'Echo': '📢', 'Rust': '🦀', 'Actix': '🎭',
+        
+        // Database
+        'MySQL': '🐬', 'PostgreSQL': '🐘', 'SQLite': '🪶', 'MariaDB': '🌊',
+        'MongoDB': '🍃', 'Redis': '🔴', 'Cassandra': '💍', 'CouchDB': '🛋️',
+        'Oracle': '🔮', 'MS SQL Server': '🔷', 'DynamoDB': '⚡',
+        'Elasticsearch': '🔍', 'Neo4j': '🕸️', 'InfluxDB': '📈',
+        
+        // DevOps
+        'Docker': '🐳', 'Kubernetes': '☸️', 'Docker Compose': '🐙',
+        'AWS': '☁️', 'Azure': '☁️', 'Google Cloud': '☁️', 'Heroku': '💜', 'Vercel': '▲',
+        'Jenkins': '👨‍🔧', 'GitLab CI/CD': '🦊', 'GitHub Actions': '🤖', 'CircleCI': '⭕',
+        'Terraform': '🏗️', 'Ansible': '🔴', 'Chef': '👨‍🍳', 'Puppet': '🎭',
+        'Nginx': '🌐', 'Apache': '🪶', 'Git': '🌿', 'SVN': '📁',
+        
+        // Mobile
+        'React Native': '📱', 'Flutter': '🦋', 'Ionic': '⚡', 'Cordova': '📱',
+        'Swift': '🍎', 'Objective-C': '🍎', 'Kotlin': '🤖', 'Java Android': '🤖',
+        'Xamarin': '🔷', 'Unity': '🎮', 'Unreal Engine': '🎮',
+        
+        // Other
+        'GraphQL': '📊', 'REST API': '🌐', 'WebSockets': '🔌', 'gRPC': '📡',
+        'Webpack': '📦', 'Vite': '⚡', 'Rollup': '📦', 'Parcel': '📦',
+        'Babel': '🔄', 'ESLint': '🔍', 'Prettier': '💅',
+        'Jest': '🃏', 'Mocha': '☕', 'Cypress': '🌲', 'Selenium': '🤖',
+        'Figma': '🎨', 'Adobe XD': '🎨', 'Sketch': '✏️', 'Photoshop': '🖼️',
+        'Machine Learning': '🤖', 'TensorFlow': '🧠', 'PyTorch': '🔥'
+      }
+      
+      return skillsEmojiMap[skillName] || '🔧'
+    },
+
+    // URL 유효성 검사
+    validateUrl(url) {
+      if (!url) return true // 빈 값은 허용
+      
+      try {
+        new URL(url)
+        return true
+      } catch {
+        return false
       }
     },
-    removeSkill(index) {
-      this.profileForm.skills.splice(index, 1);
+
+    // 폼 유효성 검사
+    validateForm() {
+      this.errors = {}
+      let isValid = true
+
+      // 이름 검증
+      if (!this.profileForm.name.trim()) {
+        this.errors.name = '이름은 필수입니다.'
+        isValid = false
+      }
+
+      // URL 검증
+      const urlFields = ['githubUrl', 'linkedinUrl', 'portfolioUrl', 'blogUrl']
+      urlFields.forEach(field => {
+        if (this.profileForm[field] && !this.validateUrl(this.profileForm[field])) {
+          this.errors[field] = '올바른 URL 형식을 입력해주세요.'
+          isValid = false
+        }
+      })
+
+      // GitHub URL 특별 검증
+      if (this.profileForm.githubUrl && !this.profileForm.githubUrl.includes('github.com')) {
+        this.errors.githubUrl = 'GitHub URL을 입력해주세요.'
+        isValid = false
+      }
+
+      // LinkedIn URL 특별 검증
+      if (this.profileForm.linkedinUrl && !this.profileForm.linkedinUrl.includes('linkedin.com')) {
+        this.errors.linkedinUrl = 'LinkedIn URL을 입력해주세요.'
+        isValid = false
+      }
+
+      return isValid
     },
+
+    // 프로필 저장
     async handleSubmit() {
-      this.isSaving = true;
+      if (!this.validateForm()) {
+        this.message = {
+          text: '입력 정보를 확인해주세요.',
+          type: 'error'
+        }
+        return
+      }
 
-      // 임시 저장 로직 (나중에 API 연동)
-      console.log("프로필 저장:", this.profileForm);
+      this.isSaving = true
+      this.message = { text: '', type: '' }
 
-      setTimeout(() => {
-        this.isSaving = false;
-        alert("프로필이 성공적으로 저장되었습니다!");
-      }, 1000);
+      try {
+        console.log('프로필 저장 시작')
+
+        // 1. 이미지 업로드 (새 이미지가 있는 경우)
+        if (this.profileImageFile) {
+          console.log('이미지 업로드 중...')
+          const uploadResult = await profileAPI.uploadProfileImage(
+            this.currentUser.id, 
+            this.profileImageFile
+          )
+
+          if (uploadResult.success) {
+            this.profileForm.profileImage = uploadResult.data.publicUrl
+            console.log('이미지 업로드 성공:', uploadResult.data.publicUrl)
+          } else {
+            throw new Error(uploadResult.error)
+          }
+        }
+
+        // 2. 프로필 정보 업데이트
+        console.log('프로필 정보 업데이트 중...')
+        const updateResult = await profileAPI.updateUserProfile(
+          this.currentUser.id, 
+          this.profileForm
+        )
+
+        if (updateResult.success) {
+          console.log('프로필 업데이트 성공')
+          this.message = {
+            text: '프로필이 성공적으로 저장되었습니다!',
+            type: 'success'
+          }
+          
+          // 업로드된 파일 참조 제거
+          this.profileImageFile = null
+          
+          // 성공 메시지 3초 후 제거
+          setTimeout(() => {
+            this.message = { text: '', type: '' }
+          }, 3000)
+          
+        } else {
+          throw new Error(updateResult.error)
+        }
+
+      } catch (error) {
+        console.error('프로필 저장 오류:', error)
+        this.message = {
+          text: `프로필 저장 중 오류가 발생했습니다: ${error.message}`,
+          type: 'error'
+        }
+      } finally {
+        this.isSaving = false
+      }
     }
   }
 };
@@ -496,6 +850,22 @@ export default {
   background: #369870;
 }
 
+.modal-skill-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+}
+
+.modal-skill-btn:hover {
+  background: #0056b3;
+}
+
 .skills-list {
   display: flex;
   flex-wrap: wrap;
@@ -644,6 +1014,65 @@ export default {
 
 .preview-links-list a:hover {
   text-decoration: underline;
+}
+
+/* 로딩 및 메시지 스타일 */
+.loading-container {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #42b883;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.message {
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.85rem;
+  margin-top: 5px;
+  display: block;
+}
+
+.form-group input.error,
+.form-group textarea.error {
+  border-color: #dc3545;
+}
+
+.form-group input.error:focus,
+.form-group textarea.error:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
 /* 반응형 */
