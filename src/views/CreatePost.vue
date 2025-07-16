@@ -3,6 +3,28 @@
     <div class="page-header">
       <h1>✏️ 새 프로젝트 추가</h1>
       <p>포트폴리오에 새로운 프로젝트를 추가하세요</p>
+      
+      <!-- 임시 저장 상태 표시 -->
+      <div v-if="isDraft" class="draft-status">
+        💾 임시 저장됨 ({{ formatLastSaved() }})
+      </div>
+    </div>
+
+    <!-- 공통 토스트 메시지 -->
+    <ToastMessage :message="message" @close="clearMessage" />
+    
+    <!-- 공통 로딩 스피너 -->
+    <LoadingSpinner v-if="loading" :message="loadingMessage" :overlay="true" />
+
+    <!-- 진행률 바 -->
+    <div v-if="showProgress" class="progress-container">
+      <div class="progress-info">
+        <span class="progress-text">{{ currentStep }}</span>
+        <span class="progress-percentage">{{ uploadProgress }}%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" :style="{ width: uploadProgress + '%' }"></div>
+      </div>
     </div>
 
     <div class="form-container">
@@ -16,7 +38,10 @@
             type="text"
             placeholder="예: Todo List App"
             required
+            @input="onFormChange"
+            :class="{ 'error': errors.title }"
           />
+          <div v-if="errors.title" class="field-error">{{ errors.title }}</div>
         </div>
 
         <!-- 프로젝트 설명 -->
@@ -28,7 +53,10 @@
             rows="4"
             placeholder="프로젝트에 대한 간단한 설명을 작성해주세요"
             required
+            @input="onFormChange"
+            :class="{ 'error': errors.description }"
           ></textarea>
+          <div v-if="errors.description" class="field-error">{{ errors.description }}</div>
         </div>
 
         <!-- 배포 URL -->
@@ -39,7 +67,10 @@
             v-model="projectForm.projectUrl"
             type="url"
             placeholder="https://your-project.com"
+            @input="onFormChange"
+            :class="{ 'error': errors.projectUrl }"
           />
+          <div v-if="errors.projectUrl" class="field-error">{{ errors.projectUrl }}</div>
         </div>
 
         <!-- GitHub URL -->
@@ -50,7 +81,10 @@
             v-model="projectForm.githubUrl"
             type="url"
             placeholder="https://github.com/username/repository"
+            @input="onFormChange"
+            :class="{ 'error': errors.githubUrl }"
           />
+          <div v-if="errors.githubUrl" class="field-error">{{ errors.githubUrl }}</div>
         </div>
 
         <!-- 프로젝트 기간 -->
@@ -62,7 +96,10 @@
               v-model="projectForm.startDate"
               type="date"
               required
+              @change="onFormChange"
+              :class="{ 'error': errors.startDate }"
             />
+            <div v-if="errors.startDate" class="field-error">{{ errors.startDate }}</div>
           </div>
           <div class="form-group">
             <label for="endDate">종료일</label>
@@ -70,15 +107,18 @@
               id="endDate"
               v-model="projectForm.endDate"
               type="date"
+              @change="onFormChange"
+              :class="{ 'error': errors.endDate }"
             />
             <small>진행 중인 프로젝트는 비워두세요</small>
+            <div v-if="errors.endDate" class="field-error">{{ errors.endDate }}</div>
           </div>
         </div>
 
         <!-- 대표 이미지 -->
         <div class="form-group">
           <label for="mainImage">대표 이미지</label>
-          <div class="file-upload-area">
+          <div class="file-upload-area" :class="{ 'error': errors.mainImage }">
             <input
               id="mainImage"
               type="file"
@@ -88,7 +128,7 @@
             />
             <div class="upload-placeholder">
               <span v-if="!projectForm.imagePreview">
-                📷 이미지를 선택하거나 드래그해주세요
+                📷 이미지를 선택하거나 드래그해주세요 (최대 10MB)
               </span>
               <img
                 v-else
@@ -98,6 +138,7 @@
               />
             </div>
           </div>
+          <div v-if="errors.mainImage" class="field-error">{{ errors.mainImage }}</div>
         </div>
 
         <!-- 기술 스택 -->
@@ -109,11 +150,13 @@
               type="text"
               placeholder="기술 이름을 입력하고 Enter 또는 + 버튼을 누르세요"
               @keyup.enter="addTechStack"
+              :class="{ 'error': errors.techStack }"
             />
             <button type="button" @click="addTechStack" class="add-tech-btn">
               +
             </button>
           </div>
+          <div v-if="errors.techStack" class="field-error">{{ errors.techStack }}</div>
           <div class="tech-stack-list">
             <span
               v-for="(tech, index) in projectForm.techStack"
@@ -130,13 +173,28 @@
               </button>
             </span>
           </div>
+          <small v-if="projectForm.techStack.length > 0">
+            {{ projectForm.techStack.length }}/10 기술 스택 추가됨
+          </small>
         </div>
 
         <!-- 제출 버튼 -->
         <div class="form-actions">
           <router-link to="/post-list" class="btn-cancel">취소</router-link>
+          <button 
+            type="button" 
+            @click="saveDraft" 
+            class="btn-draft"
+            :disabled="isSubmitting"
+          >
+            💾 임시 저장
+          </button>
           <button type="submit" class="btn-submit" :disabled="isSubmitting">
-            {{ isSubmitting ? "저장 중..." : "프로젝트 저장" }}
+            <span v-if="isSubmitting">
+              <span class="loading-spinner"></span>
+              저장 중...
+            </span>
+            <span v-else>🚀 프로젝트 저장</span>
           </button>
         </div>
       </form>
@@ -157,8 +215,19 @@
 </template>
 
 <script>
+import { projectAPI } from '@/services/projectService'
+import { imageAPI } from '@/services/imageService'
+import { messageMixin, loadingMixin } from "@/utils/messageUtils";
+import ToastMessage from "@/components/ToastMessage.vue";
+import LoadingSpinner from "@/components/LoadingSpinner.vue";
+
 export default {
   name: "CreatePostPage",
+  mixins: [messageMixin, loadingMixin],
+  components: {
+    ToastMessage,
+    LoadingSpinner
+  },
   data() {
     return {
       projectForm: {
@@ -175,54 +244,160 @@ export default {
       newTech: "",
       isSubmitting: false,
       
+      // 진행률 및 로딩 상태
+      uploadProgress: 0,
+      currentStep: "",
+      showProgress: false,
+      
+      // 에러 처리
+      errors: {},
+      
       // 모달 상태
       showModal: false,
       modalTitle: '',
       modalMessage: '',
-      modalRedirectTo: null
+      modalRedirectTo: null,
+      
+      // 임시 저장
+      isDraft: false,
+      lastSaved: null
     };
   },
+  mounted() {
+    // 임시 저장된 데이터 로드
+    this.loadDraftData();
+  },
+
+  beforeUnmount() {
+    // 컴포넌트 종료 시 미리보기 URL 정리
+    if (this.projectForm.imagePreview) {
+      imageAPI.revokePreviewUrl(this.projectForm.imagePreview);
+    }
+  },
+
   methods: {
-    handleImageUpload(event) {
+    // 이미지 업로드 처리
+    async handleImageUpload(event) {
       const file = event.target.files[0];
-      if (file) {
+      if (!file) return;
+
+      try {
+        // 파일 유효성 검사
+        const validationResult = this.validateImageFile(file);
+        if (!validationResult.isValid) {
+          this.setFieldError('mainImage', validationResult.error);
+          return;
+        }
+
+        this.clearFieldError('mainImage');
         this.projectForm.mainImage = file;
+
         // 이미지 미리보기 생성
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          this.projectForm.imagePreview = e.target.result;
+        this.projectForm.imagePreview = imageAPI.createPreviewUrl(file);
+
+        // 자동 임시 저장
+        this.saveDraft();
+
+      } catch (error) {
+        console.error('이미지 업로드 처리 오류:', error);
+        this.setFieldError('mainImage', '이미지 처리 중 오류가 발생했습니다.');
+      }
+    },
+
+    // 이미지 파일 유효성 검사
+    validateImageFile(file) {
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+
+      if (!allowedTypes.includes(file.type)) {
+        return {
+          isValid: false,
+          error: 'JPG, PNG, WebP, GIF 형식의 이미지만 업로드 가능합니다.'
         };
-        reader.readAsDataURL(file);
       }
+
+      if (file.size > maxSize) {
+        return {
+          isValid: false,
+          error: '이미지 크기는 10MB 이하여야 합니다.'
+        };
+      }
+
+      return { isValid: true };
     },
+
+    // 기술 스택 추가
     addTechStack() {
-      console.log('Add tech stack 호출:', this.newTech);
-      if (this.newTech.trim() && !this.projectForm.techStack.includes(this.newTech.trim())) {
-        this.projectForm.techStack.push(this.newTech.trim());
-        this.newTech = "";
-        console.log('기술 스택 추가됨:', this.projectForm.techStack);
-      } else {
-        console.log('기술 스택 추가 실패 - 이미 존재하거나 빈 값');
+      const tech = this.newTech.trim();
+      if (!tech) {
+        this.setFieldError('techStack', '기술 스택 이름을 입력해주세요.');
+        return;
       }
+
+      if (this.projectForm.techStack.includes(tech)) {
+        this.setFieldError('techStack', '이미 추가된 기술 스택입니다.');
+        return;
+      }
+
+      if (this.projectForm.techStack.length >= 10) {
+        this.setFieldError('techStack', '기술 스택은 최대 10개까지 추가할 수 있습니다.');
+        return;
+      }
+
+      this.clearFieldError('techStack');
+      this.projectForm.techStack.push(tech);
+      this.newTech = "";
+      this.saveDraft();
     },
+
+    // 기술 스택 제거
     removeTechStack(index) {
       this.projectForm.techStack.splice(index, 1);
+      this.saveDraft();
     },
+
+    // 폼 검증 강화
     validateForm() {
+      this.errors = {};
+      this.globalError = null;
+
+      // 필수 필드 검사
+      if (!this.projectForm.title.trim()) {
+        this.setFieldError('title', '프로젝트 제목을 입력해주세요.');
+      } else if (this.projectForm.title.length > 100) {
+        this.setFieldError('title', '프로젝트 제목은 100자 이하로 입력해주세요.');
+      }
+
+      if (!this.projectForm.description.trim()) {
+        this.setFieldError('description', '프로젝트 설명을 입력해주세요.');
+      } else if (this.projectForm.description.length > 1000) {
+        this.setFieldError('description', '프로젝트 설명은 1000자 이하로 입력해주세요.');
+      }
+
+      if (!this.projectForm.startDate) {
+        this.setFieldError('startDate', '프로젝트 시작일을 입력해주세요.');
+      }
+
       // URL 유효성 검사
       if (this.projectForm.projectUrl && !this.isValidUrl(this.projectForm.projectUrl)) {
-        alert('유효한 프로젝트 URL을 입력해주세요.');
-        return false;
+        this.setFieldError('projectUrl', '유효한 프로젝트 URL을 입력해주세요.');
       }
-      
+
       if (this.projectForm.githubUrl && !this.isValidUrl(this.projectForm.githubUrl)) {
-        alert('유효한 GitHub URL을 입력해주세요.');
-        return false;
+        this.setFieldError('githubUrl', '유효한 GitHub URL을 입력해주세요.');
       }
-      
-      return true;
+
+      // 날짜 유효성 검사
+      if (this.projectForm.startDate && this.projectForm.endDate) {
+        if (new Date(this.projectForm.startDate) > new Date(this.projectForm.endDate)) {
+          this.setFieldError('endDate', '종료일은 시작일보다 늦어야 합니다.');
+        }
+      }
+
+      return Object.keys(this.errors).length === 0;
     },
-    
+
+    // URL 유효성 검사
     isValidUrl(url) {
       try {
         const urlObj = new URL(url);
@@ -232,23 +407,145 @@ export default {
       }
     },
 
+    // 프로젝트 제출
     async handleSubmit() {
-      // 폼 검증
       if (!this.validateForm()) {
+        this.showErrorMessage('입력한 정보를 다시 확인해주세요.');
         return;
       }
-      
+
       this.isSubmitting = true;
+      this.showProgress = true;
+      this.uploadProgress = 0;
+      this.startLoading('프로젝트 생성 중...');
 
-      // 임시 저장 로직 (나중에 API 연동)
-      console.log("프로젝트 저장:", this.projectForm);
+      try {
+        this.currentStep = "프로젝트 생성 중...";
+        this.uploadProgress = 20;
 
-      setTimeout(() => {
+        // 1. 프로젝트 데이터 준비
+        const projectData = {
+          title: this.projectForm.title.trim(),
+          description: this.projectForm.description.trim(),
+          demo_url: this.projectForm.projectUrl?.trim() || null,
+          github_url: this.projectForm.githubUrl?.trim() || null,
+          start_date: this.projectForm.startDate || null,
+          end_date: this.projectForm.endDate || null,
+          tech_stack: this.projectForm.techStack,
+          image_urls: []
+        };
+
+        // 2. 프로젝트 생성
+        const projectResult = await projectAPI.createProject(projectData);
+        if (!projectResult.success) {
+          throw new Error(projectResult.error || '프로젝트 생성에 실패했습니다.');
+        }
+
+        this.uploadProgress = 50;
+        const newProject = projectResult.data;
+
+        // 3. 이미지 업로드 (있는 경우)
+        if (this.projectForm.mainImage) {
+          this.currentStep = "이미지 업로드 중...";
+          this.uploadProgress = 60;
+
+          const imageResult = await imageAPI.uploadProjectImages([this.projectForm.mainImage], newProject.id);
+          if (imageResult.success) {
+            // 프로젝트에 이미지 URL 업데이트
+            const imageUrls = imageResult.data.images.map(img => img.publicUrl);
+            await projectAPI.updateProject(newProject.id, { image_urls: imageUrls });
+            this.uploadProgress = 90;
+          } else {
+            console.warn('이미지 업로드 실패:', imageResult.error);
+          }
+        }
+
+        this.currentStep = "완료 중...";
+        this.uploadProgress = 100;
+
+        // 4. 임시 저장 데이터 삭제
+        this.clearDraftData();
+
+        // 5. 성공 모달 표시
+        setTimeout(() => {
+          this.showProgress = false;
+          this.isSubmitting = false;
+          this.stopLoading();
+          this.showSuccessModal(
+            '프로젝트 저장 완료',
+            '프로젝트가 성공적으로 저장되었습니다! 프로젝트 목록 페이지로 이동하시겠습니까?',
+            '/post-list'
+          );
+        }, 500);
+
+      } catch (error) {
+        console.error('프로젝트 제출 오류:', error);
+        this.showErrorMessage(error.message || '프로젝트 저장 중 오류가 발생했습니다.');
+        this.showProgress = false;
         this.isSubmitting = false;
-        this.showSuccessModal('프로젝트 저장 완료', '프로젝트가 성공적으로 저장되었습니다! 프로젝트 목록 페이지로 이동하시겠습니까?', '/post-list');
-      }, 1000);
+        this.stopLoading();
+      }
     },
 
+    // 임시 저장
+    async saveDraft() {
+      try {
+        const draftData = {
+          ...this.projectForm,
+          mainImage: null, // 파일은 저장하지 않음
+          imagePreview: null, // URL도 저장하지 않음
+          lastSaved: new Date().toISOString()
+        };
+
+        localStorage.setItem('createPost_draft', JSON.stringify(draftData));
+        this.lastSaved = new Date();
+        this.isDraft = true;
+
+      } catch (error) {
+        console.error('임시 저장 오류:', error);
+      }
+    },
+
+    // 임시 저장 데이터 로드
+    loadDraftData() {
+      try {
+        const draftData = localStorage.getItem('createPost_draft');
+        if (draftData) {
+          const parsed = JSON.parse(draftData);
+          this.projectForm = {
+            ...this.projectForm,
+            ...parsed,
+            mainImage: null,
+            imagePreview: null
+          };
+          this.lastSaved = new Date(parsed.lastSaved);
+          this.isDraft = true;
+        }
+      } catch (error) {
+        console.error('임시 저장 데이터 로드 오류:', error);
+      }
+    },
+
+    // 임시 저장 데이터 삭제
+    clearDraftData() {
+      localStorage.removeItem('createPost_draft');
+      this.isDraft = false;
+      this.lastSaved = null;
+    },
+
+    // 에러 설정
+    setFieldError(field, message) {
+      this.errors = { ...this.errors, [field]: message };
+    },
+
+    // 에러 제거
+    clearFieldError(field) {
+      const newErrors = { ...this.errors };
+      delete newErrors[field];
+      this.errors = newErrors;
+    },
+
+    // 성공 모달 표시
     showSuccessModal(title, message, redirectTo) {
       this.modalTitle = title;
       this.modalMessage = message;
@@ -256,6 +553,7 @@ export default {
       this.showModal = true;
     },
 
+    // 모달 확인
     handleModalConfirm() {
       this.showModal = false;
       if (this.modalRedirectTo) {
@@ -263,9 +561,34 @@ export default {
       }
     },
 
+    // 모달 취소
     handleModalCancel() {
       this.showModal = false;
       this.modalRedirectTo = null;
+    },
+
+    // 폼 입력 시 자동 임시 저장
+    onFormChange() {
+      if (this.projectForm.title || this.projectForm.description) {
+        this.saveDraft();
+      }
+    },
+
+    // 마지막 저장 시간 포맷팅
+    formatLastSaved() {
+      if (!this.lastSaved) return '';
+      
+      const now = new Date();
+      const diff = now - this.lastSaved;
+      const minutes = Math.floor(diff / 60000);
+      
+      if (minutes < 1) return '방금 전';
+      if (minutes < 60) return `${minutes}분 전`;
+      
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}시간 전`;
+      
+      return this.lastSaved.toLocaleDateString();
     }
   },
 };
@@ -292,6 +615,109 @@ export default {
 .page-header p {
   color: #7f8c8d;
   font-size: 1.1rem;
+}
+
+/* 임시 저장 상태 */
+.draft-status {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  display: inline-block;
+}
+
+/* 전역 에러 메시지 */
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff3cd;
+  border: 1px solid #ffeaa7;
+  color: #856404;
+  padding: 15px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.global-error {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+.error-icon {
+  font-size: 1.2rem;
+}
+
+.close-error-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1.2rem;
+  margin-left: auto;
+  padding: 0;
+}
+
+/* 진행률 바 */
+.progress-container {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.progress-text {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.progress-percentage {
+  color: #42b883;
+  font-weight: bold;
+}
+
+.progress-bar {
+  background: #e9ecef;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #42b883 0%, #369870 100%);
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+/* 필드 에러 메시지 */
+.field-error {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 5px;
+}
+
+/* 에러 상태 입력 필드 */
+.form-group input.error,
+.form-group textarea.error {
+  border-color: #dc3545;
+  background-color: #fff5f5;
+}
+
+.file-upload-area.error {
+  border-color: #dc3545;
+  background-color: #fff5f5;
 }
 
 .form-container {
@@ -479,6 +905,44 @@ export default {
   cursor: not-allowed;
 }
 
+/* 임시 저장 버튼 */
+.btn-draft {
+  padding: 12px 25px;
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-draft:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.btn-draft:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 로딩 스피너 */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* 모달 스타일 */
 .modal-overlay {
   position: fixed;
@@ -568,6 +1032,10 @@ export default {
 
   .form-actions {
     flex-direction: column;
+  }
+
+  .btn-cancel, .btn-draft, .btn-submit {
+    text-align: center;
   }
 
   .modal-content {
