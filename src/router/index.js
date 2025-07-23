@@ -31,11 +31,11 @@ async function requireAuth(to, from, next) {
       localStorage.removeItem('rememberUser');
       localStorage.removeItem('userEmail');
 
-      next('/login'); // 로그인 페이지로 리디렉션
+      next('/admin/login'); // 관리자 로그인 페이지로 리디렉션
     }
   } catch (error) {
     console.error('인증 확인 오류:', error);
-    next('/login');
+    next('/admin/login');
   }
 }
 
@@ -55,7 +55,7 @@ async function redirectIfAuthenticated(to, from, next) {
 
     if (session && session.user) {
       console.log('이미 로그인됨, 대시보드로 리디렉션');
-      next('/dashboard');
+      next('/admin/dashboard');
     } else {
       console.log('로그인 안됨, 로그인 페이지 표시');
       next();
@@ -69,76 +69,80 @@ async function redirectIfAuthenticated(to, from, next) {
 const routes = [
   {
     path: "/",
-    redirect: "/login", // 기본 경로를 로그인으로 변경
+    redirect: "/admin/login", // 관리자 페이지 로그인으로 변경
   },
   {
-    path: "/login",
+    path: "/admin",
+    redirect: "/admin/login", // admin 기본 경로도 로그인으로
+  },
+  {
+    path: "/admin/login",
     name: "Login",
     component: Login,
     beforeEnter: redirectIfAuthenticated, // 이미 로그인된 경우 대시보드로
   },
   {
-    path: "/signup", // ✅ register → signup 변경
+    path: "/admin/signup",
     name: "Signup",
-    component: Signup, // ✅ Register → Signup 변경
+    component: Signup,
     beforeEnter: redirectIfAuthenticated,
   },
   // ✅ 하위 호환성을 위한 register 경로 추가 (선택사항)
   {
-    path: "/register",
-    redirect: "/signup"
+    path: "/admin/register",
+    redirect: "/admin/signup"
   },
   {
-    path: "/forgot-password",
+    path: "/admin/forgot-password",
     name: "ForgotPassword",
     component: ForgotPassword,
     beforeEnter: redirectIfAuthenticated,
   },
   {
-    path: "/reset-password",
+    path: "/admin/reset-password",
     name: "ResetPassword",
     component: ResetPassword,
     // 비밀번호 재설정은 로그인하지 않은 상태에서도 접근 가능
   },
   {
-    path: "/two-factor-auth",
+    path: "/admin/two-factor-auth",
     name: "TwoFactorAuth",
     component: TwoFactorAuth,
     // 2FA는 부분적으로 인증된 상태이므로 별도 처리
   },
   {
-    path: "/auth/callback",
+    path: "/admin/auth/callback",
     name: "AuthCallback",
     component: AuthCallback,
     // OAuth 콜백은 인증 가드 없음
   },
   {
-    path: "/dashboard",
+    path: "/admin/dashboard",
     name: "Dashboard",
     component: Dashboard,
     beforeEnter: requireAuth, // 인증 필요
   },
   {
-    path: "/projects",
+    path: "/admin/projects",
     name: "Projects",
     component: Projects,
     beforeEnter: requireAuth,
   },
   // 새로 추가된 라우트들
   {
-    path: "/create-post",
+    path: "/admin/create-post",
     name: "CreatePost",
     component: CreatePost,
     beforeEnter: requireAuth,
   },
   {
-    path: "/post-list",
+    path: "/admin/post-list",
     name: "PostList",
     component: PostList,
     beforeEnter: requireAuth,
   },
   {
-    path: "/profile",
+    path: "/admin/profile",
     name: "Profile",
     component: Profile,
     beforeEnter: requireAuth,
@@ -146,7 +150,7 @@ const routes = [
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",
-    redirect: "/login", // 잘못된 경로는 로그인으로
+    redirect: "/admin/login", // 잘못된 경로는 관리자 로그인으로
   },
 ];
 
