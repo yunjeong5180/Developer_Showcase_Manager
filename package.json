@@ -1,14 +1,22 @@
 {
-  "name": "developer-showcase-frontend",
+  "name": "developer-showcase-manager",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@10.2.4",
+  "workspaces": [
+    "welcome-nextjs",
+    "portfolio-nextjs",
+    "."
+  ],
   "scripts": {
-    "serve": "vue-cli-service serve --skip-plugins @vue/cli-plugin-eslint",
-    "build": "vue-cli-service build",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "serve": "vue-cli-service serve --skip-plugins @vue/cli-plugin-eslint --port 8080",
+    "build:vue": "vue-cli-service build",
     "build:railway": "NODE_ENV=production vue-cli-service build",
     "serve:static": "npx serve dist -s -l $PORT",
     "start": "npx serve dist -s -p $PORT",
-    "lint": "vue-cli-service lint"
+    "lint": "turbo lint"
   },
   "dependencies": {
     "-": "^0.0.1",
@@ -35,6 +43,7 @@
     "eslint-plugin-vue": "^8.0.3",
     "prettier": "^2.4.1",
     "sass": "^1.32.7",
-    "sass-loader": "^12.0.0"
+    "sass-loader": "^12.0.0",
+    "turbo": "^2.5.5"
   }
 }

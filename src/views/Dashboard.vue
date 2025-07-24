@@ -32,6 +32,9 @@
         <router-link to="/profile" class="action-btn">
           👤 프로필 설정
         </router-link>
+        <a href="http://localhost:3001/portfolio/demo" class="action-btn portfolio-preview" target="_blank">
+          🌐 포트폴리오 미리보기
+        </a>
       </div>
     </div>
 
@@ -160,6 +163,17 @@ export default {
 
 .action-btn.primary:hover {
   background: #369870;
+}
+
+.action-btn.portfolio-preview {
+  background: #6f42c1;
+  color: white;
+  border-color: #6f42c1;
+}
+
+.action-btn.portfolio-preview:hover {
+  background: #5a359a;
+  border-color: #5a359a;
 }
 
 .recent-activities h2 {

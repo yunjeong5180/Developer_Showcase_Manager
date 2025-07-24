@@ -9,21 +9,30 @@ export default function Home() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <div className="text-2xl font-bold text-blue-600">
-              DevShowcase
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">C</span>
+              </div>
+              <span className="text-2xl font-bold text-blue-600">Codit</span>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-4 items-center">
+              <a 
+                href="http://localhost:3000" 
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                홈
+              </a>
+              <a 
+                href="http://localhost:8080/dashboard" 
+                className="text-gray-600 hover:text-blue-600 font-medium transition-colors"
+              >
+                My Codit
+              </a>
               <Link 
                 href="/admin" 
-                className="text-gray-600 hover:text-blue-600 font-medium"
-              >
-                로그인
-              </Link>
-              <Link 
-                href="/admin/signup" 
                 className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
               >
-                회원가입
+                로그인
               </Link>
             </div>
           </div>
