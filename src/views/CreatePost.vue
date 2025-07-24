@@ -157,6 +157,9 @@
 </template>
 
 <script>
+import { projectAPI } from '@/services/projectService';
+import { imageAPI } from '@/services/imageService';
+
 export default {
   name: "CreatePostPage",
   data() {
@@ -240,13 +243,63 @@ export default {
       
       this.isSubmitting = true;
 
-      // 임시 저장 로직 (나중에 API 연동)
-      console.log("프로젝트 저장:", this.projectForm);
+      try {
+        console.log("프로젝트 저장 시작:", this.projectForm);
 
-      setTimeout(() => {
+        // 1. 이미지 업로드 (있는 경우)
+        let imageUrls = [];
+        if (this.projectForm.mainImage) {
+          console.log("이미지 업로드 시작");
+          const imageResponse = await imageAPI.uploadImage(this.projectForm.mainImage, 'project-images');
+          
+          if (imageResponse.success) {
+            imageUrls = [imageResponse.data.url];
+            console.log("이미지 업로드 성공:", imageUrls);
+          } else {
+            console.warn("이미지 업로드 실패:", imageResponse.error);
+            // 이미지 업로드 실패해도 프로젝트는 저장 진행
+          }
+        }
+
+        // 2. 프로젝트 데이터 준비
+        const projectData = {
+          title: this.projectForm.title.trim(),
+          description: this.projectForm.description.trim(),
+          tech_stack: this.projectForm.techStack,
+          github_url: this.projectForm.githubUrl.trim() || null,
+          demo_url: this.projectForm.projectUrl.trim() || null,
+          image_urls: imageUrls,
+          start_date: this.projectForm.startDate || null,
+          end_date: this.projectForm.endDate || null,
+          is_featured: false
+        };
+
+        // 3. 프로젝트 생성
+        console.log("프로젝트 API 호출:", projectData);
+        const response = await projectAPI.createProject(projectData);
+
+        if (response.success) {
+          console.log("프로젝트 생성 성공:", response.data);
+          
+          // 폼 초기화
+          this.resetForm();
+          
+          this.showSuccessModal(
+            '프로젝트 저장 완료', 
+            '프로젝트가 성공적으로 저장되었습니다! 프로젝트 목록 페이지로 이동하시겠습니까?', 
+            '/post-list'
+          );
+        } else {
+          console.error("프로젝트 생성 실패:", response.error);
+          alert(`프로젝트 저장 실패: ${response.error}`);
+        }
+
+      } catch (error) {
+        console.error("프로젝트 저장 예외:", error);
+        alert(`프로젝트 저장 중 오류가 발생했습니다: ${error.message}`);
+      } finally {
         this.isSubmitting = false;
-        this.showSuccessModal('프로젝트 저장 완료', '프로젝트가 성공적으로 저장되었습니다! 프로젝트 목록 페이지로 이동하시겠습니까?', '/post-list');
-      }, 1000);
+      }
     },
 
     showSuccessModal(title, message, redirectTo) {
@@ -266,6 +319,27 @@ export default {
     handleModalCancel() {
       this.showModal = false;
       this.modalRedirectTo = null;
+    },
+
+    resetForm() {
+      this.projectForm = {
+        title: "",
+        description: "",
+        projectUrl: "",
+        githubUrl: "",
+        startDate: "",
+        endDate: "",
+        mainImage: null,
+        imagePreview: null,
+        techStack: [],
+      };
+      this.newTech = "";
+      
+      // 파일 입력 초기화
+      const fileInput = document.getElementById('mainImage');
+      if (fileInput) {
+        fileInput.value = '';
+      }
     }
   },
 };

@@ -10,7 +10,19 @@
       </router-link>
     </div>
 
-    <div v-if="projects.length > 0" class="projects-grid">
+    <div v-if="loading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>프로젝트를 불러오는 중...</p>
+    </div>
+
+    <div v-else-if="error" class="error-state">
+      <div class="error-icon">⚠️</div>
+      <h3>오류가 발생했습니다</h3>
+      <p>{{ error }}</p>
+      <button @click="loadProjects" class="btn-retry">다시 시도</button>
+    </div>
+
+    <div v-else-if="projects.length > 0" class="projects-grid">
       <div
         v-for="project in projects"
         :key="project.id"
@@ -57,7 +69,7 @@
       </div>
     </div>
 
-    <div v-else class="empty-state">
+    <div v-else-if="!loading" class="empty-state">
       <div class="empty-icon">📝</div>
       <h3>아직 등록된 프로젝트가 없습니다</h3>
       <p>첫 번째 프로젝트를 추가해보세요!</p>
@@ -139,77 +151,67 @@
 </template>
 
 <script>
+import { projectAPI } from '@/services/projectService';
+
 export default {
   name: "PostListPage",
   data() {
     return {
       selectedProject: null,
-      // 임시 데이터 (나중에 API에서 가져올 데이터)
-      projects: [
-        {
-          id: 1,
-          title: "Todo List App",
-          description: "Vue.js와 Firebase를 사용한 실시간 할 일 관리 애플리케이션입니다. 사용자가 쉽게 할 일을 추가, 수정, 삭제할 수 있으며 실시간으로 동기화됩니다.",
-          image: "https://placehold.co/400x250/42b883/ffffff?text=Todo+App",
-          projectUrl: "https://todo-app-demo.com",
-          githubUrl: "https://github.com/user/todo-app",
-          startDate: "2024-01-15",
-          endDate: "2024-03-20",
-          status: "completed",
-          techStack: ["Vue.js", "Firebase", "CSS3", "JavaScript"]
-        },
-        {
-          id: 2,
-          title: "E-Commerce Platform",
-          description: "React와 Node.js로 구현한 풀스택 온라인 쇼핑몰 플랫폼입니다. 상품 관리, 주문 처리, 결제 시스템을 포함합니다.",
-          image: "https://placehold.co/400x250/764ba2/ffffff?text=E-Commerce",
-          projectUrl: "https://shop-demo.com",
-          githubUrl: "https://github.com/user/ecommerce",
-          startDate: "2024-04-01",
-          endDate: null,
-          status: "active",
-          techStack: ["React", "Node.js", "MongoDB", "Express"]
-        },
-        {
-          id: 3,
-          title: "Weather Dashboard",
-          description: "OpenWeather API를 활용한 실시간 날씨 정보 대시보드입니다. 차트와 그래프로 날씨 데이터를 시각화합니다.",
-          image: "https://placehold.co/400x250/667eea/ffffff?text=Weather",
-          projectUrl: "https://weather-dashboard.com",
-          githubUrl: "https://github.com/user/weather-app",
-          startDate: "2023-11-10",
-          endDate: "2023-12-15",
-          status: "completed",
-          techStack: ["JavaScript", "Chart.js", "Weather API", "CSS Grid"]
-        },
-        {
-          id: 4,
-          title: "Portfolio Website",
-          description: "개인 포트폴리오 웹사이트입니다. 반응형 디자인과 다크모드를 지원하며, 애니메이션 효과가 적용되어 있습니다.",
-          image: "https://placehold.co/400x250/f093fb/ffffff?text=Portfolio",
-          projectUrl: "https://my-portfolio.com",
-          githubUrl: "https://github.com/user/portfolio",
-          startDate: "2023-08-01",
-          endDate: "2023-09-30",
-          status: "completed",
-          techStack: ["HTML5", "SCSS", "JavaScript", "AOS"]
-        },
-        {
-          id: 5,
-          title: "Task Management Tool",
-          description: "팀 협업을 위한 태스크 관리 도구입니다. 칸반 보드 스타일의 UI와 실시간 협업 기능을 제공합니다.",
-          image: "https://placehold.co/400x250/4ecdc4/ffffff?text=Task+Tool",
-          projectUrl: "https://task-manager.com",
-          githubUrl: "https://github.com/user/task-manager",
-          startDate: "2024-02-01",
-          endDate: null,
-          status: "active",
-          techStack: ["Vue.js", "Vuex", "Socket.io", "Node.js"]
-        }
-      ]
+      projects: [],
+      loading: false,
+      error: null,
+      pagination: {
+        page: 1,
+        limit: 12,
+        total: 0,
+        totalPages: 0
+      }
     };
   },
+  async created() {
+    await this.loadProjects();
+  },
   methods: {
+    async loadProjects() {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        const response = await projectAPI.getProjects({
+          page: this.pagination.page,
+          limit: this.pagination.limit,
+          sortBy: 'created_at',
+          sortOrder: 'desc'
+        });
+        
+        if (response.success) {
+          // API 응답 데이터를 UI에 맞게 변환
+          this.projects = response.data.projects.map(project => ({
+            id: project.id,
+            title: project.title,
+            description: project.description,
+            image: project.image_urls && project.image_urls[0] || null,
+            projectUrl: project.demo_url,
+            githubUrl: project.github_url,
+            startDate: project.start_date,
+            endDate: project.end_date,
+            status: project.end_date ? 'completed' : 'active',
+            techStack: project.tech_stack || []
+          }));
+          
+          this.pagination = response.data.pagination;
+        } else {
+          this.error = response.error;
+          console.error('프로젝트 로드 실패:', response.error);
+        }
+      } catch (error) {
+        this.error = '프로젝트를 불러오는 중 오류가 발생했습니다.';
+        console.error('프로젝트 로드 예외:', error);
+      } finally {
+        this.loading = false;
+      }
+    },
     openProjectModal(project) {
       this.selectedProject = project;
     },
@@ -217,16 +219,37 @@ export default {
       this.selectedProject = null;
     },
     editProject(project) {
-      // 임시 편집 로직
-      console.log("프로젝트 편집:", project);
-      alert(`"${project.title}" 프로젝트를 편집합니다.`);
+      // 편집 페이지로 이동
+      this.$router.push({
+        name: 'EditPost',
+        params: { id: project.id }
+      });
       this.closeModal();
     },
-    deleteProject(projectId) {
+    async deleteProject(projectId) {
       if (confirm("정말로 이 프로젝트를 삭제하시겠습니까?")) {
-        this.projects = this.projects.filter(p => p.id !== projectId);
-        this.closeModal();
-        alert("프로젝트가 삭제되었습니다.");
+        this.loading = true;
+        
+        try {
+          const response = await projectAPI.deleteProject(projectId);
+          
+          if (response.success) {
+            // 로컬 상태에서 제거
+            this.projects = this.projects.filter(p => p.id !== projectId);
+            this.closeModal();
+            alert("프로젝트가 삭제되었습니다.");
+            
+            // 프로젝트 목록 새로고침
+            await this.loadProjects();
+          } else {
+            alert(`프로젝트 삭제 실패: ${response.error}`);
+          }
+        } catch (error) {
+          console.error('프로젝트 삭제 예외:', error);
+          alert('프로젝트 삭제 중 오류가 발생했습니다.');
+        } finally {
+          this.loading = false;
+        }
       }
     },
     formatDate(dateString) {
@@ -447,6 +470,68 @@ export default {
 }
 
 .btn-empty-add:hover {
+  background: #369870;
+}
+
+/* 로딩 상태 */
+.loading-state {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #42b883;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+/* 오류 상태 */
+.error-state {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.error-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.error-state h3 {
+  color: #dc3545;
+  margin-bottom: 10px;
+}
+
+.error-state p {
+  color: #6c757d;
+  margin-bottom: 30px;
+}
+
+.btn-retry {
+  background: #42b883;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-retry:hover {
   background: #369870;
 }
 

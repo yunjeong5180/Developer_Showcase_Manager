@@ -182,7 +182,7 @@ export default {
         }
 
         // 성공 시 App.vue의 onAuthStateChange 리스너가 감지하여 대시보드로 이동시킴
-        this.$router.push('/dashboard')
+        this.$router.push('/admin/dashboard')
 
       } catch (error) {
         console.error('로그인 오류:', error)

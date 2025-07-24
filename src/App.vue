@@ -2,20 +2,20 @@
   <div id="app">
     <nav v-if="showNavigation" class="navbar">
       <div class="nav-container">
-        <router-link to="/dashboard" class="nav-brand">
+        <router-link to="/admin/dashboard" class="nav-brand">
           🚀 Developer Showcase
         </router-link>
 
         <div class="nav-right-group">
           <div class="nav-menu">
-            <router-link to="/dashboard" class="nav-link">대시보드</router-link>
-            <router-link to="/create-post" class="nav-link">프로젝트 작성</router-link>
-            <router-link to="/projects" class="nav-link">프로젝트 관리</router-link>
-            <router-link to="/post-list" class="nav-link">프로젝트 목록</router-link>
+            <router-link to="/admin/dashboard" class="nav-link">대시보드</router-link>
+            <router-link to="/admin/create-post" class="nav-link">프로젝트 작성</router-link>
+            <router-link to="/admin/projects" class="nav-link">프로젝트 관리</router-link>
+            <router-link to="/admin/post-list" class="nav-link">프로젝트 목록</router-link>
           </div>
 
           <div class="user-menu">
-            <router-link to="/profile" class="username-link">
+            <router-link to="/admin/profile" class="username-link">
               <span class="username">{{ currentUser?.name || currentUser?.email }}</span>
             </router-link>
             <button @click="handleLogout" class="logout-btn">
@@ -152,6 +152,7 @@ export default {
     updateNavigationVisibility(currentPath) {
       const hideNavRoutes = [
         '/login',
+        '/admin/login',
         '/register',
         '/signup', // 🆕 추가
         '/forgot-password',
@@ -166,7 +167,7 @@ export default {
       // 로그아웃은 단순히 signOut을 호출하면 onAuthStateChange 리스너가 나머지를 처리합니다.
       await supabase.auth.signOut();
       // 로그인 페이지로 이동
-      this.$router.push('/login')
+      this.$router.push('/admin/login')
     },
     clearUserData() {
       localStorage.removeItem('user');

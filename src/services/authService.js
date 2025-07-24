@@ -1,4 +1,4 @@
-import { supabase } from '@/services/supabaseClient.js'
+import { supabase } from '@/config/supabase'
 
 // 회원가입 함수
 export async function signUp(userData) {

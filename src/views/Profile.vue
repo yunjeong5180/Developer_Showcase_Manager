@@ -294,8 +294,58 @@
 </template>
 
 <script>
-import { authAPI, profileAPI } from '@/config/supabase'
-import SkillsModal from '@/components/SkillsModal.vue'
+import { supabase } from '@/config/supabase';
+import { getUserByEmail, updateUser } from '@/services/authService';
+import { imageAPI } from '@/services/imageService';
+import SkillsModal from '@/components/SkillsModal.vue';
+
+// 기본 프로필 API 함수들
+const profileAPI = {
+  async getCurrentUserProfile() {
+    try {
+      // 현재 인증된 사용자 정보 가져오기
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        return { success: false, error: '사용자 인증이 필요합니다.' };
+      }
+
+      // users 테이블에서 프로필 정보 조회
+      const response = await getUserByEmail(user.email);
+      return response;
+    } catch (error) {
+      console.error('프로필 조회 오류:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async updateProfile(profileData) {
+    try {
+      // 현재 인증된 사용자 정보 가져오기
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) {
+        return { success: false, error: '사용자 인증이 필요합니다.' };
+      }
+
+      // users 테이블에서 user_id 조회
+      const { data: userData, error: userDataError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', user.email)
+        .single();
+
+      if (userDataError || !userData) {
+        return { success: false, error: '사용자 정보를 찾을 수 없습니다.' };
+      }
+
+      // 프로필 업데이트
+      const response = await updateUser(userData.id, profileData);
+      return response;
+    } catch (error) {
+      console.error('프로필 업데이트 오류:', error);
+      return { success: false, error: error.message };
+    }
+  }
+};
 
 export default {
   name: "ProfilePage",
@@ -320,6 +370,7 @@ export default {
         skills: []
       },
       newSkill: "",
+      profileImageFile: null,
       isSaving: false,
       isLoading: true,
       currentUser: null,
@@ -340,26 +391,15 @@ export default {
     // 사용자 프로필 로드
     async loadUserProfile() {
       try {
-        this.isLoading = true
-        console.log('프로필 페이지 로드 시작')
-
-        // 현재 로그인된 사용자 정보 가져오기
-        this.currentUser = await authAPI.getCurrentUser()
-        
-        if (!this.currentUser) {
-          console.error('로그인된 사용자 없음')
-          this.$router.push('/login')
-          return
-        }
-
-        console.log('현재 사용자:', this.currentUser.email)
+        this.isLoading = true;
+        console.log('프로필 페이지 로드 시작');
 
         // 사용자 프로필 정보 조회
-        const result = await profileAPI.getUserProfile(this.currentUser.id)
+        const result = await profileAPI.getCurrentUserProfile();
         
-        if (result.success && result.data) {
+        if (result.success && result.user) {
           // DB에서 가져온 데이터를 폼에 설정
-          const userData = result.data
+          const userData = result.user;
           this.profileForm = {
             name: userData.name || '',
             email: userData.email || '',
@@ -370,28 +410,29 @@ export default {
             githubUrl: userData.github_url || '',
             linkedinUrl: userData.linkedin_url || '',
             portfolioUrl: userData.portfolio_url || '',
-            blogUrl: userData.blog_url || '',
+            blogUrl: userData.personal_blog_url || '',
             phone: userData.phone || '',
             location: userData.location || '',
             skills: userData.skills || []
-          }
+          };
           
-          console.log('프로필 데이터 로드 완료:', this.profileForm)
+          console.log('프로필 데이터 로드 완료:', this.profileForm);
         } else {
-          console.warn('프로필 데이터 조회 실패:', result.error)
-          // 기본값으로 현재 사용자 정보 설정
-          this.profileForm.email = this.currentUser.email
-          this.profileForm.name = this.currentUser.user_metadata?.full_name || this.currentUser.user_metadata?.name || ''
+          console.warn('프로필 데이터 조회 실패:', result.error);
+          this.message = {
+            text: result.error || '프로필 정보를 불러올 수 없습니다.',
+            type: 'error'
+          };
         }
 
       } catch (error) {
-        console.error('프로필 로드 오류:', error)
+        console.error('프로필 로드 오류:', error);
         this.message = {
           text: '프로필 정보를 불러오는 중 오류가 발생했습니다.',
           type: 'error'
-        }
+        };
       } finally {
-        this.isLoading = false
+        this.isLoading = false;
       }
     },
 
@@ -619,28 +660,41 @@ export default {
       try {
         console.log('프로필 저장 시작')
 
+        let profileImageUrl = this.profileForm.profileImage;
+
         // 1. 이미지 업로드 (새 이미지가 있는 경우)
         if (this.profileImageFile) {
           console.log('이미지 업로드 중...')
-          const uploadResult = await profileAPI.uploadProfileImage(
-            this.currentUser.id, 
-            this.profileImageFile
-          )
+          const uploadResult = await imageAPI.uploadImage(this.profileImageFile, 'profile-images');
 
           if (uploadResult.success) {
-            this.profileForm.profileImage = uploadResult.data.publicUrl
-            console.log('이미지 업로드 성공:', uploadResult.data.publicUrl)
+            profileImageUrl = uploadResult.data.url;
+            console.log('이미지 업로드 성공:', profileImageUrl)
           } else {
-            throw new Error(uploadResult.error)
+            console.warn('이미지 업로드 실패:', uploadResult.error);
+            // 이미지 업로드 실패해도 프로필은 저장 진행
           }
         }
 
-        // 2. 프로필 정보 업데이트
-        console.log('프로필 정보 업데이트 중...')
-        const updateResult = await profileAPI.updateUserProfile(
-          this.currentUser.id, 
-          this.profileForm
-        )
+        // 2. 프로필 데이터 준비
+        const profileData = {
+          name: this.profileForm.name.trim(),
+          title: this.profileForm.title.trim() || null,
+          one_liner: this.profileForm.oneLiner.trim() || null,
+          bio: this.profileForm.bio.trim() || null,
+          profile_image_url: profileImageUrl,
+          github_url: this.profileForm.githubUrl.trim() || null,
+          linkedin_url: this.profileForm.linkedinUrl.trim() || null,
+          portfolio_url: this.profileForm.portfolioUrl.trim() || null,
+          personal_blog_url: this.profileForm.blogUrl.trim() || null,
+          phone: this.profileForm.phone.trim() || null,
+          location: this.profileForm.location.trim() || null,
+          skills: this.profileForm.skills || []
+        };
+
+        // 3. 프로필 정보 업데이트
+        console.log('프로필 정보 업데이트 중...', profileData)
+        const updateResult = await profileAPI.updateProfile(profileData);
 
         if (updateResult.success) {
           console.log('프로필 업데이트 성공')
@@ -651,6 +705,7 @@ export default {
           
           // 업로드된 파일 참조 제거
           this.profileImageFile = null
+          this.profileForm.profileImage = profileImageUrl;
           
           // 성공 메시지 3초 후 제거
           setTimeout(() => {
