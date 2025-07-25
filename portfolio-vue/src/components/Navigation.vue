@@ -1,62 +1,29 @@
 <template>
-  <nav :class="[
-    'fixed top-0 w-full z-50 transition-all duration-300',
-    isScrolled 
-      ? 'bg-white/98 backdrop-blur-md shadow-lg' 
-      : 'bg-white/95 backdrop-blur-sm'
-  ]">
-    <div class="max-w-7xl mx-auto px-8">
-      <div class="flex justify-between items-center h-16">
-        <router-link to="/" class="text-2xl font-bold text-gray-800">
-          Portfolio
-        </router-link>
-        <ul class="flex space-x-8">
-          <li>
-            <router-link 
-              to="/" 
-              :class="[
-                'hover:text-blue-600 transition-colors',
-                $route.path === '/' ? 'text-blue-600 font-semibold' : 'text-gray-700'
-              ]"
-            >
-              홈
-            </router-link>
-          </li>
-          <li>
-            <router-link 
-              to="/about" 
-              :class="[
-                'hover:text-blue-600 transition-colors',
-                $route.path === '/about' ? 'text-blue-600 font-semibold' : 'text-gray-700'
-              ]"
-            >
-              소개
-            </router-link>
-          </li>
-          <li>
-            <router-link 
-              to="/projects" 
-              :class="[
-                'hover:text-blue-600 transition-colors',
-                $route.path === '/projects' ? 'text-blue-600 font-semibold' : 'text-gray-700'
-              ]"
-            >
-              프로젝트
-            </router-link>
-          </li>
-          <li>
-            <router-link 
-              to="/contact" 
-              :class="[
-                'hover:text-blue-600 transition-colors',
-                $route.path === '/contact' ? 'text-blue-600 font-semibold' : 'text-gray-700'
-              ]"
-            >
-              연락처
-            </router-link>
-          </li>
-        </ul>
-      </div>
+  <nav id="navbar" :class="{ 'scrolled': isScrolled }">
+    <div class="nav-container">
+      <router-link to="/" class="logo">Portfolio</router-link>
+      <ul class="nav-links">
+        <li>
+          <router-link to="/" :class="{ 'active': $route.path === '/' }">
+            홈
+          </router-link>
+        </li>
+        <li>
+          <router-link to="/about" :class="{ 'active': $route.path === '/about' }">
+            소개
+          </router-link>
+        </li>
+        <li>
+          <router-link to="/projects" :class="{ 'active': $route.path === '/projects' }">
+            프로젝트
+          </router-link>
+        </li>
+        <li>
+          <router-link to="/contact" :class="{ 'active': $route.path === '/contact' }">
+            연락처
+          </router-link>
+        </li>
+      </ul>
     </div>
   </nav>
 </template>
@@ -87,3 +54,87 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* 네비게이션 */
+nav {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  padding: 1rem 0;
+  transition: all 0.3s ease;
+}
+
+nav.scrolled {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 2rem;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2c3e50;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.3s ease;
+  position: relative;
+}
+
+.nav-links a:hover {
+  color: #3498db;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -5px;
+  left: 0;
+  background: #3498db;
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after,
+.nav-links a.active::after {
+  width: 100%;
+}
+
+.nav-links a.active {
+  color: #3498db;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .nav-links {
+    gap: 1rem;
+  }
+  
+  .nav-container {
+    padding: 0 1rem;
+  }
+}
+</style>

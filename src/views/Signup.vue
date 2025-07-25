@@ -3,7 +3,7 @@
     <div class="signup-card">
       <div class="signup-header">
         <h2>📝 회원가입</h2>
-        <p>Developer Showcase Manager에 오신 것을 환영합니다!</p>
+        <p>My Codit Manager에 오신 것을 환영합니다!</p>
       </div>
 
       <form @submit.prevent="handleSignUp" class="signup-form">

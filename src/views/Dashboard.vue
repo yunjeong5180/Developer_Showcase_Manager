@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard">
     <header class="dashboard-header">
-      <h1>🚀 Developer Showcase 관리자</h1>
+      <h1>🚀 My Codit 관리자</h1>
       <p>포트폴리오를 효율적으로 관리하세요</p>
     </header>
 

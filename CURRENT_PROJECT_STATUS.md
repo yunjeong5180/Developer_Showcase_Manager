@@ -1,4 +1,4 @@
-# Developer Showcase Manager - 현재 프로젝트 진행 상황
+# My Codit Manager - 현재 프로젝트 진행 상황
 
 > 📅 **분석 일자**: 2025년 1월 14일  
 > 🌟 **현재 브랜치**: `feature/add-nickname-and-validation`  
@@ -8,7 +8,7 @@
 
 ## 📊 전체 프로젝트 개요
 
-**Developer Showcase Manager**는 개발자들이 자신의 포트폴리오를 체계적으로 관리할 수 있는 관리자 대시보드 애플리케이션입니다.
+**My Codit Manager**는 개발자들이 자신의 포트폴리오를 체계적으로 관리할 수 있는 관리자 대시보드 애플리케이션입니다.
 
 ### 🛠️ 기술 스택
 - **프론트엔드**: Vue 3.2.13, Vue Router 4, JavaScript ES6+
@@ -375,7 +375,7 @@ developer-showcase-frontend/
 
 ## 🎉 **결론**
 
-**Developer Showcase Manager**는 현재 **75% 완성도**에 도달한 상태로, **인증 시스템과 UI는 프로덕션 수준**으로 완성되어 있습니다. 
+**My Codit Manager**는 현재 **75% 완성도**에 도달한 상태로, **인증 시스템과 UI는 프로덕션 수준**으로 완성되어 있습니다. 
 
 **핵심 강점:**
 - ✨ 완벽한 인증 시스템 (소셜 로그인, 2FA, 비밀번호 관리)

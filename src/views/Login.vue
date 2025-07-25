@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <h1>🚀 Developer Showcase</h1>
+        <h1>🚀 My Codit</h1>
         <p>포트폴리오 관리 시스템에 로그인하세요</p>
       </div>
 

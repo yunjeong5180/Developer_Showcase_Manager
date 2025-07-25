@@ -1,4 +1,4 @@
-# 🚀 Developer Showcase Manager
+# 🚀 My Codit Manager
 
 > **개발자를 위한 포트폴리오 관리 시스템**  
 > Vue 3 + Supabase 기반의 현대적이고 직관적인 관리자 대시보드
@@ -11,7 +11,7 @@
 
 ## 📋 **프로젝트 소개**
 
-**Developer Showcase Manager**는 개발자들이 자신의 포트폴리오를 체계적으로 관리할 수 있는 관리자 대시보드 애플리케이션입니다. 
+**My Codit Manager**는 개발자들이 자신의 포트폴리오를 체계적으로 관리할 수 있는 관리자 대시보드 애플리케이션입니다. 
 
 Vue 3와 Supabase를 기반으로 구축되어 프로젝트 관리, 프로필 설정, 인증 시스템 등 포트폴리오 운영에 필요한 모든 기능을 제공합니다.
 
@@ -95,8 +95,8 @@ Vue 3와 Supabase를 기반으로 구축되어 프로젝트 관리, 프로필 �
 
 1. **저장소 클론**
    ```bash
-   git clone https://github.com/yunjeong5180/Developer_Showcase_Manager.git
-   cd Developer_Showcase_Manager
+   git clone https://github.com/yunjeong5180/My_Codit_Manager.git
+   cd My_Codit_Manager
    ```
 
 2. **의존성 설치**
@@ -133,10 +133,10 @@ npm run lint
 npm run lint -- --fix
 
 # Docker 빌드
-docker build -t developer-showcase .
+docker build -t my-codit .
 
 # Docker 실행
-docker run -p 8080:8080 developer-showcase
+docker run -p 8080:8080 my-codit
 ```
 
 ---
@@ -144,7 +144,7 @@ docker run -p 8080:8080 developer-showcase
 ## 📁 **프로젝트 구조**
 
 ```
-developer-showcase-manager/
+my-codit-manager/
 ├── 📁 public/              # 정적 파일
 ├── 📁 src/
 │   ├── 📁 assets/          # 이미지, 폰트 등 리소스
@@ -272,8 +272,8 @@ npm run start
 
 ### **Docker 배포**
 ```bash
-docker build -t developer-showcase .
-docker run -p 8080:8080 developer-showcase
+docker build -t my-codit .
+docker run -p 8080:8080 my-codit
 ```
 
 ### **Railway 배포**

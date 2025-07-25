@@ -3,7 +3,7 @@
     <nav v-if="showNavigation" class="navbar">
       <div class="nav-container">
         <router-link to="/admin/dashboard" class="nav-brand">
-          🚀 Developer Showcase
+          🚀 My Codit
         </router-link>
 
         <div class="nav-right-group">

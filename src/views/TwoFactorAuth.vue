@@ -406,7 +406,7 @@ export default {
 
     downloadBackupCodes() {
       const codesText = this.backupCodes.join('\n')
-      const blob = new Blob([`Developer Showcase - 2단계 인증 백업 코드\n\n${codesText}\n\n이 코드들을 안전한 곳에 보관하세요.`],
+      const blob = new Blob([`My Codit - 2단계 인증 백업 코드\n\n${codesText}\n\n이 코드들을 안전한 곳에 보관하세요.`],
         { type: 'text/plain' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -421,7 +421,7 @@ export default {
       printWindow.document.write(`
         <html>
           <head>
-            <title>Developer Showcase - 백업 코드</title>
+            <title>My Codit - 백업 코드</title>
             <style>
               body { font-family: Arial, sans-serif; padding: 20px; }
               .codes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin: 20px 0; }
@@ -429,7 +429,7 @@ export default {
             </style>
           </head>
           <body>
-            <h1>Developer Showcase</h1>
+            <h1>My Codit</h1>
             <h2>2단계 인증 백업 코드</h2>
             <p>이 코드들을 안전한 곳에 보관하세요. 각 코드는 한 번만 사용할 수 있습니다.</p>
             <div class="codes">

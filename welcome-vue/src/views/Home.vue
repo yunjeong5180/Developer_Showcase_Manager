@@ -93,20 +93,6 @@
         </div>
       </section>
 
-      <!-- Demo Section -->
-      <section id="demo" class="mt-32 text-center">
-        <h2 class="text-3xl font-bold text-gray-900 mb-8">
-          실제 작동 모습을 확인해보세요
-        </h2>
-        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-4xl mx-auto">
-          <div class="aspect-video bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-            <div class="text-center">
-              <div class="w-20 h-20 bg-gray-300 rounded-full mx-auto mb-4 animate-pulse"></div>
-              <p class="text-gray-500">포트폴리오 데모 영상</p>
-            </div>
-          </div>
-        </div>
-      </section>
     </main>
 
     <!-- Footer -->

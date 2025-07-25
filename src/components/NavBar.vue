@@ -4,7 +4,7 @@
       <!-- 로고/브랜드 -->
       <div class="nav-brand">
         <router-link to="/dashboard" class="brand-link">
-          🚀 Developer Showcase
+          🚀 My Codit
         </router-link>
       </div>
 

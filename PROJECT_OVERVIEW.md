@@ -1,8 +1,8 @@
-# Developer Showcase Manager - 프로젝트 개요
+# My Codit Manager - 프로젝트 개요
 
 ## 프로젝트 소개
 
-Developer Showcase Manager는 개발자들이 자신의 포트폴리오를 효과적으로 관리할 수 있는 관리자 대시보드 애플리케이션입니다. Vue 3와 Supabase를 기반으로 구축되었으며, 프로젝트 관리, 프로필 설정, 포스트 작성 등의 기능을 제공합니다.
+My Codit Manager는 개발자들이 자신의 포트폴리오를 효과적으로 관리할 수 있는 관리자 대시보드 애플리케이션입니다. Vue 3와 Supabase를 기반으로 구축되었으며, 프로젝트 관리, 프로필 설정, 포스트 작성 등의 기능을 제공합니다.
 
 ## 주요 특징
 

@@ -1,4 +1,4 @@
-# Developer Showcase Manager - 프로젝트 구성 설계
+# My Codit Manager - 프로젝트 구성 설계
 
 ## 1. 아키텍처 개요
 
