@@ -27,8 +27,8 @@
           </span>
         </h1>
         <p class="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
-          <strong>Codit</strong>은 개발자를 위한 직관적이고 아름다운 포트폴리오 플랫폼입니다. 
-          당신의 코드와 프로젝트로 세상과 연결되어 보세요.
+          <strong>Codit</strong>은 개발자를 위한 포트폴리오 관리 플랫폼입니다. <br>
+          당신의 코드와 프로젝트로 세상을 연결해보세요.
         </p>
         
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
