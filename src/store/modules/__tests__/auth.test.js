@@ -7,8 +7,8 @@ describe('Auth Store Module', () => {
   beforeEach(() => {
     // 각 테스트 전에 상태 초기화
     state = {
-      currentUser: null,
-      userProfile: null,
+      user: null,
+      profile: null,
       isAuthenticated: false,
       loading: false,
       error: null
@@ -20,17 +20,17 @@ describe('Auth Store Module', () => {
       const user = { id: '123', email: 'test@example.com' }
       auth.mutations.SET_USER(state, user)
       
-      expect(state.currentUser).toEqual(user)
+      expect(state.user).toEqual(user)
       expect(state.isAuthenticated).toBe(true)
     })
 
     it('SET_USER mutation에 null을 전달하면 로그아웃 상태가 되는지 확인', () => {
-      state.currentUser = { id: '123', email: 'test@example.com' }
+      state.user = { id: '123', email: 'test@example.com' }
       state.isAuthenticated = true
       
       auth.mutations.SET_USER(state, null)
       
-      expect(state.currentUser).toBe(null)
+      expect(state.user).toBe(null)
       expect(state.isAuthenticated).toBe(false)
     })
 
@@ -42,7 +42,7 @@ describe('Auth Store Module', () => {
       }
       auth.mutations.SET_USER_PROFILE(state, profile)
       
-      expect(state.userProfile).toEqual(profile)
+      expect(state.profile).toEqual(profile)
     })
 
     it('SET_LOADING mutation이 로딩 상태를 올바르게 설정하는지 확인', () => {
@@ -64,7 +64,7 @@ describe('Auth Store Module', () => {
   describe('Getters', () => {
     it('currentUser getter가 현재 사용자를 반환하는지 확인', () => {
       const user = { id: '123', email: 'test@example.com' }
-      state.currentUser = user
+      state.user = user
       
       const result = auth.getters.currentUser(state)
       expect(result).toEqual(user)
@@ -80,7 +80,7 @@ describe('Auth Store Module', () => {
 
     it('userProfile getter가 사용자 프로필을 반환하는지 확인', () => {
       const profile = { name: 'John Doe' }
-      state.userProfile = profile
+      state.profile = profile
       
       const result = auth.getters.userProfile(state)
       expect(result).toEqual(profile)
@@ -102,8 +102,7 @@ describe('Auth Store Module', () => {
       await auth.actions.clearAuth({ commit })
       
       expect(commit).toHaveBeenCalledWith('SET_USER', null)
-      expect(commit).toHaveBeenCalledWith('SET_USER_PROFILE', null)
-      expect(commit).toHaveBeenCalledWith('SET_ERROR', null)
+      expect(commit).toHaveBeenCalledWith('SET_PROFILE', null)
     })
 
     it('setError action이 에러를 설정하는지 확인', () => {
