@@ -1,9 +1,9 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from 'vue-router'
 import Login from "../views/Login.vue";
 import Dashboard from "../views/Dashboard.vue";
 import Projects from "../views/Projects.vue";
 import Profile from "../views/Profile.vue";
-import Signup from "../views/Signup.vue"; // ✅ Register → Signup 변경
+import Signup from "../views/Signup.vue";
 import AuthCallback from "../views/AuthCallback.vue";
 import ForgotPassword from "../views/ForgotPassword.vue";
 import ResetPassword from "../views/ResetPassword.vue";
@@ -12,6 +12,12 @@ import TwoFactorAuth from "../views/TwoFactorAuth.vue";
 import CreatePost from "../views/CreatePost.vue";
 import PostList from "../views/PostList.vue";
 import { supabase } from '@/config/supabase';
+
+// 메인 페이지 컴포넌트들
+import HomeView from "../views/HomeView.vue";
+import AboutView from "../views/AboutView.vue";
+import PortfolioDemo from "../modules/portfolio/views/PortfolioDemo.vue";
+import PortfolioUser from "../modules/portfolio/views/PortfolioUser.vue";
 
 // 인증 확인 함수
 async function requireAuth(to, from, next) {
@@ -69,11 +75,41 @@ async function redirectIfAuthenticated(to, from, next) {
 const routes = [
   {
     path: "/",
-    redirect: "/admin/login", // 관리자 페이지 로그인으로 변경
+    name: "Home",
+    component: HomeView,
+  },
+  {
+    path: "/about",
+    name: "About",
+    component: AboutView,
+  },
+  {
+    path: "/portfolio",
+    name: "Portfolio",
+    component: PortfolioDemo,
+  },
+  {
+    path: "/portfolio/:nickname",
+    name: "PortfolioUser",
+    component: PortfolioUser,
+    props: true,
+  },
+  {
+    path: "/contact",
+    name: "Contact",
+    component: () => import("../views/AboutView.vue"), // 임시로 About 페이지 사용
+  },
+  {
+    path: "/login",
+    redirect: "/admin/login",
+  },
+  {
+    path: "/signup",
+    redirect: "/admin/signup",
   },
   {
     path: "/admin",
-    redirect: "/admin/login", // admin 기본 경로도 로그인으로
+    redirect: "/admin/dashboard",
   },
   {
     path: "/admin/login",
@@ -150,14 +186,14 @@ const routes = [
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",
-    redirect: "/admin/login", // 잘못된 경로는 관리자 로그인으로
+    redirect: "/", // 잘못된 경로는 홈으로
   },
 ];
 
 const router = createRouter({
-  history: createWebHistory(),
-  routes,
-});
+  history: createWebHistory(process.env.BASE_URL),
+  routes
+})
 
 // 전역 네비게이션 가드
 router.beforeEach((to, from, next) => {

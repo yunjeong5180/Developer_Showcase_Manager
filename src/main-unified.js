@@ -1,17 +1,8 @@
-import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
-import store from './store'
-
-// 전역 스타일 import
-import '@/shared/styles/global.scss'
-
-// Vuetify
-import 'vuetify/styles'
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
-import '@mdi/font/css/materialdesignicons.css'
+import Vue from 'vue'
+import App from './App-unified.vue'
+import router from './router/index-unified'
+import store from './store/index-unified'
+import vuetify from './plugins/vuetify'
 
 // FontAwesome
 import { library } from '@fortawesome/fontawesome-svg-core'
@@ -77,33 +68,16 @@ library.add(
   faSpinner
 )
 
-// Vuetify 설정
-const vuetify = createVuetify({
-  components,
-  directives,
-  theme: {
-    defaultTheme: 'light',
-    themes: {
-      light: {
-        colors: {
-          primary: '#42b883',
-          secondary: '#35495e',
-        }
-      }
-    }
-  }
-})
-
-// Create Vue app
-const app = createApp(App)
-
 // Register FontAwesome component globally
-app.component('font-awesome-icon', FontAwesomeIcon)
+Vue.component('font-awesome-icon', FontAwesomeIcon)
 
-// Use plugins
-app.use(router)
-app.use(store)
-app.use(vuetify)
+// Vue configuration
+Vue.config.productionTip = false
 
-// Mount app
-app.mount('#app')
+// Create Vue instance
+new Vue({
+  router,
+  store,
+  vuetify,
+  render: h => h(App)
+}).$mount('#app')
