@@ -48,23 +48,23 @@ export const getEnvironmentConfig = () => {
 
     // Supabase 설정
     supabase: {
-      url: process.env.VUE_APP_SUPABASE_URL || 'https://gjuwbcfuadlwvxrxbgui.supabase.co',
-      anonKey: process.env.VUE_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqdXdiY2Z1YWRsd3Z4cnhiZ3VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2NDUxMzYsImV4cCI6MjA2NjIyMTEzNn0.VxjQtPM47TSijZbXK4htyoVavODwOa7gdyrSwLc1-7s'
+      url: import.meta.env.VITE_SUPABASE_URL || 'https://gjuwbcfuadlwvxrxbgui.supabase.co',
+      anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqdXdiY2Z1YWRsd3Z4cnhiZ3VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2NDUxMzYsImV4cCI6MjA2NjIyMTEzNn0.VxjQtPM47TSijZbXK4htyoVavODwOa7gdyrSwLc1-7s'
     }
   }
 
   // 환경변수가 있으면 덮어쓰기 (우선순위: 환경변수 > 자동감지)
-  if (process.env.VUE_APP_BASE_URL) {
-    config.baseUrl = process.env.VUE_APP_BASE_URL
-    config.siteUrl = process.env.VUE_APP_BASE_URL
+  if (import.meta.env.VITE_BASE_URL) {
+    config.baseUrl = import.meta.env.VITE_BASE_URL
+    config.siteUrl = import.meta.env.VITE_BASE_URL
   }
 
-  if (process.env.VUE_APP_RESET_PASSWORD_URL) {
-    config.resetPasswordUrl = process.env.VUE_APP_RESET_PASSWORD_URL
+  if (import.meta.env.VITE_RESET_PASSWORD_URL) {
+    config.resetPasswordUrl = import.meta.env.VITE_RESET_PASSWORD_URL
   }
 
-  if (process.env.VUE_APP_ENVIRONMENT) {
-    config.environment = process.env.VUE_APP_ENVIRONMENT
+  if (import.meta.env.VITE_ENVIRONMENT) {
+    config.environment = import.meta.env.VITE_ENVIRONMENT
   }
 
   return config

@@ -34,78 +34,80 @@ export const statisticsAPI = {
 
       const currentUserId = userData.id
 
-      // 1. 총 프로젝트 수
-      const { count: totalProjects, error: projectCountError } = await supabase
-        .from('projects')
-        .select('id', { count: 'exact' })
-        .eq('user_id', currentUserId)
-
-      if (projectCountError) {
-        console.error('프로젝트 수 조회 오류:', projectCountError)
-      }
-
-      // 2. 총 조회수 (모든 프로젝트의 view_count 합계)
-      const { data: viewCountData, error: viewCountError } = await supabase
-        .from('projects')
-        .select('view_count')
-        .eq('user_id', currentUserId)
-
-      let totalViews = 0
-      if (!viewCountError && viewCountData) {
-        totalViews = viewCountData.reduce((sum, project) => sum + (project.view_count || 0), 0)
-      }
-
-      // 3. 이번 달 업데이트된 프로젝트 수
+      // 날짜 준비
       const startOfMonth = new Date()
       startOfMonth.setDate(1)
       startOfMonth.setHours(0, 0, 0, 0)
-
-      const { count: monthlyUpdates, error: monthlyError } = await supabase
-        .from('projects')
-        .select('id', { count: 'exact' })
-        .eq('user_id', currentUserId)
-        .gte('updated_at', startOfMonth.toISOString())
-
-      if (monthlyError) {
-        console.error('월별 업데이트 조회 오류:', monthlyError)
-      }
-
-      // 4. 특성 프로젝트 수
-      const { count: featuredProjects, error: featuredError } = await supabase
-        .from('projects')
-        .select('id', { count: 'exact' })
-        .eq('user_id', currentUserId)
-        .eq('is_featured', true)
-
-      if (featuredError) {
-        console.error('특성 프로젝트 조회 오류:', featuredError)
-      }
-
-      // 5. 최근 30일 활동 수
+      
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-      const { count: recentActivities, error: activityError } = await supabase
-        .from('activity_logs')
-        .select('id', { count: 'exact' })
-        .eq('user_id', currentUserId)
-        .gte('created_at', thirtyDaysAgo.toISOString())
+      // 모든 쿼리를 병렬로 실행하여 속도 개선
+      const [
+        projectCountResult,
+        viewCountResult,
+        monthlyUpdatesResult,
+        featuredResult,
+        recentActivitiesResult,
+        techStackResult
+      ] = await Promise.all([
+        // 1. 총 프로젝트 수
+        supabase
+          .from('projects')
+          .select('id', { count: 'exact' })
+          .eq('user_id', currentUserId),
+        
+        // 2. 총 조회수
+        supabase
+          .from('projects')
+          .select('view_count')
+          .eq('user_id', currentUserId),
+          
+        // 3. 이번 달 업데이트
+        supabase
+          .from('projects')
+          .select('id', { count: 'exact' })
+          .eq('user_id', currentUserId)
+          .gte('updated_at', startOfMonth.toISOString()),
+          
+        // 4. 특성 프로젝트
+        supabase
+          .from('projects')
+          .select('id', { count: 'exact' })
+          .eq('user_id', currentUserId)
+          .eq('is_featured', true),
+          
+        // 5. 최근 활동
+        supabase
+          .from('activity_logs')
+          .select('id', { count: 'exact' })
+          .eq('user_id', currentUserId)
+          .gte('created_at', thirtyDaysAgo.toISOString()),
+          
+        // 6. 기술 스택
+        supabase
+          .from('projects')
+          .select('tech_stack')
+          .eq('user_id', currentUserId)
+      ])
 
-      if (activityError) {
-        console.error('최근 활동 조회 오류:', activityError)
+      // 결과 처리
+      const totalProjects = projectCountResult.count || 0
+      
+      let totalViews = 0
+      if (!viewCountResult.error && viewCountResult.data) {
+        totalViews = viewCountResult.data.reduce((sum, project) => sum + (project.view_count || 0), 0)
       }
-
-      // 6. 가장 많이 사용된 기술 스택 (상위 5개)
-      const { data: projectsWithTechStack, error: techStackError } = await supabase
-        .from('projects')
-        .select('tech_stack')
-        .eq('user_id', currentUserId)
+      
+      const monthlyUpdates = monthlyUpdatesResult.count || 0
+      const featuredProjects = featuredResult.count || 0
+      const recentActivities = recentActivitiesResult.count || 0
 
       let topTechStacks = []
-      if (!techStackError && projectsWithTechStack) {
+      if (!techStackResult.error && techStackResult.data) {
         const techStackCount = {}
         
-        projectsWithTechStack.forEach(project => {
+        techStackResult.data.forEach(project => {
           if (project.tech_stack && Array.isArray(project.tech_stack)) {
             project.tech_stack.forEach(tech => {
               techStackCount[tech] = (techStackCount[tech] || 0) + 1
@@ -119,28 +121,32 @@ export const statisticsAPI = {
           .map(([tech, count]) => ({ name: tech, count }))
       }
 
-      // 7. 월별 프로젝트 생성 통계 (최근 6개월)
-      const monthlyStats = []
+      // 7. 월별 프로젝트 생성 통계 (최근 6개월) - 병렬 처리
+      const monthlyQueries = []
+      const monthLabels = []
+      
       for (let i = 5; i >= 0; i--) {
         const date = new Date()
         date.setMonth(date.getMonth() - i)
         const startOfTargetMonth = new Date(date.getFullYear(), date.getMonth(), 1)
         const endOfTargetMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59)
-
-        const { count: monthlyCount, error: monthlyStatsError } = await supabase
-          .from('projects')
-          .select('id', { count: 'exact' })
-          .eq('user_id', currentUserId)
-          .gte('created_at', startOfTargetMonth.toISOString())
-          .lte('created_at', endOfTargetMonth.toISOString())
-
-        if (!monthlyStatsError) {
-          monthlyStats.push({
-            month: date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short' }),
-            count: monthlyCount || 0
-          })
-        }
+        
+        monthLabels.push(date.toLocaleDateString('ko-KR', { year: 'numeric', month: 'short' }))
+        monthlyQueries.push(
+          supabase
+            .from('projects')
+            .select('id', { count: 'exact' })
+            .eq('user_id', currentUserId)
+            .gte('created_at', startOfTargetMonth.toISOString())
+            .lte('created_at', endOfTargetMonth.toISOString())
+        )
       }
+      
+      const monthlyResults = await Promise.all(monthlyQueries)
+      const monthlyStats = monthlyResults.map((result, index) => ({
+        month: monthLabels[index],
+        count: result.count || 0
+      }))
 
       const dashboardStats = {
         totalProjects: totalProjects || 0,

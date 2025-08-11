@@ -1,8 +1,8 @@
 // Supabase 연결 상태를 확인하는 유틸리티
 
 export const checkSupabaseConfig = () => {
-  const url = process.env.VUE_APP_SUPABASE_URL
-  const key = process.env.VUE_APP_SUPABASE_ANON_KEY
+  const url = import.meta.env.VITE_SUPABASE_URL
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
   
   const isConfigured = url && 
                        key && 

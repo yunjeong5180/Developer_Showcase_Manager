@@ -118,18 +118,8 @@ import {
   isDevelopment
 } from '@/config/environment'
 
-// SignupModal 동적 import로 안전하게 처리
-let SignupModal = null
-try {
-  SignupModal = require('@/components/SignupModal.vue').default
-} catch (error) {
-  console.warn('SignupModal을 찾을 수 없습니다:', error)
-  // 모달 없이도 동작하도록 더미 컴포넌트 제공
-  SignupModal = {
-    name: 'DummySignupModal',
-    template: '<div></div>'
-  }
-}
+// SignupModal import
+import SignupModal from '@/components/SignupModal.vue'
 
 export default {
   name: 'ForgotPassword',

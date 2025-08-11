@@ -1,0 +1,44 @@
+<\!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Session</title>
+</head>
+<body>
+    <h1>세션 초기화</h1>
+    <button onclick="clearAll()">모든 세션 데이터 삭제</button>
+    <div id="result"></div>
+    
+    <script>
+        function clearAll() {
+            // Supabase 관련 모든 localStorage 항목 삭제
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('supabase') || key.includes('sb-') || key === 'user' || key === 'rememberUser' || key === 'userEmail')) {
+                    keysToRemove.push(key);
+                }
+            }
+            
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+                console.log('Removed:', key);
+            });
+            
+            // sessionStorage도 초기화
+            sessionStorage.clear();
+            
+            document.getElementById('result').innerHTML = '<p style="color: green;">세션이 초기화되었습니다. 브라우저를 새로고침하세요.</p>';
+            
+            // 2초 후 메인 페이지로 리다이렉트
+            setTimeout(() => {
+                window.location.href = 'http://localhost:8080/';
+            }, 2000);
+        }
+        
+        // 페이지 로드 시 자동 실행
+        window.onload = function() {
+            clearAll();
+        };
+    </script>
+</body>
+</html>

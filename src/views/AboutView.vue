@@ -103,7 +103,7 @@ export default {
 
 .about-page {
   min-height: calc(100vh - 60px);
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: $gradient-light;  // 다른 페이지와 동일한 깨끗한 회색 그라디언트로 통일
 }
 
 .hero-section {

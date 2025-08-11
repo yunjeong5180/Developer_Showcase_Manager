@@ -607,13 +607,14 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '@/shared/styles/variables.scss';
 .signup-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: $gradient-light;  /* 깨끗한 회색 그라디언트 */
   padding: 20px;
 }
 
@@ -771,7 +772,7 @@ export default {
 
 .signup-btn {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: $gradient-primary;  /* 차콜 블랙 그라디언트 */
   color: white;
   border: none;
   padding: 15px;
@@ -887,7 +888,7 @@ export default {
 }
 
 .modal-btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: $gradient-primary;  /* 차콜 블랙 그라디언트 */
   color: white;
 }
 

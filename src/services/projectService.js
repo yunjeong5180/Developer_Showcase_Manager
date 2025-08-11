@@ -89,7 +89,7 @@ export const projectAPI = {
     }
   },
 
-  // 프로젝트 목록 조회
+  // 프로젝트 목록 조회 (최적화된 버전)
   async getProjects(filters = {}) {
     try {
       console.log('프로젝트 목록 조회:', filters)
@@ -119,10 +119,10 @@ export const projectAPI = {
         }
       }
 
-      // 쿼리 빌더 시작
+      // 쿼리 빌더 시작 - 필요한 필드만 선택하여 속도 개선
       let query = supabase
         .from('projects')
-        .select('*')
+        .select('id, title, description, tech_stack, github_url, demo_url, image_urls, start_date, end_date, is_featured, view_count, created_at, updated_at', { count: 'exact' })
         .eq('user_id', userData.id)
 
       // 검색 필터
@@ -179,8 +179,8 @@ export const projectAPI = {
           pagination: {
             page: page,
             limit: limit,
-            total: count || projects.length,
-            totalPages: Math.ceil((count || projects.length) / limit)
+            total: count || 0,
+            totalPages: Math.ceil((count || 0) / limit)
           }
         }
       }

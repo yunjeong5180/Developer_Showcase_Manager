@@ -221,7 +221,7 @@ export default {
 }
 
 .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: $gradient-primary;  // 차콜 블랙 그라디언트로 통일
   padding: 100px 20px 60px;
   
   .hero-content {
@@ -232,14 +232,14 @@ export default {
     .hero-title {
       font-size: 3rem;
       font-weight: 700;
-      color: white;
+      color: white;  // 검정 배경에 흰색 텍스트
       margin-bottom: 16px;
       animation: fadeInDown 0.8s ease;
     }
     
     .hero-subtitle {
       font-size: 1.25rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.9);  // 밝은 회색 텍스트
       animation: fadeInUp 0.8s ease;
     }
   }
@@ -285,7 +285,7 @@ section {
       .profile-avatar {
         width: 150px;
         height: 150px;
-        background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+        background: $gradient-primary;  // 차콜 블랙 그라디언트
         border-radius: 50%;
         display: flex;
         align-items: center;

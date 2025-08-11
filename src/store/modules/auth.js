@@ -13,6 +13,7 @@ const getters = {
   currentUser: state => state.user,
   userProfile: state => state.profile,
   isAuthenticated: state => state.isAuthenticated,
+  isLoading: state => state.loading,
   authLoading: state => state.loading,
   authError: state => state.error
 }
@@ -21,6 +22,9 @@ const mutations = {
   SET_USER(state, user) {
     state.user = user
     state.isAuthenticated = !!user
+  },
+  SET_USER_PROFILE(state, profile) {
+    state.profile = profile
   },
   SET_PROFILE(state, profile) {
     state.profile = profile
@@ -40,21 +44,14 @@ const mutations = {
 }
 
 const actions = {
-  async initAuth({ commit }) {
+  async initAuth({ commit, dispatch }) {
     commit('SET_LOADING', true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         commit('SET_USER', user)
         // 프로필 정보 가져오기
-        const { data: profile } = await supabase
-          .from('users')
-          .select('*')
-          .eq('auth_user_id', user.id)
-          .single()
-        if (profile) {
-          commit('SET_PROFILE', profile)
-        }
+        await dispatch('loadUserProfile')
       }
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -63,7 +60,56 @@ const actions = {
     }
   },
   
-  async signIn({ commit }, { email, password }) {
+  async loadUserProfile({ commit, state }) {
+    if (!state.user) {
+      console.log('사용자 정보 없음, 프로필 로드 중단')
+      return
+    }
+    
+    console.log('프로필 로드 시작:', state.user.id)
+    
+    try {
+      const { data: profile, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('auth_user_id', state.user.id)
+        .single()
+        
+      if (error) {
+        console.error('프로필 조회 에러:', error)
+        // 프로필이 없는 경우 기본 프로필 생성
+        if (error.code === 'PGRST116') {
+          console.log('프로필 없음, 기본 프로필 생성 시도')
+          const { data: newProfile, error: createError } = await supabase
+            .from('users')
+            .insert([{
+              auth_user_id: state.user.id,
+              email: state.user.email,
+              name: state.user.user_metadata?.name || state.user.email.split('@')[0],
+              nickname: state.user.user_metadata?.nickname || state.user.email.split('@')[0],
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }])
+            .select()
+            .single()
+            
+          if (createError) {
+            console.error('프로필 생성 실패:', createError)
+          } else if (newProfile) {
+            console.log('프로필 생성 성공:', newProfile)
+            commit('SET_PROFILE', newProfile)
+          }
+        }
+      } else if (profile) {
+        console.log('프로필 로드 성공:', profile)
+        commit('SET_PROFILE', profile)
+      }
+    } catch (error) {
+      console.error('프로필 로드 예외:', error)
+    }
+  },
+  
+  async signIn({ commit, dispatch }, { email, password }) {
     commit('SET_LOADING', true)
     commit('SET_ERROR', null)
     try {
@@ -73,6 +119,8 @@ const actions = {
       })
       if (error) throw error
       commit('SET_USER', data.user)
+      // 로그인 성공 후 프로필 로드
+      await dispatch('loadUserProfile')
       return { success: true }
     } catch (error) {
       commit('SET_ERROR', error.message)
@@ -113,6 +161,15 @@ const actions = {
     } finally {
       commit('SET_LOADING', false)
     }
+  },
+  
+  async clearAuth({ commit }) {
+    commit('SET_USER', null)
+    commit('SET_PROFILE', null)
+  },
+  
+  setError({ commit }, error) {
+    commit('SET_ERROR', error)
   }
 }
 

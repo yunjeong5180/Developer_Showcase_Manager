@@ -7,34 +7,38 @@
       </div>
     </transition>
 
-    <!-- 네비게이션 바 (조건부 렌더링) -->
-    <nav v-if="showNavigation" class="navbar">
+    <!-- 초기 로딩 중일 때는 네비게이션 바 숨김 -->
+    <nav v-if="showNavigation && !authLoading" class="navbar">
       <div class="nav-container">
-        <router-link to="/" class="nav-brand">
-          🚀 Codit
-        </router-link>
+        <!-- 로그인 전: Codit (홈으로), 로그인 후: My Codit (대시보드로) -->
+        <template v-if="isAuthenticated">
+          <router-link to="/admin/dashboard" class="nav-brand">
+            🚀 My Codit
+          </router-link>
+        </template>
+        <template v-else>
+          <router-link to="/" class="nav-brand">
+            🚀 Codit
+          </router-link>
+        </template>
 
         <div class="nav-right-group">
           <div class="nav-menu">
             <template v-if="isAuthenticated">
-              <router-link to="/admin/dashboard" class="nav-link">대시보드</router-link>
-              <router-link to="/admin/projects" class="nav-link">프로젝트</router-link>
-              <router-link to="/admin/profile" class="nav-link">프로필</router-link>
-              <router-link :to="`/portfolio/${userProfile?.nickname || 'demo'}`" class="nav-link">내 포트폴리오</router-link>
-            </template>
-            <template v-else>
-              <router-link to="/portfolio" class="nav-link">포트폴리오</router-link>
-              <router-link to="/about" class="nav-link">소개</router-link>
-              <router-link to="/contact" class="nav-link">문의</router-link>
-            </template>
-          </div>
-
-          <div class="user-menu">
-            <template v-if="isAuthenticated">
-              <span class="username">{{ userProfile?.name || currentUser?.email }}</span>
+              <!-- 로그인 후 메뉴 -->
+              <router-link to="/admin/create-post" class="nav-link">프로젝트 작성</router-link>
+              <router-link to="/admin/projects" class="nav-link">프로젝트 관리</router-link>
+              <router-link to="/admin/post-list" class="nav-link">프로젝트 목록</router-link>
+              <router-link to="/admin/profile" class="nav-link">
+                {{ userProfile?.nickname || userProfile?.name || '프로필' }}
+              </router-link>
               <button @click="handleLogout" class="logout-btn">로그아웃</button>
             </template>
             <template v-else>
+              <!-- 로그인 전 메뉴 -->
+              <router-link to="/portfolio" class="nav-link">포트폴리오</router-link>
+              <router-link to="/about" class="nav-link">소개</router-link>
+              <router-link to="/contact" class="nav-link">문의</router-link>
               <router-link to="/login" class="login-btn">로그인</router-link>
               <router-link to="/signup" class="signup-btn">회원가입</router-link>
             </template>
@@ -56,7 +60,7 @@ export default {
   name: 'App',
   computed: {
     ...mapGetters(['notification']),
-    ...mapGetters('auth', ['currentUser', 'userProfile', 'isAuthenticated']),
+    ...mapGetters('auth', ['currentUser', 'userProfile', 'isAuthenticated', 'authLoading']),
     
     showNavigation() {
       const hideNavRoutes = [
@@ -69,17 +73,64 @@ export default {
       return !hideNavRoutes.includes(this.$route.path)
     }
   },
+  watch: {
+    isAuthenticated(newVal) {
+      console.log('인증 상태 변경:', newVal)
+      console.log('현재 사용자:', this.currentUser)
+      console.log('프로필 정보:', this.userProfile)
+    }
+  },
   methods: {
     ...mapActions('auth', ['initAuth', 'signOut']),
     
     async handleLogout() {
+      // 로그아웃 시 모든 세션 데이터 강제 삭제
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('supabase') || key.includes('sb-'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // sessionStorage도 초기화
+      sessionStorage.clear();
+      
       await this.signOut()
       this.$router.push('/login')
     }
   },
-  created() {
-    // 앱 시작시 인증 상태 초기화
-    this.initAuth()
+  async created() {
+    // Supabase 인증 리스너를 먼저 설정
+    const { supabase } = await import('@/config/supabase')
+    if (supabase) {
+      // 초기 세션 확인 (중복 방지)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        this.$store.commit('auth/SET_USER', session.user)
+        // 프로필은 한 번만 로드
+        this.$store.dispatch('auth/loadUserProfile')
+      }
+      
+      // 이후 변경사항만 리스너로 처리
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email)
+        if (event === 'SIGNED_IN' && session) {
+          // 로그인 성공 시 store 업데이트
+          this.$store.commit('auth/SET_USER', session.user)
+          // 프로필 로드 완료까지 대기
+          await this.$store.dispatch('auth/loadUserProfile')
+          console.log('프로필 로드 완료, 현재 프로필:', this.userProfile)
+        } else if (event === 'SIGNED_OUT') {
+          // 로그아웃 시 store 초기화
+          this.$store.commit('auth/CLEAR_AUTH')
+        }
+        // INITIAL_SESSION 이벤트는 제거 (getSession으로 대체)
+      })
+    }
+    
+    console.log('초기 인증 상태 확인 완료')
   },
   mounted() {
     // Supabase 연결 상태 확인
@@ -191,6 +242,7 @@ body {
   transition: opacity 0.3s ease;
   
   &:hover {
+    color: white;  // 호버 시에도 흰색 유지
     opacity: 0.8;
   }
 }
@@ -217,11 +269,13 @@ body {
   
   &:hover {
     background: rgba(255, 255, 255, 0.1);
+    color: white;  // 호버 시에도 흰색 유지
     transform: translateY(-1px);
   }
   
   &.router-link-active {
     background: rgba(255, 255, 255, 0.2);
+    color: white;  // 활성 상태에서도 흰색 유지
     font-weight: 600;
   }
 }
@@ -253,6 +307,7 @@ body {
   
   &:hover {
     background: rgba(255, 255, 255, 0.2);
+    color: white;  // 호버 시에도 흰색 유지
     transform: translateY(-1px);
     box-shadow: $shadow-sm;
   }
@@ -264,6 +319,7 @@ body {
   
   &:hover {
     background: white;
+    color: $primary-dark;  // 회원가입 버튼은 검정색 유지
   }
 }
 

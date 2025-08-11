@@ -144,13 +144,14 @@ export default {
           localStorage.removeItem('userEmail')  // 이메일만 기억 안함
         }
 
-        // Supabase로 로그인 시도
-        const { error } = await supabase.auth.signInWithPassword({
+        // Vuex store를 통한 로그인 시도
+        const result = await this.$store.dispatch('auth/signIn', {
           email: this.email,
           password: this.password
         })
 
-        if (error) {
+        if (!result.success) {
+          const error = { message: result.error }
           console.log('로그인 에러:', error.message)
 
           // 🔥 핵심 수정: 로그인 실패 후 이메일 존재 여부 확인
@@ -181,8 +182,12 @@ export default {
           return
         }
 
-        // 성공 시 App.vue의 onAuthStateChange 리스너가 감지하여 대시보드로 이동시킴
-        this.$router.push('/admin/dashboard')
+        // 로그인 성공 - store가 자동으로 업데이트됨
+        console.log('로그인 성공, 대시보드로 이동')
+        // 약간의 지연 후 이동 (store 업데이트 대기)
+        setTimeout(() => {
+          this.$router.push('/admin/dashboard')
+        }, 100)
 
       } catch (error) {
         console.error('로그인 오류:', error)
@@ -319,7 +324,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f7f7f7 0%, #e5e5e5 100%);  /* 깨끗한 회색 그라디언트 */
   padding: 20px;
 }
 
@@ -378,7 +383,7 @@ export default {
 
 .form-group input:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: #3b82f6;  /* 포커스 시 블루 */
 }
 
 .form-group input:disabled {
@@ -409,14 +414,14 @@ export default {
 }
 
 .forgot-password {
-  color: #667eea;
+  color: #3b82f6;  /* 모던 블루 */
   text-decoration: none;
   font-size: 0.9rem;
   transition: color 0.3s ease;
 }
 
 .forgot-password:hover {
-  color: #5a6fd8;
+  color: #2563eb;  /* 블루 호버 */
   text-decoration: underline;
 }
 
@@ -433,7 +438,7 @@ export default {
 .login-btn {
   width: 100%;
   padding: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: $gradient-primary;  /* 차콜 블랙 그라디언트 */
   color: white;
   border: none;
   border-radius: 10px;
@@ -534,14 +539,14 @@ export default {
 }
 
 .signup-link a {
-  color: #667eea;
+  color: #3b82f6;  /* 모던 블루 */
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
 .signup-link a:hover {
-  color: #5a6fd8;
+  color: #2563eb;  /* 블루 호버 */
   text-decoration: underline;
 }
 

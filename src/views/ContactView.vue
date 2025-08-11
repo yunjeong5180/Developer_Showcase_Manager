@@ -229,11 +229,11 @@ export default {
 
 .contact-page {
   min-height: calc(100vh - 60px);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: $gradient-light;  // 깨끗한 회색 그라디언트
 }
 
 .hero-section {
-  background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
+  background: $gradient-primary;  // 차콜 블랙 그라디언트
   color: white;
   padding: 80px 20px;
   text-align: center;
@@ -273,14 +273,13 @@ export default {
 .contact-info {
   h2 {
     font-size: 1.75rem;
-    color: white;
+    color: $primary-color;  // 차콜 블랙
     margin-bottom: 30px;
   }
   
   .info-card {
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: white;
+    border: 1px solid $gray-200;
     padding: 20px;
     border-radius: $border-radius-lg;
     margin-bottom: 20px;
@@ -291,28 +290,29 @@ export default {
     
     &:hover {
       transform: translateX(5px);
-      background: rgba(255, 255, 255, 0.15);
+      background: $gray-50;
     }
     
     .info-icon {
       font-size: 2rem;
+      color: $accent-color;  // 블루 아이콘
     }
     
     .info-content {
       h3 {
-        color: white;
+        color: $primary-color;  // 차콜 블랙
         font-size: 1.125rem;
         margin-bottom: 8px;
       }
       
       p {
-        color: rgba(255, 255, 255, 0.9);
+        color: $gray-600;
         margin: 4px 0;
       }
       
       .sub-text {
         font-size: 0.875rem;
-        color: rgba(255, 255, 255, 0.7);
+        color: $gray-500;
       }
     }
   }
@@ -321,7 +321,7 @@ export default {
     margin-top: 40px;
     
     h3 {
-      color: white;
+      color: $primary-color;  // 차콜 블랙으로 변경
       margin-bottom: 20px;
     }
     
@@ -428,8 +428,8 @@ export default {
       border: none;
       
       &.btn-primary {
-        background: linear-gradient(135deg, $primary-color 0%, $primary-dark 100%);
-        color: white;
+        background: $gradient-primary;  // 차콜 블랙 그라디언트
+        color: white;  // 흰색 텍스트
         
         &:hover:not(:disabled) {
           transform: translateY(-2px);

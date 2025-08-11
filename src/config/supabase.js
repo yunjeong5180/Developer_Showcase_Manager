@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Supabase 프로젝트 설정 - 환경 변수 사용
-const supabaseUrl = process.env.VUE_APP_SUPABASE_URL || 'https://your-project.supabase.co'
-const supabaseKey = process.env.VUE_APP_SUPABASE_ANON_KEY || 'your-anon-key-here'
+// Supabase 프로젝트 설정 - 환경 변수 사용 (Vite는 import.meta.env 사용)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co'
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key-here'
 
 // Supabase가 제대로 설정되었는지 확인
 const isSupabaseConfigured = supabaseUrl !== 'https://your-project.supabase.co' && 
@@ -12,7 +12,7 @@ const isSupabaseConfigured = supabaseUrl !== 'https://your-project.supabase.co' 
 // Supabase 클라이언트 생성 (설정된 경우에만)
 export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey, {
   auth: {
-    persistSession: true,
+    persistSession: true,  // 세션 유지 (로그인 상태 유지)
     autoRefreshToken: true,
     detectSessionInUrl: true,
     redirectTo: `${window.location.origin}/auth/callback`
@@ -415,10 +415,21 @@ export const authAPI = {
           console.log('회원가입 성공, 자동 로그인 방지를 위해 로그아웃 실행')
           await supabase.auth.signOut()
 
-          // localStorage도 확실히 정리
-          localStorage.removeItem('user')
-          localStorage.removeItem('supabase.auth.token')
-          localStorage.removeItem('sb-gjuwbcfuadlwvxrxbgui-auth-token')
+          // localStorage에서 모든 Supabase 관련 항목 삭제
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('supabase') || key.includes('sb-'))) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+            console.log('Removed key:', key);
+          });
+          
+          // sessionStorage도 초기화
+          sessionStorage.clear();
 
           console.log('자동 로그아웃 완료')
         }
