@@ -16,6 +16,7 @@ import { supabase } from '@/config/supabase';
 // 메인 페이지 컴포넌트들
 import HomeView from "../views/HomeView.vue";
 import AboutView from "../views/AboutView.vue";
+import ContactView from "../views/ContactView.vue";
 import PortfolioDemo from "../modules/portfolio/views/PortfolioDemo.vue";
 import PortfolioUser from "../modules/portfolio/views/PortfolioUser.vue";
 
@@ -24,6 +25,18 @@ async function requireAuth(to, from, next) {
   console.log('인증 가드 실행:', to.path);
 
   try {
+    // Supabase가 설정되지 않은 경우 로컬 모드로 처리
+    if (!supabase) {
+      console.log('Supabase 미설정 - 로컬 모드로 인증 체크');
+      // 로컬 스토리지에서 사용자 확인
+      const localUser = localStorage.getItem('currentUser');
+      if (localUser) {
+        return next();
+      } else {
+        return next('/login');
+      }
+    }
+    
     // Supabase 세션 확인
     const { data: { session } } = await supabase.auth.getSession();
 
@@ -54,6 +67,20 @@ async function redirectIfAuthenticated(to, from, next) {
     if (from.path === '/reset-password') {
       console.log('비밀번호 재설정에서 온 접근, 세션 체크 무시하고 로그인 페이지 표시');
       next();
+      return;
+    }
+
+    // Supabase가 설정되지 않은 경우 로컬 모드로 처리
+    if (!supabase) {
+      console.log('Supabase 미설정 - 로컬 모드');
+      const localUser = localStorage.getItem('currentUser');
+      if (localUser) {
+        console.log('로컬 사용자 로그인됨, 대시보드로 리디렉션');
+        next('/admin/dashboard');
+      } else {
+        console.log('로컬 사용자 없음, 로그인 페이지 표시');
+        next();
+      }
       return;
     }
 
@@ -97,7 +124,7 @@ const routes = [
   {
     path: "/contact",
     name: "Contact",
-    component: () => import("../views/AboutView.vue"), // 임시로 About 페이지 사용
+    component: ContactView,
   },
   {
     path: "/login",

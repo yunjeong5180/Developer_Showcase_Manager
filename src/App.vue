@@ -50,6 +50,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import { getSupabaseStatus } from '@/shared/services/authService'
 
 export default {
   name: 'App',
@@ -79,6 +80,18 @@ export default {
   created() {
     // 앱 시작시 인증 상태 초기화
     this.initAuth()
+  },
+  mounted() {
+    // Supabase 연결 상태 확인
+    const supabaseStatus = getSupabaseStatus()
+    if (!supabaseStatus.isConfigured) {
+      console.warn('⚠️ Supabase 설정 안내:')
+      console.warn('1. .env.development 파일을 생성하세요')
+      console.warn('2. .env.example 파일을 참고하여 Supabase URL과 익명 키를 설정하세요')
+      console.warn('3. 로컬 모드로 실행 중입니다 (데이터는 브라우저에만 저장됩니다)')
+    } else {
+      console.log('✅ Supabase 연결 설정 완료:', supabaseStatus.url)
+    }
   }
 }
 </script>

@@ -4,10 +4,14 @@
   "private": true,
   "packageManager": "npm@10.2.4",
   "scripts": {
-    "dev": "vue-cli-service serve --port 8080",
-    "build": "vue-cli-service build",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint": "vue-cli-service lint",
     "serve": "vue-cli-service serve --port 8080",
+    "test": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
     "build:railway": "NODE_ENV=production vue-cli-service build",
     "serve:static": "npx serve dist -s -l $PORT",
     "start": "npx serve dist -s -p $PORT"
@@ -33,18 +37,25 @@
   "devDependencies": {
     "@babel/core": "^7.12.16",
     "@babel/eslint-parser": "^7.12.16",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/ui": "^3.2.4",
     "@vue/cli-plugin-babel": "~5.0.0",
     "@vue/cli-plugin-eslint": "~5.0.0",
     "@vue/cli-plugin-router": "~5.0.0",
     "@vue/cli-plugin-vuex": "~5.0.0",
     "@vue/cli-service": "~5.0.0",
+    "@vue/test-utils": "^2.4.0-alpha.2",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-vue": "^8.0.3",
+    "happy-dom": "^18.0.1",
     "prettier": "^2.4.1",
     "sass": "^1.32.7",
     "sass-loader": "^12.0.0",
+    "terser": "^5.43.1",
+    "vite": "^7.1.1",
+    "vitest": "^3.2.4",
     "webpack-plugin-vuetify": "^3.1.2"
   }
 }

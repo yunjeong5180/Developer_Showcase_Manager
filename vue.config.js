@@ -1,6 +1,7 @@
 const { defineConfig } = require('@vue/cli-service')
 const path = require('path')
 const { VuetifyPlugin } = require('webpack-plugin-vuetify')
+const webpack = require('webpack')
 
 module.exports = defineConfig({
   transpileDependencies: true,
@@ -10,6 +11,12 @@ module.exports = defineConfig({
       new VuetifyPlugin({
         autoImport: true,
       }),
+      // Vue 3 Feature Flags 정의
+      new webpack.DefinePlugin({
+        __VUE_OPTIONS_API__: 'true',
+        __VUE_PROD_DEVTOOLS__: 'false',
+        __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: 'false'
+      })
     ],
     resolve: {
       alias: {

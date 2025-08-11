@@ -1,23 +1,37 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Supabase 프로젝트 설정
-const supabaseUrl = 'https://gjuwbcfuadlwvxrxbgui.supabase.co'
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqdXdiY2Z1YWRsd3Z4cnhiZ3VpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTA2NDUxMzYsImV4cCI6MjA2NjIyMTEzNn0.VxjQtPM47TSijZbXK4htyoVavODwOa7gdyrSwLc1-7s'
+// Supabase 프로젝트 설정 - 환경 변수 사용
+const supabaseUrl = process.env.VUE_APP_SUPABASE_URL || 'https://your-project.supabase.co'
+const supabaseKey = process.env.VUE_APP_SUPABASE_ANON_KEY || 'your-anon-key-here'
 
-// Supabase 클라이언트 생성
-export const supabase = createClient(supabaseUrl, supabaseKey, {
+// Supabase가 제대로 설정되었는지 확인
+const isSupabaseConfigured = supabaseUrl !== 'https://your-project.supabase.co' && 
+                            supabaseKey !== 'your-anon-key-here' &&
+                            supabaseUrl && supabaseKey
+
+// Supabase 클라이언트 생성 (설정된 경우에만)
+export const supabase = isSupabaseConfigured ? createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
     redirectTo: `${window.location.origin}/auth/callback`
   }
-})
+}) : null
 
 // 인증 관련 API 함수들
 export const authAPI = {
   // 닉네임 중복 체크 - 임시 회원가입 시도로 실제 중복 확인
   async checkNicknameDuplicate(nickname) {
+    // Supabase가 설정되지 않은 경우 처리
+    if (!supabase) {
+      console.log('Supabase 미설정 - 로컬 모드')
+      return {
+        data: { exists: false },
+        error: null
+      }
+    }
+    
     try {
       console.log('닉네임 중복 확인:', nickname)
 
@@ -108,6 +122,15 @@ export const authAPI = {
 
   // 이메일 중복 체크 - 임시 삽입 시도로 실제 중복 확인
   async checkEmailDuplicate(email) {
+    // Supabase가 설정되지 않은 경우 처리
+    if (!supabase) {
+      console.log('Supabase 미설정 - 로컬 모드')
+      return {
+        data: { exists: false },
+        error: null
+      }
+    }
+    
     try {
       console.log('이메일 중복 확인:', email)
 
@@ -258,6 +281,29 @@ export const authAPI = {
 
   // 🔥 핵심 수정: 회원가입 함수 - 순차적 처리로 안전성 확보
   async signUp(userData) {
+    // Supabase가 설정되지 않은 경우 처리
+    if (!supabase) {
+      console.log('Supabase 미설정 - 로컬 모드로 회원가입')
+      const mockUser = {
+        id: 'local-' + Date.now(),
+        email: userData.email,
+        name: userData.name,
+        nickname: userData.nickname,
+        created_at: new Date().toISOString()
+      }
+      
+      // 로컬 스토리지에 저장
+      const localUsers = JSON.parse(localStorage.getItem('localUsers') || '[]')
+      localUsers.push(mockUser)
+      localStorage.setItem('localUsers', JSON.stringify(localUsers))
+      
+      return {
+        success: true,
+        user: mockUser,
+        message: '로컬 모드로 회원가입 완료'
+      }
+    }
+    
     let authUserId = null
     
     try {
@@ -420,6 +466,29 @@ export const authAPI = {
 
   // 기존 로그인 + 자동 마이그레이션
   async signIn(email, password, rememberMe = false) {
+    // Supabase가 설정되지 않은 경우 처리
+    if (!supabase) {
+      console.log('Supabase 미설정 - 로컬 모드로 로그인')
+      const localUsers = JSON.parse(localStorage.getItem('localUsers') || '[]')
+      const user = localUsers.find(u => u.email === email)
+      
+      if (user) {
+        return {
+          success: true,
+          data: {
+            auth: { user },
+            user
+          }
+        }
+      } else {
+        return {
+          success: false,
+          error: '등록되지 않은 사용자입니다.',
+          data: null
+        }
+      }
+    }
+    
     try {
       console.log('로그인 시도:', email)
 
