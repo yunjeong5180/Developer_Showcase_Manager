@@ -80,6 +80,11 @@ export default {
 
     showNavigation() {
       const hideNavRoutes = [
+        "/admin/login",
+        "/admin/signup",
+        "/admin/forgot-password",
+        "/admin/reset-password",
+        "/admin/auth/callback",
         "/login",
         "/signup",
         "/forgot-password",
@@ -121,7 +126,7 @@ export default {
     // Supabase 인증 리스너를 먼저 설정
     const { supabase } = await import("@/config/supabase");
     if (supabase) {
-      // 초기 세션 확인 (중복 방지)
+      // 초기 세션 확인 - 자동 로그인 방지
       try {
         const {
           data: { session },
@@ -132,9 +137,22 @@ export default {
           console.log("만료된 refresh token 제거 중...");
           await supabase.auth.signOut();
         } else if (session) {
-          this.$store.commit("auth/SET_USER", session.user);
-          // 프로필은 한 번만 로드
-          this.$store.dispatch("auth/loadUserProfile");
+          console.log("세션 복원 중:", session.user.email);
+          
+          // 세션 만료 시간 확인
+          const expiresAt = session.expires_at ? new Date(session.expires_at * 1000) : null;
+          const now = new Date();
+          
+          if (expiresAt && expiresAt <= now) {
+            // 만료된 세션은 제거
+            console.log("만료된 세션 제거");
+            await supabase.auth.signOut();
+          } else {
+            // 유효한 세션이면 store에 저장하여 로그인 상태 유지
+            console.log("유효한 세션 복원");
+            this.$store.commit("auth/SET_USER", session.user);
+            await this.$store.dispatch("auth/loadUserProfile");
+          }
         }
       } catch (err) {
         console.error("세션 확인 중 오류:", err);
@@ -159,7 +177,7 @@ export default {
 
     console.log("초기 인증 상태 확인 완료");
   },
-  mounted() {
+  async mounted() {
     // Supabase 연결 상태 확인
     const supabaseStatus = getSupabaseStatus();
     if (!supabaseStatus.isConfigured) {
@@ -173,6 +191,8 @@ export default {
       );
     } else {
       console.log("✅ Supabase 연결 설정 완료:", supabaseStatus.url);
+      // 인증 초기화 - 새로고침 시에도 세션 복원
+      await this.initAuth();
     }
   },
 };

@@ -75,6 +75,13 @@ async function redirectIfAuthenticated(to, from, next) {
       return;
     }
 
+    // 메인 페이지들에서 온 경우 또는 쿼리 파라미터로 강제 표시 요청
+    if (from.path === "/" || from.path === "/portfolio" || from.path === "/about" || from.path === "/contact" || to.query.force === "true") {
+      console.log("메인 페이지에서 온 접근 또는 강제 표시, 로그인/회원가입 페이지 표시");
+      next();
+      return;
+    }
+
     // Supabase가 설정되지 않은 경우 로컬 모드로 처리
     if (!supabase) {
       console.log("Supabase 미설정 - 로컬 모드");
@@ -94,8 +101,14 @@ async function redirectIfAuthenticated(to, from, next) {
     } = await supabase.auth.getSession();
 
     if (session && session.user) {
-      console.log("이미 로그인됨, 대시보드로 리디렉션");
-      next("/admin/dashboard");
+      // URL에서 직접 접근한 경우만 리디렉션
+      if (!from.path || from.path === to.path) {
+        console.log("이미 로그인됨, 대시보드로 리디렉션");
+        next("/admin/dashboard");
+      } else {
+        console.log("다른 페이지에서 온 접근, 페이지 표시");
+        next();
+      }
     } else {
       console.log("로그인 안됨, 로그인 페이지 표시");
       next();

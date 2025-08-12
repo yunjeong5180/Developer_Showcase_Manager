@@ -2,8 +2,9 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <h1>🚀 My Codit</h1>
-        <p>포트폴리오 관리 시스템에 로그인하세요</p>
+        <router-link to="/" class="logo-link">
+          <h1 class="brand-logo">Codit</h1>
+        </router-link>
       </div>
 
       <form @submit.prevent="handleLogin" class="login-form">
@@ -335,6 +336,38 @@ export default {
     #e5e5e5 100%
   ); /* 깨끗한 회색 그라디언트 */
   padding: 20px;
+  position: relative;
+}
+
+.back-to-home {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: #6c757d;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.back-to-home:hover {
+  color: #2c3e50;
+}
+
+.logo-link {
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
+.brand-logo {
+  color: #2c3e50;
+  font-size: 2rem;
+  margin: 0;
+  transition: transform 0.3s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.05);
 }
 
 .login-card {
@@ -351,8 +384,10 @@ export default {
   margin-bottom: 30px;
 }
 
-.login-header h1 {
+.login-header h2 {
   color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 1.8rem;
   margin-bottom: 10px;
   font-size: 1.6rem;
   white-space: nowrap;

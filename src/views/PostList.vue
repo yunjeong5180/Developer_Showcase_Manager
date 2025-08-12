@@ -113,7 +113,7 @@
                 👁️ 보기
               </button>
               <button
-                @click="deleteProject(project.id)"
+                @click="handleDeleteProject(project.id)"
                 class="action-btn delete"
               >
                 🗑️ 삭제
@@ -147,7 +147,7 @@
 </template>
 
 <script>
-import { getProjects, deleteProject } from "@/services/projectService";
+import { projectAPI } from "@/shared/services/projectService";
 
 export default {
   name: "PostList",
@@ -210,7 +210,7 @@ export default {
     async loadProjects() {
       this.isLoading = true;
       try {
-        const result = await getProjects();
+        const result = await projectAPI.getProjects();
         if (result.success) {
           this.projects = result.data;
         }
@@ -235,13 +235,13 @@ export default {
       }
     },
 
-    async deleteProject(id) {
+    async handleDeleteProject(id) {
       if (!confirm("정말로 이 프로젝트를 삭제하시겠습니까?")) {
         return;
       }
 
       try {
-        const result = await deleteProject(id);
+        const result = await projectAPI.deleteProject(id);
         if (result.success) {
           this.projects = this.projects.filter((p) => p.id !== id);
         } else {
@@ -270,7 +270,7 @@ export default {
 
 <style lang="scss" scoped>
 @use "@/shared/styles/variables" as *;
-@import "@/shared/styles/admin-common";
+@use "@/shared/styles/admin-common";
 
 .post-list {
   .action-bar {

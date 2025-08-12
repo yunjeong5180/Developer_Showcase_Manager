@@ -327,8 +327,8 @@
 
 <script>
 import { supabase } from "@/config/supabase";
-import { getUserByEmail, updateUser } from "@/services/authService";
-import { imageAPI } from "@/services/imageService";
+import { getUserByEmail, updateUser } from "@/shared/services/authService";
+import { imageAPI } from "@/shared/services/imageService";
 import SkillsModal from "@/components/SkillsModal.vue";
 
 // 기본 프로필 API 함수들

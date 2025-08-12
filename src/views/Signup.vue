@@ -2,8 +2,9 @@
   <div class="signup-container">
     <div class="signup-card">
       <div class="signup-header">
-        <h2>📝 회원가입</h2>
-        <p>My Codit Manager에 오신 것을 환영합니다!</p>
+        <router-link to="/" class="logo-link">
+          <h1 class="brand-logo">Codit</h1>
+        </router-link>
       </div>
 
       <form @submit.prevent="handleSignUp" class="signup-form">
@@ -708,6 +709,38 @@ export default {
   justify-content: center;
   background: $gradient-light; /* 깨끗한 회색 그라디언트 */
   padding: 20px;
+  position: relative;
+}
+
+.back-to-home {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: #6c757d;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+  
+  &:hover {
+    color: #2c3e50;
+  }
+}
+
+.logo-link {
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 10px;
+  
+  .brand-logo {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin: 0;
+    transition: transform 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
 }
 
 .signup-card {

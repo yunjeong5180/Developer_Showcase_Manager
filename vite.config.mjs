@@ -38,10 +38,14 @@ export default defineConfig({
   },
   server: {
     port: 8080,
-    open: true,
+    open: false,
     hmr: {
       port: 8080,
       host: 'localhost'
+    },
+    // 성능 개선을 위한 설정
+    fs: {
+      strict: false
     }
   },
   build: {

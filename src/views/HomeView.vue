@@ -13,7 +13,7 @@
           <router-link to="/portfolio" class="btn btn-primary">
             포트폴리오 둘러보기
           </router-link>
-          <router-link to="/signup" class="btn btn-secondary">
+          <router-link to="/admin/signup" class="btn btn-secondary">
             시작하기
           </router-link>
         </div>
@@ -68,7 +68,7 @@
       <div class="container">
         <h2>지금 시작하세요</h2>
         <p>무료로 포트폴리오를 만들고 관리해보세요</p>
-        <router-link to="/signup" class="btn btn-large">
+        <router-link to="/admin/signup" class="btn btn-large">
           무료로 시작하기
         </router-link>
       </div>
