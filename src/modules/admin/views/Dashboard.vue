@@ -44,7 +44,11 @@
         <router-link to="/profile" class="action-btn">
           👤 프로필 설정
         </router-link>
-        <a href="/portfolio/demo" class="action-btn portfolio-preview" target="_blank">
+        <a
+          href="/portfolio/demo"
+          class="action-btn portfolio-preview"
+          target="_blank"
+        >
           🌐 포트폴리오 미리보기
         </a>
         <button @click="goToMyPortfolio" class="action-btn my-portfolio">
@@ -56,15 +60,16 @@
     <div v-if="!loading" class="recent-activities">
       <h2>최근 활동</h2>
       <div class="activity-list">
-        <div 
-          v-if="recentActivities.length > 0" 
-          v-for="activity in recentActivities" 
-          :key="activity.id"
-          class="activity-item"
-        >
-          <span class="activity-time">{{ activity.timeAgo }}</span>
-          <span class="activity-text">{{ activity.description }}</span>
-        </div>
+        <template v-if="recentActivities.length > 0">
+          <div
+            v-for="activity in recentActivities"
+            :key="activity.id"
+            class="activity-item"
+          >
+            <span class="activity-time">{{ activity.timeAgo }}</span>
+            <span class="activity-text">{{ activity.description }}</span>
+          </div>
+        </template>
         <div v-else class="no-activities">
           <p>아직 활동 내역이 없습니다.</p>
           <p>프로젝트를 추가하거나 프로필을 수정해보세요!</p>
@@ -75,7 +80,7 @@
 </template>
 
 <script>
-import { statisticsService, supabase } from '@/shared/services';
+import { statisticsService, supabase } from "@/shared/services";
 
 export default {
   name: "DashboardPage",
@@ -84,11 +89,11 @@ export default {
       stats: {
         totalProjects: 0,
         totalViews: 0,
-        monthlyUpdates: 0
+        monthlyUpdates: 0,
       },
       recentActivities: [],
       loading: true,
-      error: null
+      error: null,
     };
   },
   async created() {
@@ -98,33 +103,32 @@ export default {
     async loadDashboardData() {
       this.loading = true;
       this.error = null;
-      
+
       try {
         // 대시보드 통계 데이터 가져오기
         const [statsResponse, activitiesResponse] = await Promise.all([
           statisticsService.getDashboardStats(),
-          statisticsService.getRecentActivities(5)
+          statisticsService.getRecentActivities(5),
         ]);
-        
+
         if (statsResponse.success) {
           this.stats = {
             totalProjects: statsResponse.data.totalProjects,
             totalViews: statsResponse.data.totalViews,
-            monthlyUpdates: statsResponse.data.monthlyUpdates
+            monthlyUpdates: statsResponse.data.monthlyUpdates,
           };
         } else {
-          console.error('통계 데이터 로드 실패:', statsResponse.error);
+          console.error("통계 데이터 로드 실패:", statsResponse.error);
         }
-        
+
         if (activitiesResponse.success) {
           this.recentActivities = activitiesResponse.data.slice(0, 3);
         } else {
-          console.error('최근 활동 로드 실패:', activitiesResponse.error);
+          console.error("최근 활동 로드 실패:", activitiesResponse.error);
         }
-        
       } catch (error) {
-        this.error = '대시보드 데이터를 불러오는 중 오류가 발생했습니다.';
-        console.error('대시보드 데이터 로드 예외:', error);
+        this.error = "대시보드 데이터를 불러오는 중 오류가 발생했습니다.";
+        console.error("대시보드 데이터 로드 예외:", error);
       } finally {
         this.loading = false;
       }
@@ -133,35 +137,39 @@ export default {
     async goToMyPortfolio() {
       try {
         // 현재 사용자 정보 가져오기
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
         if (userError || !user) {
-          alert('로그인이 필요합니다.');
+          alert("로그인이 필요합니다.");
           return;
         }
 
         // users 테이블에서 사용자 정보 조회
         const { data: userData, error: userDataError } = await supabase
-          .from('users')
-          .select('id, name')
-          .eq('auth_user_id', user.id)
+          .from("users")
+          .select("id, name")
+          .eq("auth_user_id", user.id)
           .single();
 
         if (userDataError || !userData) {
-          alert('사용자 정보를 찾을 수 없습니다.');
-          console.error('사용자 정보 조회 오류:', userDataError);
+          alert("사용자 정보를 찾을 수 없습니다.");
+          console.error("사용자 정보 조회 오류:", userDataError);
           return;
         }
 
         // 사용자별 포트폴리오 페이지로 이동
-        const portfolioUrl = `/portfolio/${encodeURIComponent(userData.name)}/${userData.id}`;
-        window.open(portfolioUrl, '_blank');
-        
+        const portfolioUrl = `/portfolio/${encodeURIComponent(userData.name)}/${
+          userData.id
+        }`;
+        window.open(portfolioUrl, "_blank");
       } catch (error) {
-        console.error('포트폴리오 이동 오류:', error);
-        alert('포트폴리오 페이지로 이동하는 중 오류가 발생했습니다.');
+        console.error("포트폴리오 이동 오류:", error);
+        alert("포트폴리오 페이지로 이동하는 중 오류가 발생했습니다.");
       }
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -344,8 +352,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-state p {

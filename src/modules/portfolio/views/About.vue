@@ -4,7 +4,7 @@
     <section class="about-header">
       <div class="container">
         <h1 class="page-title">About Me</h1>
-        
+
         <!-- 프로필 섹션 -->
         <div class="profile-section">
           <div class="profile-container">
@@ -16,18 +16,23 @@
             <div class="profile-right">
               <h2>개발자를 꿈꾸는 양윤정</h2>
               <p class="profile-description">
-                비전공자에서 시작한 개발 여정을 통해 HTML, CSS, JavaScript부터<br>
+                비전공자에서 시작한 개발 여정을 통해 HTML, CSS,
+                JavaScript부터<br />
                 시작해서 Java, Spring Boot까지 차근차근 배워나가고 있습니다.
               </p>
               <p class="profile-sub">
-                새로운 기술을 배우는 것을 좋아하고, 사용자 친화적인 웹 애플리케이션을 만들기 위해 노력하고<br>
-                있습니다. 매일 조금씩이라도 성장하는 개발자가 되는 것이 목표입니다.
+                새로운 기술을 배우는 것을 좋아하고, 사용자 친화적인 웹
+                애플리케이션을 만들기 위해 노력하고<br />
+                있습니다. 매일 조금씩이라도 성장하는 개발자가 되는 것이
+                목표입니다.
               </p>
               <p class="profile-sub">
-                현재는 IntelliJ IDEA를 주로 사용하며, GitHub으로 형상 관리를 하면서 프로젝트를 진행하고 있습니다. 클린 코드와 사용<br>
-                자 경험을 중시하며, Supabase와 Railway를 활용해 프로젝트를 배포하고 있습니다.
+                현재는 IntelliJ IDEA를 주로 사용하며, GitHub으로 형상 관리를
+                하면서 프로젝트를 진행하고 있습니다. 클린 코드와 사용<br />
+                자 경험을 중시하며, Supabase와 Railway를 활용해 프로젝트를
+                배포하고 있습니다.
               </p>
-              
+
               <!-- 기술 스택 -->
               <div class="skills-container">
                 <span class="skill-tag">HTML/CSS</span>
@@ -49,45 +54,60 @@
     <section class="journey-section">
       <div class="container">
         <h2 class="section-title">학습 여정</h2>
-        
+
         <div class="timeline">
           <div class="timeline-item">
             <div class="timeline-date">2024.01</div>
             <div class="timeline-content">
               <h3>웹 개발 학습 시작</h3>
-              <p>HTML, CSS 기초부터 시작하여 웹페이지 구조를 이해하고 디자인 다루기 시작했습니다.</p>
+              <p>
+                HTML, CSS 기초부터 시작하여 웹페이지 구조를 이해하고 디자인
+                다루기 시작했습니다.
+              </p>
             </div>
           </div>
-          
+
           <div class="timeline-item">
             <div class="timeline-date">2024.03</div>
             <div class="timeline-content">
               <h3>JavaScript 학습</h3>
-              <p>동적인 웹 페이지를 만들기 위해 JavaScript의 기초부터 다양한 프로젝트를 진행했습니다.</p>
+              <p>
+                동적인 웹 페이지를 만들기 위해 JavaScript의 기초부터 다양한
+                프로젝트를 진행했습니다.
+              </p>
             </div>
           </div>
-          
+
           <div class="timeline-item">
             <div class="timeline-date">2024.06</div>
             <div class="timeline-content">
               <h3>Java & Spring Boot 학습</h3>
-              <p>백엔드 개발을 위해 Java와 Spring Boot를 학습하고 웹 애플리케이션을 개발했습니다.</p>
+              <p>
+                백엔드 개발을 위해 Java와 Spring Boot를 학습하고 웹
+                애플리케이션을 개발했습니다.
+              </p>
             </div>
           </div>
-          
+
           <div class="timeline-item">
             <div class="timeline-date">2024.09</div>
             <div class="timeline-content">
               <h3>클라우드 서비스 활용</h3>
-              <p>Supabase와 Railway를 활용해 실제 서비스를 배포하고 운영하는 경험을 쌓았습니다.</p>
+              <p>
+                Supabase와 Railway를 활용해 실제 서비스를 배포하고 운영하는
+                경험을 쌓았습니다.
+              </p>
             </div>
           </div>
-          
+
           <div class="timeline-item">
             <div class="timeline-date">현재</div>
             <div class="timeline-content">
               <h3>지속적인 성장</h3>
-              <p>매일 새로운 것을 배우고, 더 나은 코드를 작성하기 위해 노력하고 있습니다.</p>
+              <p>
+                매일 새로운 것을 배우고, 더 나은 코드를 작성하기 위해 노력하고
+                있습니다.
+              </p>
             </div>
           </div>
         </div>
@@ -98,30 +118,42 @@
     <section class="interests-section">
       <div class="container">
         <h2 class="section-title">관심사 & 목표</h2>
-        
+
         <div class="interests-grid">
           <div class="interest-card">
             <div class="interest-icon">🎯</div>
             <h3>목표</h3>
-            <p>풀스택 개발자로 성장하여 사용자에게 가치있는 서비스를 제공하는 것이 목표입니다.</p>
+            <p>
+              풀스택 개발자로 성장하여 사용자에게 가치있는 서비스를 제공하는
+              것이 목표입니다.
+            </p>
           </div>
-          
+
           <div class="interest-card">
             <div class="interest-icon">📚</div>
             <h3>학습</h3>
-            <p>새로운 기술과 트렌드에 관심을 가지고 꾸준히 학습하며, 지식을 실무에 적용하려 노력합니다.</p>
+            <p>
+              새로운 기술과 트렌드에 관심을 가지고 꾸준히 학습하며, 지식을
+              실무에 적용하려 노력합니다.
+            </p>
           </div>
-          
+
           <div class="interest-card">
             <div class="interest-icon">💡</div>
             <h3>혁신</h3>
-            <p>창의적인 문제해결과 사용자 경험 개선을 통해 더 나은 서비스를 만들어가고 있습니다.</p>
+            <p>
+              창의적인 문제해결과 사용자 경험 개선을 통해 더 나은 서비스를
+              만들어가고 있습니다.
+            </p>
           </div>
-          
+
           <div class="interest-card">
             <div class="interest-icon">🚀</div>
             <h3>도전</h3>
-            <p>새로운 도전을 두려워하지 않으며, 실패를 통해 배우고 성장하는 마인드셋을 가지고 있습니다.</p>
+            <p>
+              새로운 도전을 두려워하지 않으며, 실패를 통해 배우고 성장하는
+              마인드셋을 가지고 있습니다.
+            </p>
           </div>
         </div>
       </div>
@@ -137,30 +169,30 @@
 // - Store: import store from '@/store/index-unified'
 
 export default {
-  name: 'About',
+  name: "About",
   mounted() {
-    this.observeElements()
+    this.observeElements();
   },
   methods: {
     observeElements() {
       const options = {
         threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
-      }
+        rootMargin: "0px 0px -100px 0px",
+      };
 
       const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('visible')
+            entry.target.classList.add("visible");
           }
-        })
-      }, options)
+        });
+      }, options);
 
-      const fadeElements = document.querySelectorAll('.fade-in')
-      fadeElements.forEach(el => observer.observe(el))
-    }
-  }
-}
+      const fadeElements = document.querySelectorAll(".fade-in");
+      fadeElements.forEach((el) => observer.observe(el));
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -179,7 +211,7 @@ export default {
 }
 
 .page-title::after {
-  content: '';
+  content: "";
   width: 50px;
   height: 3px;
   background: #3498db;
@@ -284,7 +316,7 @@ export default {
 }
 
 .timeline::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 150px;
   top: 0;
@@ -302,7 +334,7 @@ export default {
 }
 
 .timeline-item::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 144px;
   top: 35px;
@@ -391,58 +423,58 @@ export default {
   .page-title {
     font-size: 2rem;
   }
-  
+
   .profile-container {
     grid-template-columns: 1fr;
     gap: 2rem;
     text-align: center;
   }
-  
+
   .profile-img {
     width: 150px;
     height: 150px;
   }
-  
+
   .profile-img span {
     font-size: 4rem;
   }
-  
+
   .profile-right {
     text-align: center;
   }
-  
+
   .profile-right h2 {
     font-size: 1.5rem;
   }
-  
+
   .skills-container {
     justify-content: center;
   }
-  
+
   .timeline::before {
     left: 20px;
   }
-  
+
   .timeline-item {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .timeline-item::before {
     left: 14px;
     top: 25px;
   }
-  
+
   .timeline-date {
     width: 100%;
     padding-left: 50px;
     margin-bottom: 5px;
   }
-  
+
   .timeline-content {
     padding-left: 50px;
   }
-  
+
   .interests-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;

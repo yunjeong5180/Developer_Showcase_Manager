@@ -4,19 +4,18 @@
       <h1 class="error-code">404</h1>
       <h2 class="error-message">Page Not Found</h2>
       <p class="error-description">
-        The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+        The page you are looking for might have been removed, had its name
+        changed, or is temporarily unavailable.
       </p>
-      <router-link to="/" class="back-home-btn">
-        Go to Homepage
-      </router-link>
+      <router-link to="/" class="back-home-btn"> Go to Homepage </router-link>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: 'NotFound'
-}
+  name: "NotFound",
+};
 </script>
 
 <style scoped>

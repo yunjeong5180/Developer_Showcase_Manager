@@ -58,6 +58,16 @@
             🚪 로그아웃
           </button>
         </li>
+        <li class="nav-item">
+          <router-link
+            to="/clear-session"
+            class="nav-link"
+            @click="closeMobileMenu"
+            title="테스트용 세션 클리어"
+          >
+            🧹 세션 클리어
+          </router-link>
+        </li>
       </ul>
     </div>
   </nav>
@@ -78,10 +88,19 @@ export default {
     closeMobileMenu() {
       this.isMobileMenuOpen = false;
     },
-    handleLogout() {
-      // 임시 로그아웃 로직
+    async handleLogout() {
       if (confirm("로그아웃 하시겠습니까?")) {
         this.closeMobileMenu();
+
+        // Vuex store의 로그아웃 액션 호출
+        if (this.$store) {
+          await this.$store.dispatch("auth/signOut");
+        }
+
+        // 추가 클린업
+        localStorage.clear();
+        sessionStorage.clear();
+
         this.$router.push("/login");
       }
     },

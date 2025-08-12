@@ -66,11 +66,7 @@
           </div>
           <div class="form-group">
             <label for="endDate">종료일</label>
-            <input
-              id="endDate"
-              v-model="projectForm.endDate"
-              type="date"
-            />
+            <input id="endDate" v-model="projectForm.endDate" type="date" />
             <small>진행 중인 프로젝트는 비워두세요</small>
           </div>
         </div>
@@ -148,8 +144,12 @@
         <h3>{{ modalTitle }}</h3>
         <p>{{ modalMessage }}</p>
         <div class="modal-buttons">
-          <button @click="handleModalConfirm" class="modal-btn-primary">확인</button>
-          <button @click="handleModalCancel" class="modal-btn-secondary">취소</button>
+          <button @click="handleModalConfirm" class="modal-btn-primary">
+            확인
+          </button>
+          <button @click="handleModalCancel" class="modal-btn-secondary">
+            취소
+          </button>
         </div>
       </div>
     </div>
@@ -157,7 +157,7 @@
 </template>
 
 <script>
-import { projectService, imageService } from '@/shared/services';
+import { projectService, imageService } from "@/shared/services";
 
 export default {
   name: "CreatePostPage",
@@ -176,12 +176,12 @@ export default {
       },
       newTech: "",
       isSubmitting: false,
-      
+
       // 모달 상태
       showModal: false,
-      modalTitle: '',
-      modalMessage: '',
-      modalRedirectTo: null
+      modalTitle: "",
+      modalMessage: "",
+      modalRedirectTo: null,
     };
   },
   methods: {
@@ -198,13 +198,16 @@ export default {
       }
     },
     addTechStack() {
-      console.log('Add tech stack 호출:', this.newTech);
-      if (this.newTech.trim() && !this.projectForm.techStack.includes(this.newTech.trim())) {
+      console.log("Add tech stack 호출:", this.newTech);
+      if (
+        this.newTech.trim() &&
+        !this.projectForm.techStack.includes(this.newTech.trim())
+      ) {
         this.projectForm.techStack.push(this.newTech.trim());
         this.newTech = "";
-        console.log('기술 스택 추가됨:', this.projectForm.techStack);
+        console.log("기술 스택 추가됨:", this.projectForm.techStack);
       } else {
-        console.log('기술 스택 추가 실패 - 이미 존재하거나 빈 값');
+        console.log("기술 스택 추가 실패 - 이미 존재하거나 빈 값");
       }
     },
     removeTechStack(index) {
@@ -212,23 +215,29 @@ export default {
     },
     validateForm() {
       // URL 유효성 검사
-      if (this.projectForm.projectUrl && !this.isValidUrl(this.projectForm.projectUrl)) {
-        alert('유효한 프로젝트 URL을 입력해주세요.');
+      if (
+        this.projectForm.projectUrl &&
+        !this.isValidUrl(this.projectForm.projectUrl)
+      ) {
+        alert("유효한 프로젝트 URL을 입력해주세요.");
         return false;
       }
-      
-      if (this.projectForm.githubUrl && !this.isValidUrl(this.projectForm.githubUrl)) {
-        alert('유효한 GitHub URL을 입력해주세요.');
+
+      if (
+        this.projectForm.githubUrl &&
+        !this.isValidUrl(this.projectForm.githubUrl)
+      ) {
+        alert("유효한 GitHub URL을 입력해주세요.");
         return false;
       }
-      
+
       return true;
     },
-    
+
     isValidUrl(url) {
       try {
         const urlObj = new URL(url);
-        return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+        return urlObj.protocol === "http:" || urlObj.protocol === "https:";
       } catch (e) {
         return false;
       }
@@ -239,7 +248,7 @@ export default {
       if (!this.validateForm()) {
         return;
       }
-      
+
       this.isSubmitting = true;
 
       try {
@@ -249,8 +258,11 @@ export default {
         let imageUrls = [];
         if (this.projectForm.mainImage) {
           console.log("이미지 업로드 시작");
-          const imageResponse = await imageService.uploadImage(this.projectForm.mainImage, 'project-images');
-          
+          const imageResponse = await imageService.uploadImage(
+            this.projectForm.mainImage,
+            "project-images"
+          );
+
           if (imageResponse.success) {
             imageUrls = [imageResponse.data.url];
             console.log("이미지 업로드 성공:", imageUrls);
@@ -270,7 +282,7 @@ export default {
           image_urls: imageUrls,
           start_date: this.projectForm.startDate || null,
           end_date: this.projectForm.endDate || null,
-          is_featured: false
+          is_featured: false,
         };
 
         // 3. 프로젝트 생성
@@ -279,20 +291,19 @@ export default {
 
         if (response.success) {
           console.log("프로젝트 생성 성공:", response.data);
-          
+
           // 폼 초기화
           this.resetForm();
-          
+
           this.showSuccessModal(
-            '프로젝트 저장 완료', 
-            '프로젝트가 성공적으로 저장되었습니다! 프로젝트 목록 페이지로 이동하시겠습니까?', 
-            '/post-list'
+            "프로젝트 저장 완료",
+            "프로젝트가 성공적으로 저장되었습니다! 프로젝트 목록 페이지로 이동하시겠습니까?",
+            "/post-list"
           );
         } else {
           console.error("프로젝트 생성 실패:", response.error);
           alert(`프로젝트 저장 실패: ${response.error}`);
         }
-
       } catch (error) {
         console.error("프로젝트 저장 예외:", error);
         alert(`프로젝트 저장 중 오류가 발생했습니다: ${error.message}`);
@@ -333,13 +344,13 @@ export default {
         techStack: [],
       };
       this.newTech = "";
-      
+
       // 파일 입력 초기화
-      const fileInput = document.getElementById('mainImage');
+      const fileInput = document.getElementById("mainImage");
       if (fileInput) {
-        fileInput.value = '';
+        fileInput.value = "";
       }
-    }
+    },
   },
 };
 </script>
@@ -594,7 +605,8 @@ export default {
   justify-content: center;
 }
 
-.modal-btn-primary, .modal-btn-secondary {
+.modal-btn-primary,
+.modal-btn-secondary {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -652,7 +664,8 @@ export default {
     flex-direction: column;
   }
 
-  .modal-btn-primary, .modal-btn-secondary {
+  .modal-btn-primary,
+  .modal-btn-secondary {
     width: 100%;
     margin-bottom: 10px;
   }

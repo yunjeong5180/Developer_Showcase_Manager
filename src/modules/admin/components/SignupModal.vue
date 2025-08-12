@@ -1,21 +1,10 @@
 <template>
   <!-- 모달 오버레이 -->
-  <div
-    v-if="isVisible"
-    class="modal-overlay"
-    @click="closeModal"
-  >
+  <div v-if="isVisible" class="modal-overlay" @click="closeModal">
     <!-- 모달 컨텐츠 -->
-    <div
-      class="modal-content"
-      @click.stop
-    >
+    <div class="modal-content" @click.stop>
       <!-- 닫기 버튼 -->
-      <button
-        class="close-btn"
-        @click="closeModal"
-        aria-label="모달 닫기"
-      >
+      <button class="close-btn" @click="closeModal" aria-label="모달 닫기">
         ✕
       </button>
 
@@ -32,11 +21,14 @@
       <!-- 모달 메시지 -->
       <p class="modal-message">
         <template v-if="mode === 'forgotPassword'">
-          <strong>{{ email }}</strong>은 아직 회원가입되지 않은 이메일입니다.<br>
-          비밀번호 재설정을 위해서는 먼저 <strong>My Codit</strong>에 가입해주세요!
+          <strong>{{ email }}</strong
+          >은 아직 회원가입되지 않은 이메일입니다.<br />
+          비밀번호 재설정을 위해서는 먼저 <strong>My Codit</strong>에
+          가입해주세요!
         </template>
         <template v-else>
-          <strong>{{ email }}</strong>은 아직 <strong>My Codit</strong>에<br>
+          <strong>{{ email }}</strong
+          >은 아직 <strong>My Codit</strong>에<br />
           가입되지 않은 이메일입니다.
         </template>
       </p>
@@ -71,18 +63,12 @@
 
       <!-- 액션 버튼들 -->
       <div class="modal-actions">
-        <button
-          class="signup-btn"
-          @click="goToSignup"
-        >
+        <button class="signup-btn" @click="goToSignup">
           <span class="btn-icon">{{ modalConfig.primaryButtonIcon }}</span>
           {{ modalConfig.primaryButtonText }}
         </button>
 
-        <button
-          class="cancel-btn"
-          @click="closeModal"
-        >
+        <button class="cancel-btn" @click="closeModal">
           {{ modalConfig.cancelButtonText }}
         </button>
       </div>
@@ -91,10 +77,7 @@
       <div class="modal-footer">
         <p class="footer-text">
           {{ modalConfig.footerText }}
-          <button
-            class="link-btn"
-            @click="handleRetry"
-          >
+          <button class="link-btn" @click="handleRetry">
             {{ modalConfig.footerButtonText }}
           </button>
         </p>
@@ -105,90 +88,90 @@
 
 <script>
 export default {
-  name: 'SignupModal',
+  name: "SignupModal",
   props: {
     isVisible: {
       type: Boolean,
-      default: false
+      default: false,
     },
     email: {
       type: String,
-      default: ''
+      default: "",
     },
     // 🆕 추가: 모달 모드 (login: 로그인 실패, forgotPassword: 비밀번호 찾기)
     mode: {
       type: String,
-      default: 'login', // 'login' | 'forgotPassword'
-      validator: (value) => ['login', 'forgotPassword'].includes(value)
-    }
+      default: "login", // 'login' | 'forgotPassword'
+      validator: (value) => ["login", "forgotPassword"].includes(value),
+    },
   },
-  emits: ['close', 'goToSignup', 'retryLogin', 'retryReset'],
+  emits: ["close", "goToSignup", "retryLogin", "retryReset"],
 
   computed: {
     // 🔥 모드에 따른 모달 설정
     modalConfig() {
-      if (this.mode === 'forgotPassword') {
+      if (this.mode === "forgotPassword") {
         return {
-          icon: '🔒',
-          title: '등록되지 않은 이메일',
-          message: '', // 템플릿에서 직접 처리
-          primaryButtonIcon: '📝',
-          primaryButtonText: '회원가입하기',
-          cancelButtonText: '나중에 하기',
-          footerText: '이미 계정이 있으신가요?',
-          footerButtonText: '다른 이메일로 시도'
-        }
+          icon: "🔒",
+          title: "등록되지 않은 이메일",
+          message: "", // 템플릿에서 직접 처리
+          primaryButtonIcon: "📝",
+          primaryButtonText: "회원가입하기",
+          cancelButtonText: "나중에 하기",
+          footerText: "이미 계정이 있으신가요?",
+          footerButtonText: "다른 이메일로 시도",
+        };
       } else {
         // 기본 로그인 모드
         return {
-          icon: '🚀',
-          title: '아직 계정이 없으신가요?',
-          message: '', // 템플릿에서 직접 처리
-          primaryButtonIcon: '✨',
-          primaryButtonText: '지금 회원가입하기',
-          cancelButtonText: '나중에 하기',
-          footerText: '이미 계정이 있으신가요?',
-          footerButtonText: '다시 로그인하기'
-        }
+          icon: "🚀",
+          title: "아직 계정이 없으신가요?",
+          message: "", // 템플릿에서 직접 처리
+          primaryButtonIcon: "✨",
+          primaryButtonText: "지금 회원가입하기",
+          cancelButtonText: "나중에 하기",
+          footerText: "이미 계정이 있으신가요?",
+          footerButtonText: "다시 로그인하기",
+        };
       }
-    }
+    },
   },
 
   // 🔧 라이프사이클 훅
   mounted() {
-    document.addEventListener('keydown', this.handleEscape)
+    document.addEventListener("keydown", this.handleEscape);
   },
 
   beforeUnmount() {
-    document.removeEventListener('keydown', this.handleEscape)
+    document.removeEventListener("keydown", this.handleEscape);
   },
 
   // ✅ 하나의 methods 객체로 통합
   methods: {
     closeModal() {
-      this.$emit('close')
+      this.$emit("close");
     },
 
     goToSignup() {
-      this.$emit('goToSignup', this.email)
+      this.$emit("goToSignup", this.email);
     },
 
     // 🔥 모드에 따른 재시도 처리
     handleRetry() {
-      if (this.mode === 'forgotPassword') {
-        this.$emit('retryReset')
+      if (this.mode === "forgotPassword") {
+        this.$emit("retryReset");
       } else {
-        this.$emit('retryLogin')
+        this.$emit("retryLogin");
       }
     },
 
     handleEscape(event) {
-      if (event.key === 'Escape' && this.isVisible) {
-        this.closeModal()
+      if (event.key === "Escape" && this.isVisible) {
+        this.closeModal();
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -275,7 +258,11 @@ export default {
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
     transform: translateY(0);
   }
   40% {

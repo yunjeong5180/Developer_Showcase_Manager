@@ -9,7 +9,10 @@
             v-for="step in 3"
             :key="step"
             class="step"
-            :class="{ active: currentStep >= step, completed: currentStep > step }"
+            :class="{
+              active: currentStep >= step,
+              completed: currentStep > step,
+            }"
           >
             {{ step }}
           </div>
@@ -74,7 +77,11 @@
                 <label>수동으로 이 키를 입력하세요:</label>
                 <div class="key-display">
                   <code>{{ secretKey }}</code>
-                  <button @click="copyToClipboard" class="copy-btn" title="클립보드에 복사">
+                  <button
+                    @click="copyToClipboard"
+                    class="copy-btn"
+                    title="클립보드에 복사"
+                  >
                     📋
                   </button>
                 </div>
@@ -84,7 +91,9 @@
 
           <div class="step-actions">
             <button @click="prevStep" class="prev-btn">이전</button>
-            <button @click="nextStep" class="next-btn">스캔 완료, 다음 단계로</button>
+            <button @click="nextStep" class="next-btn">
+              스캔 완료, 다음 단계로
+            </button>
           </div>
         </div>
 
@@ -95,7 +104,10 @@
             <p>인증 앱에 표시된 6자리 코드를 입력하세요</p>
           </div>
 
-          <form @submit.prevent="verifyAndActivate2FA" class="verification-form">
+          <form
+            @submit.prevent="verifyAndActivate2FA"
+            class="verification-form"
+          >
             <div class="code-input-group">
               <input
                 v-for="(digit, index) in verificationCode"
@@ -116,8 +128,14 @@
             </div>
 
             <div class="step-actions">
-              <button @click="prevStep" type="button" class="prev-btn">이전</button>
-              <button type="submit" class="activate-btn" :disabled="!isCodeComplete || loading">
+              <button @click="prevStep" type="button" class="prev-btn">
+                이전
+              </button>
+              <button
+                type="submit"
+                class="activate-btn"
+                :disabled="!isCodeComplete || loading"
+              >
                 <span v-if="loading">확인 중...</span>
                 <span v-else>2단계 인증 활성화</span>
               </button>
@@ -135,7 +153,10 @@
 
           <div class="backup-codes">
             <h3>🔐 백업 코드</h3>
-            <p>인증 앱에 접근할 수 없을 때 사용할 수 있는 백업 코드입니다. 안전한 곳에 보관하세요.</p>
+            <p>
+              인증 앱에 접근할 수 없을 때 사용할 수 있는 백업 코드입니다. 안전한
+              곳에 보관하세요.
+            </p>
 
             <div class="codes-grid">
               <div v-for="code in backupCodes" :key="code" class="backup-code">
@@ -188,7 +209,11 @@
             {{ verificationError }}
           </div>
 
-          <button type="submit" class="verify-btn" :disabled="!isCodeComplete || loading">
+          <button
+            type="submit"
+            class="verify-btn"
+            :disabled="!isCodeComplete || loading"
+          >
             <span v-if="loading">인증 중...</span>
             <span v-else>인증하기</span>
           </button>
@@ -211,7 +236,10 @@
             :disabled="loading"
           />
           <div class="backup-code-actions">
-            <button @click="verifyBackupCode" :disabled="!backupCodeInput || loading">
+            <button
+              @click="verifyBackupCode"
+              :disabled="!backupCodeInput || loading"
+            >
               백업 코드로 인증
             </button>
             <button @click="showBackupCodeInput = false" type="button">
@@ -229,195 +257,203 @@ export default {
   name: "TwoFactorAuthPage",
   data() {
     return {
-      mode: 'setup', // 'setup' or 'verify'
+      mode: "setup", // 'setup' or 'verify'
       currentStep: 1,
-      secretKey: 'JBSWY3DPEHPK3PXP', // 실제로는 서버에서 생성
-      verificationCode: ['', '', '', '', '', ''],
-      verificationError: '',
+      secretKey: "JBSWY3DPEHPK3PXP", // 실제로는 서버에서 생성
+      verificationCode: ["", "", "", "", "", ""],
+      verificationError: "",
       loading: false,
       backupCodes: [
-        'ABC123DEF456',
-        'GHI789JKL012',
-        'MNO345PQR678',
-        'STU901VWX234',
-        'YZA567BCD890',
-        'EFG123HIJ456',
-        'KLM789NOP012',
-        'QRS345TUV678'
+        "ABC123DEF456",
+        "GHI789JKL012",
+        "MNO345PQR678",
+        "STU901VWX234",
+        "YZA567BCD890",
+        "EFG123HIJ456",
+        "KLM789NOP012",
+        "QRS345TUV678",
       ],
       showBackupCodeInput: false,
-      backupCodeInput: ''
-    }
+      backupCodeInput: "",
+    };
   },
   computed: {
     isCodeComplete() {
-      return this.verificationCode.every(digit => digit !== '')
-    }
+      return this.verificationCode.every((digit) => digit !== "");
+    },
   },
   mounted() {
     // URL 파라미터에서 모드 확인
-    const urlParams = new URLSearchParams(window.location.search)
-    this.mode = urlParams.get('mode') || 'setup'
+    const urlParams = new URLSearchParams(window.location.search);
+    this.mode = urlParams.get("mode") || "setup";
 
     // 첫 번째 입력 필드에 포커스
     this.$nextTick(() => {
       if (this.$refs.codeInput0 && this.$refs.codeInput0[0]) {
-        this.$refs.codeInput0[0].focus()
+        this.$refs.codeInput0[0].focus();
       }
-    })
+    });
   },
   methods: {
     nextStep() {
       if (this.currentStep < 4) {
-        this.currentStep++
-        this.verificationError = ''
+        this.currentStep++;
+        this.verificationError = "";
 
         // 3단계에서 첫 번째 입력 필드에 포커스
         if (this.currentStep === 3) {
           this.$nextTick(() => {
             if (this.$refs.codeInput0 && this.$refs.codeInput0[0]) {
-              this.$refs.codeInput0[0].focus()
+              this.$refs.codeInput0[0].focus();
             }
-          })
+          });
         }
       }
     },
 
     prevStep() {
       if (this.currentStep > 1) {
-        this.currentStep--
-        this.verificationError = ''
+        this.currentStep--;
+        this.verificationError = "";
       }
     },
 
     handleCodeInput(index) {
       // 숫자만 입력 허용
-      this.verificationCode[index] = this.verificationCode[index].replace(/[^0-9]/g, '')
+      this.verificationCode[index] = this.verificationCode[index].replace(
+        /[^0-9]/g,
+        ""
+      );
 
       // 다음 입력 필드로 자동 이동
       if (this.verificationCode[index] && index < 5) {
-        const nextInput = this.$refs[`codeInput${index + 1}`]
+        const nextInput = this.$refs[`codeInput${index + 1}`];
         if (nextInput && nextInput[0]) {
-          nextInput[0].focus()
+          nextInput[0].focus();
         }
       }
     },
 
     handleKeyDown(index, event) {
       // 백스페이스 키로 이전 필드로 이동
-      if (event.key === 'Backspace' && !this.verificationCode[index] && index > 0) {
-        const prevInput = this.$refs[`codeInput${index - 1}`]
+      if (
+        event.key === "Backspace" &&
+        !this.verificationCode[index] &&
+        index > 0
+      ) {
+        const prevInput = this.$refs[`codeInput${index - 1}`];
         if (prevInput && prevInput[0]) {
-          prevInput[0].focus()
+          prevInput[0].focus();
         }
       }
     },
 
     async verifyAndActivate2FA() {
-      this.loading = true
-      this.verificationError = ''
+      this.loading = true;
+      this.verificationError = "";
 
       try {
-        const code = this.verificationCode.join('')
+        const code = this.verificationCode.join("");
 
         // 데모용으로 '123456' 코드 허용
-        if (code === '123456') {
-          this.currentStep = 4
+        if (code === "123456") {
+          this.currentStep = 4;
         } else {
-          this.verificationError = '인증 코드가 올바르지 않습니다'
+          this.verificationError = "인증 코드가 올바르지 않습니다";
         }
-
       } catch (error) {
-        console.error('2FA 활성화 오류:', error)
-        this.verificationError = '2단계 인증 활성화 중 오류가 발생했습니다'
+        console.error("2FA 활성화 오류:", error);
+        this.verificationError = "2단계 인증 활성화 중 오류가 발생했습니다";
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
     async verify2FACode() {
-      this.loading = true
-      this.verificationError = ''
+      this.loading = true;
+      this.verificationError = "";
 
       try {
-        const code = this.verificationCode.join('')
+        const code = this.verificationCode.join("");
 
         // 데모용으로 '123456' 코드 허용
-        if (code === '123456') {
+        if (code === "123456") {
           // 로그인 완료 처리
-          this.$router.push('/dashboard')
+          this.$router.push("/dashboard");
         } else {
-          this.verificationError = '인증 코드가 올바르지 않습니다'
+          this.verificationError = "인증 코드가 올바르지 않습니다";
           // 입력 필드 초기화
-          this.verificationCode = ['', '', '', '', '', '']
+          this.verificationCode = ["", "", "", "", "", ""];
           this.$nextTick(() => {
             if (this.$refs.codeInput0 && this.$refs.codeInput0[0]) {
-              this.$refs.codeInput0[0].focus()
+              this.$refs.codeInput0[0].focus();
             }
-          })
+          });
         }
-
       } catch (error) {
-        console.error('2FA 인증 오류:', error)
-        this.verificationError = '인증 중 오류가 발생했습니다'
+        console.error("2FA 인증 오류:", error);
+        this.verificationError = "인증 중 오류가 발생했습니다";
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
     useBackupCode() {
-      this.showBackupCodeInput = true
+      this.showBackupCodeInput = true;
     },
 
     async verifyBackupCode() {
-      this.loading = true
-      this.verificationError = ''
+      this.loading = true;
+      this.verificationError = "";
 
       try {
         // 데모용으로 백업 코드 목록에 있는 코드 허용
         if (this.backupCodes.includes(this.backupCodeInput.toUpperCase())) {
-          this.$router.push('/dashboard')
+          this.$router.push("/dashboard");
         } else {
-          this.verificationError = '올바르지 않은 백업 코드입니다'
+          this.verificationError = "올바르지 않은 백업 코드입니다";
         }
-
       } catch (error) {
-        console.error('백업 코드 인증 오류:', error)
-        this.verificationError = '백업 코드 인증 중 오류가 발생했습니다'
+        console.error("백업 코드 인증 오류:", error);
+        this.verificationError = "백업 코드 인증 중 오류가 발생했습니다";
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
     async copyToClipboard() {
       try {
-        await navigator.clipboard.writeText(this.secretKey)
+        await navigator.clipboard.writeText(this.secretKey);
         // 임시로 버튼 텍스트 변경
-        const button = event.target
-        const originalText = button.textContent
-        button.textContent = '✅'
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = "✅";
         setTimeout(() => {
-          button.textContent = originalText
-        }, 2000)
+          button.textContent = originalText;
+        }, 2000);
       } catch (error) {
-        console.error('클립보드 복사 실패:', error)
+        console.error("클립보드 복사 실패:", error);
       }
     },
 
     downloadBackupCodes() {
-      const codesText = this.backupCodes.join('\n')
-      const blob = new Blob([`My Codit - 2단계 인증 백업 코드\n\n${codesText}\n\n이 코드들을 안전한 곳에 보관하세요.`],
-        { type: 'text/plain' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = 'developer-showcase-backup-codes.txt'
-      a.click()
-      URL.revokeObjectURL(url)
+      const codesText = this.backupCodes.join("\n");
+      const blob = new Blob(
+        [
+          `My Codit - 2단계 인증 백업 코드\n\n${codesText}\n\n이 코드들을 안전한 곳에 보관하세요.`,
+        ],
+        { type: "text/plain" }
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "developer-showcase-backup-codes.txt";
+      a.click();
+      URL.revokeObjectURL(url);
     },
 
     printBackupCodes() {
-      const printWindow = window.open('', '_blank')
+      const printWindow = window.open("", "_blank");
       printWindow.document.write(`
         <html>
           <head>
@@ -433,21 +469,23 @@ export default {
             <h2>2단계 인증 백업 코드</h2>
             <p>이 코드들을 안전한 곳에 보관하세요. 각 코드는 한 번만 사용할 수 있습니다.</p>
             <div class="codes">
-              ${this.backupCodes.map(code => `<div class="code">${code}</div>`).join('')}
+              ${this.backupCodes
+                .map((code) => `<div class="code">${code}</div>`)
+                .join("")}
             </div>
             <p><small>생성일: ${new Date().toLocaleDateString()}</small></p>
           </body>
         </html>
-      `)
-      printWindow.document.close()
-      printWindow.print()
+      `);
+      printWindow.document.close();
+      printWindow.print();
     },
 
     goToDashboard() {
-      this.$router.push('/dashboard')
-    }
-  }
-}
+      this.$router.push("/dashboard");
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -663,7 +701,7 @@ export default {
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 5px;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-size: 0.9rem;
 }
 
@@ -746,7 +784,7 @@ export default {
   border: 1px solid #ddd;
   border-radius: 5px;
   text-align: center;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
   font-weight: 600;
 }
 

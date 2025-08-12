@@ -14,14 +14,18 @@
             type="email"
             id="email"
             v-model="email"
-            :class="{ 'error': errors.email }"
+            :class="{ error: errors.email }"
             :disabled="isLoading"
             placeholder="이메일을 입력하세요"
             required
           />
-          <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
+          <span v-if="errors.email" class="error-message">{{
+            errors.email
+          }}</span>
           <!-- DB 확인 중 표시 -->
-          <div v-if="checkingEmail" class="checking-message">이메일 확인 중...</div>
+          <div v-if="checkingEmail" class="checking-message">
+            이메일 확인 중...
+          </div>
         </div>
 
         <!-- 🆕 환경 정보 표시 (개발 환경에서만) -->
@@ -33,7 +37,10 @@
         </div>
 
         <!-- 성공/실패 메시지 (모달이 표시되지 않을 때만) -->
-        <div v-if="message.text && !showSignupModal" :class="`message ${message.type}`">
+        <div
+          v-if="message.text && !showSignupModal"
+          :class="`message ${message.type}`"
+        >
           {{ message.text }}
 
           <!-- 🆕 성공 시 재전송 버튼과 추가 안내 -->
@@ -43,7 +50,7 @@
               class="resend-btn"
               :disabled="isLoading || resendLoading"
             >
-              {{ resendLoading ? '전송 중...' : '📧 이메일 다시 보내기' }}
+              {{ resendLoading ? "전송 중..." : "📧 이메일 다시 보내기" }}
             </button>
 
             <div class="email-tips">
@@ -53,11 +60,18 @@
                 <li>⏰ <strong>5-10분</strong> 정도 기다려주세요</li>
                 <li>📝 이메일 주소가 <strong>정확한지</strong> 확인해주세요</li>
                 <li>🚫 이메일 차단 설정이 있는지 확인해주세요</li>
-                <li>📱 모바일에서는 <strong>프로모션/소셜 탭</strong>도 확인해주세요</li>
+                <li>
+                  📱 모바일에서는 <strong>프로모션/소셜 탭</strong>도
+                  확인해주세요
+                </li>
               </ul>
 
               <div class="support-contact">
-                <p>여전히 문제가 있다면 <a href="mailto:support@example.com">고객지원</a>에 문의해주세요.</p>
+                <p>
+                  여전히 문제가 있다면
+                  <a href="mailto:support@example.com">고객지원</a>에
+                  문의해주세요.
+                </p>
               </div>
             </div>
           </div>
@@ -68,7 +82,13 @@
           class="reset-btn"
           :disabled="isLoading || checkingEmail"
         >
-          {{ isLoading ? '처리 중...' : checkingEmail ? '이메일 확인 중...' : '재설정 링크 보내기' }}
+          {{
+            isLoading
+              ? "처리 중..."
+              : checkingEmail
+              ? "이메일 확인 중..."
+              : "재설정 링크 보내기"
+          }}
         </button>
       </form>
 
@@ -93,13 +113,21 @@
     />
 
     <!-- Success Modal - 이메일 전송 완료 후 표시 -->
-    <div v-if="showSuccessModal" class="modal-overlay" @click="handleSuccessModalCancel">
+    <div
+      v-if="showSuccessModal"
+      class="modal-overlay"
+      @click="handleSuccessModalCancel"
+    >
       <div class="modal-content" @click.stop>
         <h3>{{ modalTitle }}</h3>
         <p>{{ modalMessage }}</p>
         <div class="modal-buttons">
-          <button @click="handleSuccessModalConfirm" class="modal-btn-primary">확인</button>
-          <button @click="handleSuccessModalCancel" class="modal-btn-secondary">취소</button>
+          <button @click="handleSuccessModalConfirm" class="modal-btn-primary">
+            확인
+          </button>
+          <button @click="handleSuccessModalCancel" class="modal-btn-secondary">
+            취소
+          </button>
         </div>
       </div>
     </div>
@@ -107,256 +135,295 @@
 </template>
 
 <script>
-import { supabase } from '@/config/supabase'
+import { supabase } from "@/config/supabase";
 // 🔥 환경 설정 가져오기
 import {
   getEnvironmentConfig,
   logEnvironmentInfo,
   validateEnvironmentConfig,
-  getResetPasswordUrl,
   getCallbackUrl,
-  isDevelopment
-} from '@/config/environment'
+  isDevelopment,
+} from "@/config/environment";
 
 // SignupModal import
-import SignupModal from '@/components/SignupModal.vue'
+import SignupModal from "@/components/SignupModal.vue";
 
 export default {
-  name: 'ForgotPassword',
+  name: "ForgotPassword",
   components: {
-    SignupModal
+    SignupModal,
   },
   data() {
     return {
-      email: '',
+      email: "",
       isLoading: false,
       resendLoading: false,
       checkingEmail: false,
       errors: {},
       message: {
-        text: '',
-        type: ''
+        text: "",
+        type: "",
       },
       showSignupModal: false,
       emailSentAt: null, // 이메일 전송 시간 추적
       showSuccessModal: false,
-      modalTitle: '',
-      modalMessage: '',
+      modalTitle: "",
+      modalMessage: "",
       modalRedirectTo: null,
 
       // 🆕 환경 설정 관련
       environmentConfig: {},
-      showEnvironmentInfo: false // 개발 환경에서만 true
-    }
+      showEnvironmentInfo: false, // 개발 환경에서만 true
+    };
   },
   methods: {
     // 🔧 수정된 DB 확인 함수 - DB 우선 확인
     async checkEmailExistsInDB(email) {
       try {
-        console.log('📊 비밀번호 재설정: DB에서 이메일 존재 여부 확인:', email)
+        console.log("📊 비밀번호 재설정: DB에서 이메일 존재 여부 확인:", email);
 
-        const normalizedEmail = email.toLowerCase().trim()
+        const normalizedEmail = email.toLowerCase().trim();
 
         // 🎯 방법 1: Supabase users 테이블에서 먼저 확인 (가장 정확함)
         try {
           const { data, error } = await supabase
-            .from('users')
-            .select('email')
-            .eq('email', normalizedEmail)
-            .single()
+            .from("users")
+            .select("email")
+            .eq("email", normalizedEmail)
+            .single();
 
           if (data && data.email) {
-            console.log('✅ users 테이블에서 가입된 이메일 확인:', normalizedEmail)
-            return true
+            console.log(
+              "✅ users 테이블에서 가입된 이메일 확인:",
+              normalizedEmail
+            );
+            return true;
           }
 
-          if (error && (error.code === 'PGRST116' || error.message.includes('No rows'))) {
-            console.log('❌ users 테이블에서 미가입 이메일 확인:', normalizedEmail)
-            return false
+          if (
+            error &&
+            (error.code === "PGRST116" || error.message.includes("No rows"))
+          ) {
+            console.log(
+              "❌ users 테이블에서 미가입 이메일 확인:",
+              normalizedEmail
+            );
+            return false;
           }
         } catch (dbError) {
-          console.warn('users 테이블 쿼리 실패, 다른 방법 시도:', dbError)
+          console.warn("users 테이블 쿼리 실패, 다른 방법 시도:", dbError);
         }
 
         // 🎯 방법 2: localStorage 확인 (백업용)
-        const recentSignups = JSON.parse(localStorage.getItem('recentSignups') || '[]')
+        const recentSignups = JSON.parse(
+          localStorage.getItem("recentSignups") || "[]"
+        );
         if (recentSignups.includes(normalizedEmail)) {
-          console.log('✅ localStorage에서 가입된 이메일 확인 (백업):', normalizedEmail)
+          console.log(
+            "✅ localStorage에서 가입된 이메일 확인 (백업):",
+            normalizedEmail
+          );
 
           // 하지만 DB에서 확인되지 않았다면 localStorage 데이터가 잘못된 것
-          console.warn('⚠️ localStorage와 DB 불일치 감지, localStorage 정리 필요')
+          console.warn(
+            "⚠️ localStorage와 DB 불일치 감지, localStorage 정리 필요"
+          );
 
           // localStorage에서 해당 이메일 제거
-          const updatedSignups = recentSignups.filter(e => e !== normalizedEmail)
-          localStorage.setItem('recentSignups', JSON.stringify(updatedSignups))
+          const updatedSignups = recentSignups.filter(
+            (e) => e !== normalizedEmail
+          );
+          localStorage.setItem("recentSignups", JSON.stringify(updatedSignups));
 
-          return false // DB를 믿고 미가입으로 처리
+          return false; // DB를 믿고 미가입으로 처리
         }
 
         // 🎯 방법 3: Supabase auth 더미 로그인 시도 (최후의 수단)
         try {
           const { error } = await supabase.auth.signInWithPassword({
             email: normalizedEmail,
-            password: '___DUMMY_PASSWORD_FOR_EMAIL_CHECK___'
-          })
+            password: "___DUMMY_PASSWORD_FOR_EMAIL_CHECK___",
+          });
 
-          if (error && error.message === 'Invalid login credentials') {
-            console.log('✅ Supabase auth에서 가입된 이메일 확인 (더미 로그인):', normalizedEmail)
-            return true
+          if (error && error.message === "Invalid login credentials") {
+            console.log(
+              "✅ Supabase auth에서 가입된 이메일 확인 (더미 로그인):",
+              normalizedEmail
+            );
+            return true;
           }
         } catch (authError) {
-          console.warn('더미 로그인 시도 중 오류:', authError)
+          console.warn("더미 로그인 시도 중 오류:", authError);
         }
 
-        console.log('❌ 모든 확인 방법에서 미가입 이메일로 판단:', normalizedEmail)
-        return false
-
+        console.log(
+          "❌ 모든 확인 방법에서 미가입 이메일로 판단:",
+          normalizedEmail
+        );
+        return false;
       } catch (error) {
-        console.error('이메일 존재 확인 중 오류:', error)
-        return false
+        console.error("이메일 존재 확인 중 오류:", error);
+        return false;
       }
     },
 
     // 이메일 유효성 검사
     validateEmail() {
-      this.errors.email = ""
+      this.errors.email = "";
 
       if (!this.email.trim()) {
-        this.errors.email = "이메일을 입력해주세요"
-        return false
+        this.errors.email = "이메일을 입력해주세요";
+        return false;
       }
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(this.email)) {
-        this.errors.email = "올바른 이메일 형식을 입력해주세요"
-        return false
+        this.errors.email = "올바른 이메일 형식을 입력해주세요";
+        return false;
       }
 
-      return true
+      return true;
     },
 
     // 🔥 완전히 수정된 비밀번호 재설정 처리 - 환경별 동적 URL 사용
     async handleResetPassword() {
       if (!this.validateEmail()) {
-        return
+        return;
       }
 
-      this.isLoading = true
-      this.checkingEmail = true
-      this.message = { text: '', type: '' }
-      this.showSignupModal = false
+      this.isLoading = true;
+      this.checkingEmail = true;
+      this.message = { text: "", type: "" };
+      this.showSignupModal = false;
 
       try {
-        console.log('비밀번호 재설정 요청:', this.email)
+        console.log("비밀번호 재설정 요청:", this.email);
 
         // 🆕 환경 설정 가져오기 및 검증
-        const envConfig = getEnvironmentConfig()
+        const envConfig = getEnvironmentConfig();
 
         // 환경 설정 검증
         if (!validateEnvironmentConfig()) {
           this.message = {
-            text: '🚨 환경 설정에 문제가 있습니다. 관리자에게 문의해주세요.',
-            type: 'error'
-          }
-          return
+            text: "🚨 환경 설정에 문제가 있습니다. 관리자에게 문의해주세요.",
+            type: "error",
+          };
+          return;
         }
 
         // 디버깅 정보 출력
-        logEnvironmentInfo()
+        logEnvironmentInfo();
 
         // 1단계: DB에서 이메일 존재 여부 확인
-        const emailExists = await this.checkEmailExistsInDB(this.email)
-        this.checkingEmail = false
+        const emailExists = await this.checkEmailExistsInDB(this.email);
+        this.checkingEmail = false;
 
         if (!emailExists) {
           // 미가입 이메일인 경우 모달 표시
-          console.log('❌ 미가입 이메일로 비밀번호 재설정 시도 → 회원가입 모달 표시')
-          this.message = { text: '', type: '' }
-          this.showSignupModal = true
-          return
+          console.log(
+            "❌ 미가입 이메일로 비밀번호 재설정 시도 → 회원가입 모달 표시"
+          );
+          this.message = { text: "", type: "" };
+          this.showSignupModal = true;
+          return;
         }
 
         // 2단계: 가입된 이메일인 경우에만 재설정 링크 전송
-        console.log('✅ 가입된 이메일 확인됨, 재설정 링크 전송 진행')
+        console.log("✅ 가입된 이메일 확인됨, 재설정 링크 전송 진행");
 
         // 🔥 환경별 동적 resetTo URL 설정
         // AuthCallback을 거쳐서 reset-password로 가도록 설정
-        const callbackUrl = getCallbackUrl() // 헬퍼 함수 사용
-        console.log('🌍 환경별 Callback URL:', callbackUrl)
-        console.log('📧 이메일 전송 대상:', this.email)
+        const callbackUrl = getCallbackUrl(); // 헬퍼 함수 사용
+        console.log("🌍 환경별 Callback URL:", callbackUrl);
+        console.log("📧 이메일 전송 대상:", this.email);
 
-        const { error } = await supabase.auth.resetPasswordForEmail(this.email, {
-          redirectTo: callbackUrl, // 🔥 callback URL 사용 (Supabase가 여기로 리다이렉트)
-          captchaToken: null
-        })
+        const { error } = await supabase.auth.resetPasswordForEmail(
+          this.email,
+          {
+            redirectTo: callbackUrl, // 🔥 callback URL 사용 (Supabase가 여기로 리다이렉트)
+            captchaToken: null,
+          }
+        );
 
         if (error) {
-          console.error('비밀번호 재설정 오류:', error)
+          console.error("비밀번호 재설정 오류:", error);
 
           // 🔥 상세한 에러 처리
-          if (error.message.includes('Email rate limit exceeded') || error.message.includes('rate limit')) {
+          if (
+            error.message.includes("Email rate limit exceeded") ||
+            error.message.includes("rate limit")
+          ) {
             this.message = {
-              text: '⏰ 이메일 전송 한도를 초과했습니다.\n\nSupabase 무료 플랜은 시간당 2개 이메일 제한이 있습니다.\n1시간 후 다시 시도해주세요.',
-              type: 'error'
-            }
-          } else if (error.message.includes('redirectTo') || error.message.includes('redirect')) {
+              text: "⏰ 이메일 전송 한도를 초과했습니다.\n\nSupabase 무료 플랜은 시간당 2개 이메일 제한이 있습니다.\n1시간 후 다시 시도해주세요.",
+              type: "error",
+            };
+          } else if (
+            error.message.includes("redirectTo") ||
+            error.message.includes("redirect")
+          ) {
             this.message = {
               text: `🚨 리디렉트 URL 설정 오류\n\nSupabase Dashboard에서 다음 URL을 Redirect URLs에 추가해주세요:\n${callbackUrl}\n\n현재 환경: ${envConfig.environment}`,
-              type: 'error'
-            }
-          } else if (error.message.includes('Invalid email')) {
+              type: "error",
+            };
+          } else if (error.message.includes("Invalid email")) {
             this.message = {
-              text: '유효하지 않은 이메일 주소입니다.',
-              type: 'error'
-            }
-          } else if (error.message.includes('SMTP not configured')) {
+              text: "유효하지 않은 이메일 주소입니다.",
+              type: "error",
+            };
+          } else if (error.message.includes("SMTP not configured")) {
             this.message = {
-              text: '이메일 서비스 설정에 문제가 있습니다. 관리자에게 문의하세요.',
-              type: 'error'
-            }
+              text: "이메일 서비스 설정에 문제가 있습니다. 관리자에게 문의하세요.",
+              type: "error",
+            };
           } else {
             this.message = {
               text: this.getErrorMessage(error.message),
-              type: 'error'
-            }
+              type: "error",
+            };
           }
-          return
+          return;
         }
 
-        console.log('비밀번호 재설정 이메일 전송 성공')
-        this.emailSentAt = new Date()
+        console.log("비밀번호 재설정 이메일 전송 성공");
+        this.emailSentAt = new Date();
 
         // 🆕 환경별 상세한 성공 메시지
         this.message = {
-          text: `✅ 비밀번호 재설정 링크가 ${this.email}로 전송되었습니다.\n\n📬 이메일 확인 안내:\n• 이메일이 도착하는데 최대 10분 소요될 수 있습니다\n• 스팸 메일함도 반드시 확인해주세요\n• 링크는 24시간 후 만료됩니다${envConfig.isDevelopment ? `\n\n🌍 현재 환경: ${envConfig.environment}\n📍 Callback URL: ${callbackUrl}` : ''}`,
-          type: 'success'
-        }
+          text: `✅ 비밀번호 재설정 링크가 ${
+            this.email
+          }로 전송되었습니다.\n\n📬 이메일 확인 안내:\n• 이메일이 도착하는데 최대 10분 소요될 수 있습니다\n• 스팸 메일함도 반드시 확인해주세요\n• 링크는 24시간 후 만료됩니다${
+            envConfig.isDevelopment
+              ? `\n\n🌍 현재 환경: ${envConfig.environment}\n📍 Callback URL: ${callbackUrl}`
+              : ""
+          }`,
+          type: "success",
+        };
 
         // 🔥 추가: 디버깅을 위한 상세 정보 로그
-        console.log('이메일 전송 상세 정보:', {
+        console.log("이메일 전송 상세 정보:", {
           email: this.email,
           redirectTo: callbackUrl,
           environment: envConfig.environment,
           timestamp: new Date().toISOString(),
-          supabaseProject: 'gjuwbcfuadlwvxrxbgui',
-          origin: envConfig.currentOrigin
-        })
+          supabaseProject: "gjuwbcfuadlwvxrxbgui",
+          origin: envConfig.currentOrigin,
+        });
 
         // 모달로 사용자에게 선택권 제공
-        this.showSuccessModal = true
-        this.modalTitle = '이메일 전송 완료'
-        this.modalMessage = '비밀번호 재설정 링크가 이메일로 전송되었습니다. 로그인 페이지로 이동하시겠습니까?'
-        this.modalRedirectTo = '/login'
-
+        this.showSuccessModal = true;
+        this.modalTitle = "이메일 전송 완료";
+        this.modalMessage =
+          "비밀번호 재설정 링크가 이메일로 전송되었습니다. 로그인 페이지로 이동하시겠습니까?";
+        this.modalRedirectTo = "/login";
       } catch (error) {
-        console.error('비밀번호 재설정 처리 오류:', error)
+        console.error("비밀번호 재설정 처리 오류:", error);
         this.message = {
-          text: '비밀번호 재설정 요청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-          type: 'error'
-        }
+          text: "비밀번호 재설정 요청 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+          type: "error",
+        };
       } finally {
-        this.isLoading = false
-        this.checkingEmail = false
+        this.isLoading = false;
+        this.checkingEmail = false;
       }
     },
 
@@ -364,166 +431,179 @@ export default {
     async resendResetEmail() {
       if (!this.email) {
         this.message = {
-          text: '이메일 주소를 먼저 입력해주세요.',
-          type: 'error'
-        }
-        return
+          text: "이메일 주소를 먼저 입력해주세요.",
+          type: "error",
+        };
+        return;
       }
 
       // 너무 빠른 재전송 방지 (30초 제한)
       if (this.emailSentAt && new Date() - this.emailSentAt < 30000) {
-        const remainingTime = Math.ceil((30000 - (new Date() - this.emailSentAt)) / 1000)
+        const remainingTime = Math.ceil(
+          (30000 - (new Date() - this.emailSentAt)) / 1000
+        );
         this.message = {
           text: `⏰ ${remainingTime}초 후에 다시 시도해주세요.`,
-          type: 'error'
-        }
-        return
+          type: "error",
+        };
+        return;
       }
 
-      this.resendLoading = true
+      this.resendLoading = true;
 
       try {
         // 🔥 환경별 동적 URL 설정
-        const callbackUrl = getCallbackUrl()
-        const envConfig = getEnvironmentConfig()
+        const callbackUrl = getCallbackUrl();
+        const envConfig = getEnvironmentConfig();
 
-        console.log('이메일 재전송 - Callback URL:', callbackUrl)
+        console.log("이메일 재전송 - Callback URL:", callbackUrl);
 
         // 동일한 이메일로 재전송
-        const { error } = await supabase.auth.resetPasswordForEmail(this.email, {
-          redirectTo: callbackUrl // 🔥 callback URL 사용
-        })
+        const { error } = await supabase.auth.resetPasswordForEmail(
+          this.email,
+          {
+            redirectTo: callbackUrl, // 🔥 callback URL 사용
+          }
+        );
 
         if (error) {
-          console.error('이메일 재전송 오류:', error)
+          console.error("이메일 재전송 오류:", error);
 
-          if (error.message.includes('rate limit') || error.message.includes('Email rate limit exceeded')) {
+          if (
+            error.message.includes("rate limit") ||
+            error.message.includes("Email rate limit exceeded")
+          ) {
             this.message = {
-              text: '⚠️ 이메일 전송 제한에 도달했습니다.\n\nSupabase 무료 플랜은 시간당 2개 이메일 제한이 있습니다.\n1시간 후 다시 시도해주세요.',
-              type: 'error'
-            }
+              text: "⚠️ 이메일 전송 제한에 도달했습니다.\n\nSupabase 무료 플랜은 시간당 2개 이메일 제한이 있습니다.\n1시간 후 다시 시도해주세요.",
+              type: "error",
+            };
           } else {
             this.message = {
-              text: '이메일 재전송 중 오류가 발생했습니다.',
-              type: 'error'
-            }
+              text: "이메일 재전송 중 오류가 발생했습니다.",
+              type: "error",
+            };
           }
         } else {
-          this.emailSentAt = new Date()
-          console.log('이메일 재전송 성공:', this.email)
+          this.emailSentAt = new Date();
+          console.log("이메일 재전송 성공:", this.email);
 
           this.message = {
-            text: `🔄 이메일을 다시 전송했습니다!\n\n📧 ${this.email}으로 재전송되었습니다.\n스팸 메일함도 확인해주세요.${envConfig.isDevelopment ? `\n\n🌍 환경: ${envConfig.environment}` : ''}`,
-            type: 'success'
-          }
+            text: `🔄 이메일을 다시 전송했습니다!\n\n📧 ${
+              this.email
+            }으로 재전송되었습니다.\n스팸 메일함도 확인해주세요.${
+              envConfig.isDevelopment
+                ? `\n\n🌍 환경: ${envConfig.environment}`
+                : ""
+            }`,
+            type: "success",
+          };
         }
       } catch (error) {
-        console.error('이메일 재전송 예외:', error)
+        console.error("이메일 재전송 예외:", error);
         this.message = {
-          text: '이메일 재전송 중 오류가 발생했습니다.',
-          type: 'error'
-        }
+          text: "이메일 재전송 중 오류가 발생했습니다.",
+          type: "error",
+        };
       } finally {
-        this.resendLoading = false
+        this.resendLoading = false;
       }
     },
 
     // 🔥 개선된 에러 메시지 변환
     getErrorMessage(error) {
       switch (error) {
-        case 'Invalid email':
-          return "올바른 이메일 형식이 아닙니다"
-        case 'Email not found':
-          return "등록되지 않은 이메일 주소입니다"
-        case 'Too many requests':
-        case 'Email rate limit exceeded':
-          return "⏰ 이메일 전송 한도를 초과했습니다.\n\nSupabase 무료 플랜은 시간당 2개 이메일 제한이 있습니다.\n1시간 후 다시 시도해주세요."
-        case 'SMTP not configured':
-          return "이메일 서비스 설정에 문제가 있습니다. 관리자에게 문의하세요"
-        case 'For security purposes, you can only request this once every 60 seconds':
-          return "보안을 위해 60초마다 한 번씩만 요청할 수 있습니다"
+        case "Invalid email":
+          return "올바른 이메일 형식이 아닙니다";
+        case "Email not found":
+          return "등록되지 않은 이메일 주소입니다";
+        case "Too many requests":
+        case "Email rate limit exceeded":
+          return "⏰ 이메일 전송 한도를 초과했습니다.\n\nSupabase 무료 플랜은 시간당 2개 이메일 제한이 있습니다.\n1시간 후 다시 시도해주세요.";
+        case "SMTP not configured":
+          return "이메일 서비스 설정에 문제가 있습니다. 관리자에게 문의하세요";
+        case "For security purposes, you can only request this once every 60 seconds":
+          return "보안을 위해 60초마다 한 번씩만 요청할 수 있습니다";
         default:
-          return `비밀번호 재설정 실패: ${error}`
+          return `비밀번호 재설정 실패: ${error}`;
       }
     },
 
     // 모달 관련 메서드들
     closeSignupModal() {
-      this.showSignupModal = false
+      this.showSignupModal = false;
     },
 
     goToSignupWithEmail(email) {
       this.$router.push({
-        path: '/signup',
-        query: { email: email }
-      })
+        path: "/signup",
+        query: { email: email },
+      });
     },
 
     retryPasswordReset() {
-      this.showSignupModal = false
-      this.email = ''
-      this.message = { text: '', type: '' }
+      this.showSignupModal = false;
+      this.email = "";
+      this.message = { text: "", type: "" };
       this.$nextTick(() => {
-        const emailInput = document.getElementById('email')
+        const emailInput = document.getElementById("email");
         if (emailInput) {
-          emailInput.focus()
+          emailInput.focus();
         }
-      })
+      });
     },
 
     handleSuccessModalConfirm() {
-      this.showSuccessModal = false
+      this.showSuccessModal = false;
       if (this.modalRedirectTo) {
-        this.$router.push(this.modalRedirectTo)
+        this.$router.push(this.modalRedirectTo);
       }
     },
 
     handleSuccessModalCancel() {
-      this.showSuccessModal = false
-      this.modalRedirectTo = null
-    }
+      this.showSuccessModal = false;
+      this.modalRedirectTo = null;
+    },
   },
 
   watch: {
     // 이메일 변경 시 에러 메시지 초기화
     email() {
-      this.errors.email = ""
-      this.message = { text: '', type: '' }
-      this.showSignupModal = false
-    }
+      this.errors.email = "";
+      this.message = { text: "", type: "" };
+      this.showSignupModal = false;
+    },
   },
 
   // 🆕 컴포넌트 마운트 시 환경 설정 초기화
   mounted() {
-    console.log('ForgotPassword 컴포넌트 마운트됨')
+    console.log("ForgotPassword 컴포넌트 마운트됨");
 
     try {
       // 환경 설정 로드
-      this.environmentConfig = getEnvironmentConfig()
+      this.environmentConfig = getEnvironmentConfig();
 
       // 개발 환경에서만 환경 정보 표시
-      this.showEnvironmentInfo = isDevelopment()
+      this.showEnvironmentInfo = isDevelopment();
 
       // 환경 설정 검증
-      const isValid = validateEnvironmentConfig()
+      const isValid = validateEnvironmentConfig();
       if (!isValid) {
-        console.error('❌ 환경 설정에 문제가 있습니다!')
+        console.error("❌ 환경 설정에 문제가 있습니다!");
       }
 
       // 디버깅 정보 출력 (개발 환경에서만)
       if (this.showEnvironmentInfo) {
-        logEnvironmentInfo()
+        logEnvironmentInfo();
       }
-
     } catch (error) {
-      console.error('환경 설정 로드 중 오류:', error)
+      console.error("환경 설정 로드 중 오류:", error);
       this.message = {
-        text: '환경 설정 로드 중 오류가 발생했습니다.',
-        type: 'error'
-      }
+        text: "환경 설정 로드 중 오류가 발생했습니다.",
+        type: "error",
+      };
     }
-  }
-}
+  },
+};
 </script>
 
 <style scoped>
@@ -621,8 +701,13 @@ export default {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* 🆕 환경 정보 표시 */
@@ -861,7 +946,8 @@ export default {
   justify-content: center;
 }
 
-.modal-btn-primary, .modal-btn-secondary {
+.modal-btn-primary,
+.modal-btn-secondary {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -927,7 +1013,8 @@ export default {
     flex-direction: column;
   }
 
-  .modal-btn-primary, .modal-btn-secondary {
+  .modal-btn-primary,
+  .modal-btn-secondary {
     width: 100%;
     margin-bottom: 10px;
   }

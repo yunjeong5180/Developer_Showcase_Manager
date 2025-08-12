@@ -4,7 +4,9 @@
     <section class="projects-header">
       <div class="container">
         <h1 class="page-title fade-in">My Projects</h1>
-        <p class="page-subtitle fade-in">지금까지 진행한 프로젝트들을 소개합니다</p>
+        <p class="page-subtitle fade-in">
+          지금까지 진행한 프로젝트들을 소개합니다
+        </p>
       </div>
     </section>
 
@@ -12,29 +14,29 @@
     <section class="projects-filter">
       <div class="container">
         <div class="filter-buttons fade-in">
-          <button 
-            class="filter-btn" 
+          <button
+            class="filter-btn"
             :class="{ active: selectedFilter === 'all' }"
             @click="filterProjects('all')"
           >
             전체
           </button>
-          <button 
-            class="filter-btn" 
+          <button
+            class="filter-btn"
             :class="{ active: selectedFilter === 'web' }"
             @click="filterProjects('web')"
           >
             웹 개발
           </button>
-          <button 
-            class="filter-btn" 
+          <button
+            class="filter-btn"
             :class="{ active: selectedFilter === 'frontend' }"
             @click="filterProjects('frontend')"
           >
             프론트엔드
           </button>
-          <button 
-            class="filter-btn" 
+          <button
+            class="filter-btn"
             :class="{ active: selectedFilter === 'fullstack' }"
             @click="filterProjects('fullstack')"
           >
@@ -48,21 +50,24 @@
     <section class="projects-section">
       <div class="container">
         <div class="projects-grid">
-          <div 
-            v-for="project in filteredProjects" 
+          <div
+            v-for="project in filteredProjects"
             :key="project.id"
             class="project-card fade-in"
             :data-category="project.category"
           >
-            <div class="project-image" :style="{ background: project.gradient }">
+            <div
+              class="project-image"
+              :style="{ background: project.gradient }"
+            >
               {{ project.emoji }}
             </div>
             <div class="project-content">
               <h3>{{ project.title }}</h3>
               <p>{{ project.description }}</p>
               <div class="project-tech">
-                <span 
-                  v-for="tech in project.technologies" 
+                <span
+                  v-for="tech in project.technologies"
                   :key="tech"
                   class="tech-tag"
                 >
@@ -97,142 +102,148 @@
 // - Store: import store from '@/store/index-unified'
 
 export default {
-  name: 'Projects',
+  name: "Projects",
   data() {
     return {
-      selectedFilter: 'all',
+      selectedFilter: "all",
       projects: [
         {
           id: 1,
-          title: '포트폴리오 웹사이트',
-          description: '반응형 디자인과 애니메이션 효과를 적용한 개인 포트폴리오 웹사이트입니다. 순수 HTML, CSS, JavaScript로 제작했습니다.',
-          emoji: '🌐',
-          gradient: 'linear-gradient(45deg, #667eea, #764ba2)',
-          category: 'frontend web',
-          technologies: ['HTML', 'CSS', 'JavaScript', '반응형'],
+          title: "포트폴리오 웹사이트",
+          description:
+            "반응형 디자인과 애니메이션 효과를 적용한 개인 포트폴리오 웹사이트입니다. 순수 HTML, CSS, JavaScript로 제작했습니다.",
+          emoji: "🌐",
+          gradient: "linear-gradient(45deg, #667eea, #764ba2)",
+          category: "frontend web",
+          technologies: ["HTML", "CSS", "JavaScript", "반응형"],
           features: [
-            '반응형 웹 디자인',
-            '스크롤 애니메이션',
-            '스무스 스크롤 네비게이션',
-            '연락처 폼'
-          ]
+            "반응형 웹 디자인",
+            "스크롤 애니메이션",
+            "스무스 스크롤 네비게이션",
+            "연락처 폼",
+          ],
         },
         {
           id: 2,
-          title: '할일 관리 앱 (To-Do List)',
-          description: 'Spring Boot와 Supabase를 활용한 할일 관리 웹 애플리케이션입니다. CRUD 기능과 카테고리 분류 기능을 구현했습니다.',
-          emoji: '📝',
-          gradient: 'linear-gradient(45deg, #ff6b6b, #feca57)',
-          category: 'fullstack web',
-          technologies: ['Java', 'Spring Boot', 'Supabase', 'PostgreSQL'],
+          title: "할일 관리 앱 (To-Do List)",
+          description:
+            "Spring Boot와 Supabase를 활용한 할일 관리 웹 애플리케이션입니다. CRUD 기능과 카테고리 분류 기능을 구현했습니다.",
+          emoji: "📝",
+          gradient: "linear-gradient(45deg, #ff6b6b, #feca57)",
+          category: "fullstack web",
+          technologies: ["Java", "Spring Boot", "Supabase", "PostgreSQL"],
           features: [
-            '할일 추가/수정/삭제',
-            '카테고리별 분류',
-            '완료 상태 관리',
-            '우선순위 설정'
-          ]
+            "할일 추가/수정/삭제",
+            "카테고리별 분류",
+            "완료 상태 관리",
+            "우선순위 설정",
+          ],
         },
         {
           id: 3,
-          title: '아이디어 노트',
-          description: '개발 공부하면서 얻은 아이디어들을 정리하는 개인 블로그입니다. 마크다운 에디터와 태그 시스템을 구현했습니다.',
-          emoji: '💡',
-          gradient: 'linear-gradient(45deg, #a8edea, #fed6e3)',
-          category: 'fullstack web',
-          technologies: ['JavaScript', 'Spring Boot', 'PostgreSQL', 'Markdown'],
+          title: "아이디어 노트",
+          description:
+            "개발 공부하면서 얻은 아이디어들을 정리하는 개인 블로그입니다. 마크다운 에디터와 태그 시스템을 구현했습니다.",
+          emoji: "💡",
+          gradient: "linear-gradient(45deg, #a8edea, #fed6e3)",
+          category: "fullstack web",
+          technologies: ["JavaScript", "Spring Boot", "PostgreSQL", "Markdown"],
           features: [
-            '마크다운 에디터',
-            '태그 시스템',
-            '검색 기능',
-            '카테고리 분류'
-          ]
+            "마크다운 에디터",
+            "태그 시스템",
+            "검색 기능",
+            "카테고리 분류",
+          ],
         },
         {
           id: 4,
-          title: '북마크 관리 사이트',
-          description: '웹사이트 URL을 저장하고 카테고리별로 정리할 수 있는 북마크 관리 시스템입니다. 검색과 공유 기능을 포함합니다.',
-          emoji: '🔖',
-          gradient: 'linear-gradient(45deg, #ff9a9e, #fecfef)',
-          category: 'fullstack web',
-          technologies: ['Java', 'Spring Boot', 'Supabase', 'Railway'],
+          title: "북마크 관리 사이트",
+          description:
+            "웹사이트 URL을 저장하고 카테고리별로 정리할 수 있는 북마크 관리 시스템입니다. 검색과 공유 기능을 포함합니다.",
+          emoji: "🔖",
+          gradient: "linear-gradient(45deg, #ff9a9e, #fecfef)",
+          category: "fullstack web",
+          technologies: ["Java", "Spring Boot", "Supabase", "Railway"],
           features: [
-            'URL 저장 및 관리',
-            '카테고리별 정리',
-            '키워드 검색',
-            '즐겨찾기 기능'
-          ]
+            "URL 저장 및 관리",
+            "카테고리별 정리",
+            "키워드 검색",
+            "즐겨찾기 기능",
+          ],
         },
         {
           id: 5,
-          title: '간단한 쇼핑몰',
-          description: 'Spring Boot를 활용한 간단한 온라인 쇼핑몰입니다. 상품 관리, 장바구니, 주문 기능을 구현했습니다.',
-          emoji: '🛒',
-          gradient: 'linear-gradient(45deg, #ffecd2, #fcb69f)',
-          category: 'fullstack web',
-          technologies: ['Java', 'Spring Boot', 'JPA', 'PostgreSQL'],
+          title: "간단한 쇼핑몰",
+          description:
+            "Spring Boot를 활용한 간단한 온라인 쇼핑몰입니다. 상품 관리, 장바구니, 주문 기능을 구현했습니다.",
+          emoji: "🛒",
+          gradient: "linear-gradient(45deg, #ffecd2, #fcb69f)",
+          category: "fullstack web",
+          technologies: ["Java", "Spring Boot", "JPA", "PostgreSQL"],
           features: [
-            '상품 등록/관리',
-            '장바구니 기능',
-            '주문 관리',
-            '회원 관리'
-          ]
+            "상품 등록/관리",
+            "장바구니 기능",
+            "주문 관리",
+            "회원 관리",
+          ],
         },
         {
           id: 6,
-          title: '날씨 앱',
-          description: '외부 API를 활용한 날씨 정보 웹 애플리케이션입니다. 현재 날씨와 5일 예보를 제공합니다.',
-          emoji: '🌤️',
-          gradient: 'linear-gradient(45deg, #74b9ff, #0984e3)',
-          category: 'frontend web',
-          technologies: ['JavaScript', 'API', 'CSS', 'LocalStorage'],
+          title: "날씨 앱",
+          description:
+            "외부 API를 활용한 날씨 정보 웹 애플리케이션입니다. 현재 날씨와 5일 예보를 제공합니다.",
+          emoji: "🌤️",
+          gradient: "linear-gradient(45deg, #74b9ff, #0984e3)",
+          category: "frontend web",
+          technologies: ["JavaScript", "API", "CSS", "LocalStorage"],
           features: [
-            '현재 날씨 조회',
-            '5일 날씨 예보',
-            '도시 검색',
-            '즐겨찾기 도시'
-          ]
-        }
-      ]
-    }
+            "현재 날씨 조회",
+            "5일 날씨 예보",
+            "도시 검색",
+            "즐겨찾기 도시",
+          ],
+        },
+      ],
+    };
   },
   computed: {
     filteredProjects() {
-      if (this.selectedFilter === 'all') {
-        return this.projects
+      if (this.selectedFilter === "all") {
+        return this.projects;
       }
-      return this.projects.filter(project => 
+      return this.projects.filter((project) =>
         project.category.includes(this.selectedFilter)
-      )
-    }
+      );
+    },
   },
   mounted() {
-    this.observeElements()
+    this.observeElements();
   },
   methods: {
     filterProjects(filter) {
-      this.selectedFilter = filter
+      this.selectedFilter = filter;
     },
     observeElements() {
       const options = {
         threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
-      }
+        rootMargin: "0px 0px -100px 0px",
+      };
 
       const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('visible')
+            entry.target.classList.add("visible");
           }
-        })
-      }, options)
+        });
+      }, options);
 
       this.$nextTick(() => {
-        const fadeElements = document.querySelectorAll('.fade-in')
-        fadeElements.forEach(el => observer.observe(el))
-      })
-    }
-  }
-}
+        const fadeElements = document.querySelectorAll(".fade-in");
+        fadeElements.forEach((el) => observer.observe(el));
+      });
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -376,7 +387,7 @@ export default {
 }
 
 .project-details li::before {
-  content: '•';
+  content: "•";
   position: absolute;
   left: 0;
   color: #3498db;
@@ -403,16 +414,16 @@ export default {
   .page-title {
     font-size: 2rem;
   }
-  
+
   .page-subtitle {
     font-size: 1rem;
   }
-  
+
   .projects-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
-  
+
   .filter-buttons {
     justify-content: center;
   }

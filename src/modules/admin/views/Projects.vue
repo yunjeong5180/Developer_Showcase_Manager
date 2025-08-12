@@ -46,12 +46,12 @@ export default {
   data() {
     return {
       // 임시 데이터
-    }
+    };
   },
   mounted() {
-    console.log('프로젝트 페이지 로드됨')
-  }
-}
+    console.log("프로젝트 페이지 로드됨");
+  },
+};
 </script>
 
 <style scoped>

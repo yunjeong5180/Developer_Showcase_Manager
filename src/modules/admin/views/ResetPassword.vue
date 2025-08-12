@@ -51,7 +51,7 @@
           :disabled="loading || !isFormValid"
           class="login-btn"
         >
-          {{ loading ? '처리 중...' : '비밀번호 변경' }}
+          {{ loading ? "처리 중..." : "비밀번호 변경" }}
         </button>
       </form>
 
@@ -67,8 +67,12 @@
         <h3>{{ modalTitle }}</h3>
         <p>{{ modalMessage }}</p>
         <div class="modal-buttons">
-          <button @click="handleModalConfirm" class="modal-btn-primary">확인</button>
-          <button @click="handleModalCancel" class="modal-btn-secondary">취소</button>
+          <button @click="handleModalConfirm" class="modal-btn-primary">
+            확인
+          </button>
+          <button @click="handleModalCancel" class="modal-btn-secondary">
+            취소
+          </button>
         </div>
       </div>
     </div>
@@ -76,266 +80,316 @@
 </template>
 
 <script>
-import { supabase } from '@/shared/services'
+import { supabase } from "@/shared/services";
 
 export default {
-  name: 'ResetPassword',
+  name: "ResetPassword",
   data() {
     return {
-      newPassword: '',
-      confirmPassword: '',
+      newPassword: "",
+      confirmPassword: "",
       loading: false,
       isLoading: true,
       error: null,
       success: null,
       sessionReady: false,
       showModal: false,
-      modalTitle: '',
-      modalMessage: '',
-      modalRedirectTo: null
-    }
+      modalTitle: "",
+      modalMessage: "",
+      modalRedirectTo: null,
+    };
   },
   computed: {
     isFormValid() {
-      return this.newPassword &&
+      return (
+        this.newPassword &&
         this.confirmPassword &&
         this.newPassword.length >= 8 &&
         this.sessionReady
-    }
+      );
+    },
   },
   async mounted() {
-    this.debugLog('ResetPassword 컴포넌트 마운트됨')
-    this.debugLog('현재 URL:', window.location.href)
-    this.debugLog('URL 해시:', window.location.hash)
-    await this.initializeSession()
+    this.debugLog("ResetPassword 컴포넌트 마운트됨");
+    this.debugLog("현재 URL:", window.location.href);
+    this.debugLog("URL 해시:", window.location.hash);
+    await this.initializeSession();
   },
   methods: {
     // 🔍 개발 환경 디버깅 로그
     debugLog(...args) {
-      if (process.env.NODE_ENV === 'development' || process.env.VUE_APP_DEBUG === 'true') {
-        console.log('[ResetPassword Debug]', ...args)
+      if (
+        process.env.NODE_ENV === "development" ||
+        process.env.VUE_APP_DEBUG === "true"
+      ) {
+        console.log("[ResetPassword Debug]", ...args);
       }
     },
 
     async initializeSession() {
       try {
-        this.debugLog('세션 설정 시작')
+        this.debugLog("세션 설정 시작");
 
         // URL 해시에서 토큰 추출
-        const hash = window.location.hash.substring(1)
-        const params = new URLSearchParams(hash)
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
 
-        this.debugLog('URL 파라미터:', Object.fromEntries(params))
+        this.debugLog("URL 파라미터:", Object.fromEntries(params));
 
         // 에러 체크
-        const error = params.get('error')
-        const errorCode = params.get('error_code')
-        const errorDescription = params.get('error_description')
-        
+        const error = params.get("error");
+        const errorCode = params.get("error_code");
+        const errorDescription = params.get("error_description");
+
         if (error) {
-          this.debugLog('URL에서 에러 발견:', error, errorCode, errorDescription)
-          
+          this.debugLog(
+            "URL에서 에러 발견:",
+            error,
+            errorCode,
+            errorDescription
+          );
+
           // 에러에 따른 메시지 처리
-          if (errorCode === 'otp_expired') {
-            this.showErrorModal('링크 만료', '비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.', '/forgot-password')
-            return
+          if (errorCode === "otp_expired") {
+            this.showErrorModal(
+              "링크 만료",
+              "비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.",
+              "/forgot-password"
+            );
+            return;
           }
-          
-          throw new Error(this.getErrorMessage(error, errorCode))
+
+          throw new Error(this.getErrorMessage(error, errorCode));
         }
 
         // 토큰 확인
-        const accessToken = params.get('access_token')
-        const tokenType = params.get('type')
-        const refreshToken = params.get('refresh_token')
+        const accessToken = params.get("access_token");
+        const tokenType = params.get("type");
+        const refreshToken = params.get("refresh_token");
 
-        this.debugLog('토큰 정보:', {
+        this.debugLog("토큰 정보:", {
           hasAccessToken: !!accessToken,
           hasRefreshToken: !!refreshToken,
           tokenType,
-          tokenLength: accessToken?.length || 0
-        })
+          tokenLength: accessToken?.length || 0,
+        });
 
-        if (!accessToken || tokenType !== 'recovery') {
-          this.showErrorModal('유효하지 않은 링크', '유효하지 않은 재설정 링크입니다. 새로운 링크를 요청해주세요.', '/forgot-password')
-          return
+        if (!accessToken || tokenType !== "recovery") {
+          this.showErrorModal(
+            "유효하지 않은 링크",
+            "유효하지 않은 재설정 링크입니다. 새로운 링크를 요청해주세요.",
+            "/forgot-password"
+          );
+          return;
         }
 
         // 현재 세션 확인 (이미 App.vue에서 세션이 설정되었을 수 있음)
-        const { data: { session: currentSession } } = await supabase.auth.getSession()
-        
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
+
         if (currentSession && currentSession.user) {
           // 이미 세션이 있는 경우
-          this.debugLog('기존 세션 발견:', {
+          this.debugLog("기존 세션 발견:", {
             userEmail: currentSession.user.email,
-            expiresAt: currentSession.expires_at
-          })
-          this.sessionReady = true
-          this.error = null
-          return
+            expiresAt: currentSession.expires_at,
+          });
+          this.sessionReady = true;
+          this.error = null;
+          return;
         }
-        
+
         // 세션이 없는 경우에만 설정 시도
-        this.debugLog('Supabase 세션 설정 시도...')
-        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+        this.debugLog("Supabase 세션 설정 시도...");
+        const { error: sessionError } = await supabase.auth.setSession({
           access_token: accessToken,
-          refresh_token: refreshToken || accessToken
-        })
+          refresh_token: refreshToken || accessToken,
+        });
 
         if (sessionError) {
-          this.debugLog('세션 설정 오류:', sessionError)
-          
+          this.debugLog("세션 설정 오류:", sessionError);
+
           // 세션 오류 처리
-          if (sessionError.message.includes('JWT') || sessionError.message.includes('expired') || sessionError.message.includes('session missing')) {
-            this.showErrorModal('링크 만료', '비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.', '/forgot-password')
-            return
+          if (
+            sessionError.message.includes("JWT") ||
+            sessionError.message.includes("expired") ||
+            sessionError.message.includes("session missing")
+          ) {
+            this.showErrorModal(
+              "링크 만료",
+              "비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.",
+              "/forgot-password"
+            );
+            return;
           }
-          
-          throw sessionError
+
+          throw sessionError;
         }
 
         // 세션 재확인
-        const { data: { session } } = await supabase.auth.getSession()
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         if (!session) {
-          this.debugLog('세션 확인 실패')
-          this.showErrorModal('세션 설정 실패', '세션 설정에 실패했습니다. 새로운 링크를 요청해주세요.', '/forgot-password')
-          return
+          this.debugLog("세션 확인 실패");
+          this.showErrorModal(
+            "세션 설정 실패",
+            "세션 설정에 실패했습니다. 새로운 링크를 요청해주세요.",
+            "/forgot-password"
+          );
+          return;
         }
 
-        this.debugLog('세션 설정 성공:', {
+        this.debugLog("세션 설정 성공:", {
           userEmail: session.user.email,
-          expiresAt: session.expires_at
-        })
+          expiresAt: session.expires_at,
+        });
 
         // 성공적으로 세션이 설정된 경우에만 sessionReady를 true로 설정
-        this.sessionReady = true
-        this.error = null
-
+        this.sessionReady = true;
+        this.error = null;
       } catch (err) {
-        this.debugLog('세션 설정 실패:', err.message)
-        
+        this.debugLog("세션 설정 실패:", err.message);
+
         // 에러 메시지 개선
-        if (err.message.includes('session missing') || err.message.includes('Auth session missing')) {
+        if (
+          err.message.includes("session missing") ||
+          err.message.includes("Auth session missing")
+        ) {
           // 이미 세션이 있는지 최종 확인
-          const { data: { session } } = await supabase.auth.getSession()
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
           if (session && session.user) {
-            this.debugLog('에러 발생했지만 세션은 유효함')
-            this.sessionReady = true
-            this.error = null
+            this.debugLog("에러 발생했지만 세션은 유효함");
+            this.sessionReady = true;
+            this.error = null;
           } else {
-            this.showErrorModal('링크 만료', '비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.', '/forgot-password')
+            this.showErrorModal(
+              "링크 만료",
+              "비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.",
+              "/forgot-password"
+            );
           }
         } else {
-          this.error = this.getErrorMessage(err.message, err.code)
+          this.error = this.getErrorMessage(err.message, err.code);
         }
-        
+
         // 에러가 발생해도 폼은 표시하되, sessionReady를 false로 유지
         if (this.error) {
-          this.sessionReady = false
+          this.sessionReady = false;
         }
       } finally {
-        this.isLoading = false
+        this.isLoading = false;
       }
     },
 
     async handleResetPassword() {
-      if (!this.validateForm()) return
+      if (!this.validateForm()) return;
 
-      this.loading = true
-      this.error = null
-      this.debugLog('비밀번호 업데이트 시작')
+      this.loading = true;
+      this.error = null;
+      this.debugLog("비밀번호 업데이트 시작");
 
       try {
         // 세션 재확인
-        const { data: { session } } = await supabase.auth.getSession()
-        this.debugLog('세션 재확인:', {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        this.debugLog("세션 재확인:", {
           hasSession: !!session,
-          userEmail: session?.user?.email
-        })
+          userEmail: session?.user?.email,
+        });
 
         const { error } = await supabase.auth.updateUser({
-          password: this.newPassword
-        })
+          password: this.newPassword,
+        });
 
         if (error) {
-          this.debugLog('비밀번호 업데이트 오류:', error)
-          throw error
+          this.debugLog("비밀번호 업데이트 오류:", error);
+          throw error;
         }
 
-        this.debugLog('비밀번호 변경 성공')
-        this.debugLog('비밀번호 변경 성공')
-        
-        // 세션 종료 및 모달 표시
-        await supabase.auth.signOut()
-        this.debugLog('세션 종료 완료, 로그인 페이지로 이동')
-        this.showSuccessModal('비밀번호 변경 완료', '비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동하시겠습니까?', '/login')
+        this.debugLog("비밀번호 변경 성공");
+        this.debugLog("비밀번호 변경 성공");
 
+        // 세션 종료 및 모달 표시
+        await supabase.auth.signOut();
+        this.debugLog("세션 종료 완료, 로그인 페이지로 이동");
+        this.showSuccessModal(
+          "비밀번호 변경 완료",
+          "비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동하시겠습니까?",
+          "/login"
+        );
       } catch (err) {
-        this.debugLog('비밀번호 업데이트 실패:', err.message)
-        this.error = this.getUpdateErrorMessage(err.message)
+        this.debugLog("비밀번호 업데이트 실패:", err.message);
+        this.error = this.getUpdateErrorMessage(err.message);
       } finally {
-        this.loading = false
+        this.loading = false;
       }
     },
 
     validateForm() {
       if (this.newPassword !== this.confirmPassword) {
-        this.error = '비밀번호가 일치하지 않습니다.'
-        return false
+        this.error = "비밀번호가 일치하지 않습니다.";
+        return false;
       }
       if (this.newPassword.length < 8) {
-        this.error = '비밀번호는 최소 8자 이상이어야 합니다.'
-        return false
+        this.error = "비밀번호는 최소 8자 이상이어야 합니다.";
+        return false;
       }
-      return true
+      return true;
     },
 
     getErrorMessage(error, errorCode) {
-      if (errorCode === 'otp_expired' || error === 'access_denied') {
-        return '비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.'
+      if (errorCode === "otp_expired" || error === "access_denied") {
+        return "비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.";
       }
-      return '재설정 링크에 문제가 있습니다. 새로운 링크를 요청해주세요.'
+      return "재설정 링크에 문제가 있습니다. 새로운 링크를 요청해주세요.";
     },
 
     getUpdateErrorMessage(message) {
-      if (message.includes('session') || message.includes('expired')) {
-        return '세션이 만료되었습니다. 다시 시도해주세요.'
+      if (message.includes("session") || message.includes("expired")) {
+        return "세션이 만료되었습니다. 다시 시도해주세요.";
       }
-      if (message.includes('same password') || message.includes('different from the old password')) {
-        return '비밀번호는 이전 비밀번호와 달라야 합니다.'
+      if (
+        message.includes("same password") ||
+        message.includes("different from the old password")
+      ) {
+        return "비밀번호는 이전 비밀번호와 달라야 합니다.";
       }
-      return '비밀번호 변경 중 오류가 발생했습니다.'
+      return "비밀번호 변경 중 오류가 발생했습니다.";
     },
 
     showErrorModal(title, message, redirectTo) {
-      this.modalTitle = title
-      this.modalMessage = message
-      this.modalRedirectTo = redirectTo
-      this.showModal = true
-      this.error = null
+      this.modalTitle = title;
+      this.modalMessage = message;
+      this.modalRedirectTo = redirectTo;
+      this.showModal = true;
+      this.error = null;
     },
 
     showSuccessModal(title, message, redirectTo) {
-      this.modalTitle = title
-      this.modalMessage = message
-      this.modalRedirectTo = redirectTo
-      this.showModal = true
-      this.success = null
+      this.modalTitle = title;
+      this.modalMessage = message;
+      this.modalRedirectTo = redirectTo;
+      this.showModal = true;
+      this.success = null;
     },
 
     handleModalConfirm() {
-      this.showModal = false
+      this.showModal = false;
       if (this.modalRedirectTo) {
-        this.$router.push(this.modalRedirectTo)
+        this.$router.push(this.modalRedirectTo);
       }
     },
 
     handleModalCancel() {
-      this.showModal = false
-      this.modalRedirectTo = null
-    }
-  }
-}
+      this.showModal = false;
+      this.modalRedirectTo = null;
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -390,8 +444,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .login-form {
@@ -429,7 +487,8 @@ export default {
   cursor: not-allowed;
 }
 
-.error-message, .success-message {
+.error-message,
+.success-message {
   padding: 12px;
   border-radius: 8px;
   font-size: 14px;
@@ -532,7 +591,8 @@ export default {
   justify-content: center;
 }
 
-.modal-btn-primary, .modal-btn-secondary {
+.modal-btn-primary,
+.modal-btn-secondary {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -581,7 +641,8 @@ export default {
     flex-direction: column;
   }
 
-  .modal-btn-primary, .modal-btn-secondary {
+  .modal-btn-primary,
+  .modal-btn-secondary {
     width: 100%;
     margin-bottom: 10px;
   }

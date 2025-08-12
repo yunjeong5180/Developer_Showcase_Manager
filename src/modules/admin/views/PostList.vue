@@ -36,7 +36,7 @@
             @error="handleImageError"
           />
           <div class="project-status" :class="project.status">
-            {{ project.status === 'active' ? '진행중' : '완료' }}
+            {{ project.status === "active" ? "진행중" : "완료" }}
           </div>
         </div>
 
@@ -131,7 +131,11 @@
               <h4>프로젝트 기간</h4>
               <p>
                 {{ formatDate(selectedProject.startDate) }} ~
-                {{ selectedProject.endDate ? formatDate(selectedProject.endDate) : '진행중' }}
+                {{
+                  selectedProject.endDate
+                    ? formatDate(selectedProject.endDate)
+                    : "진행중"
+                }}
               </p>
             </div>
           </div>
@@ -141,7 +145,10 @@
           <button @click="editProject(selectedProject)" class="btn-modal-edit">
             수정하기
           </button>
-          <button @click="deleteProject(selectedProject.id)" class="btn-modal-delete">
+          <button
+            @click="deleteProject(selectedProject.id)"
+            class="btn-modal-delete"
+          >
             삭제하기
           </button>
         </div>
@@ -151,7 +158,7 @@
 </template>
 
 <script>
-import { projectService } from '@/shared/services';
+import { projectService } from "@/shared/services";
 
 export default {
   name: "PostListPage",
@@ -165,8 +172,8 @@ export default {
         page: 1,
         limit: 12,
         total: 0,
-        totalPages: 0
-      }
+        totalPages: 0,
+      },
     };
   },
   async created() {
@@ -176,38 +183,38 @@ export default {
     async loadProjects() {
       this.loading = true;
       this.error = null;
-      
+
       try {
         const response = await projectService.getProjects({
           page: this.pagination.page,
           limit: this.pagination.limit,
-          sortBy: 'created_at',
-          sortOrder: 'desc'
+          sortBy: "created_at",
+          sortOrder: "desc",
         });
-        
+
         if (response.success) {
           // API 응답 데이터를 UI에 맞게 변환
-          this.projects = response.data.projects.map(project => ({
+          this.projects = response.data.projects.map((project) => ({
             id: project.id,
             title: project.title,
             description: project.description,
-            image: project.image_urls && project.image_urls[0] || null,
+            image: (project.image_urls && project.image_urls[0]) || null,
             projectUrl: project.demo_url,
             githubUrl: project.github_url,
             startDate: project.start_date,
             endDate: project.end_date,
-            status: project.end_date ? 'completed' : 'active',
-            techStack: project.tech_stack || []
+            status: project.end_date ? "completed" : "active",
+            techStack: project.tech_stack || [],
           }));
-          
+
           this.pagination = response.data.pagination;
         } else {
           this.error = response.error;
-          console.error('프로젝트 로드 실패:', response.error);
+          console.error("프로젝트 로드 실패:", response.error);
         }
       } catch (error) {
-        this.error = '프로젝트를 불러오는 중 오류가 발생했습니다.';
-        console.error('프로젝트 로드 예외:', error);
+        this.error = "프로젝트를 불러오는 중 오류가 발생했습니다.";
+        console.error("프로젝트 로드 예외:", error);
       } finally {
         this.loading = false;
       }
@@ -221,32 +228,32 @@ export default {
     editProject(project) {
       // 편집 페이지로 이동
       this.$router.push({
-        name: 'EditPost',
-        params: { id: project.id }
+        name: "EditPost",
+        params: { id: project.id },
       });
       this.closeModal();
     },
     async deleteProject(projectId) {
       if (confirm("정말로 이 프로젝트를 삭제하시겠습니까?")) {
         this.loading = true;
-        
+
         try {
           const response = await projectService.deleteProject(projectId);
-          
+
           if (response.success) {
             // 로컬 상태에서 제거
-            this.projects = this.projects.filter(p => p.id !== projectId);
+            this.projects = this.projects.filter((p) => p.id !== projectId);
             this.closeModal();
             alert("프로젝트가 삭제되었습니다.");
-            
+
             // 프로젝트 목록 새로고침
             await this.loadProjects();
           } else {
             alert(`프로젝트 삭제 실패: ${response.error}`);
           }
         } catch (error) {
-          console.error('프로젝트 삭제 예외:', error);
-          alert('프로젝트 삭제 중 오류가 발생했습니다.');
+          console.error("프로젝트 삭제 예외:", error);
+          alert("프로젝트 삭제 중 오류가 발생했습니다.");
         } finally {
           this.loading = false;
         }
@@ -258,13 +265,14 @@ export default {
       return date.toLocaleDateString("ko-KR", {
         year: "numeric",
         month: "long",
-        day: "numeric"
+        day: "numeric",
       });
     },
     handleImageError(event) {
-      event.target.src = "https://placehold.co/400x250/e9ecef/6c757d?text=No+Image";
-    }
-  }
+      event.target.src =
+        "https://placehold.co/400x250/e9ecef/6c757d?text=No+Image";
+    },
+  },
 };
 </script>
 
@@ -411,7 +419,8 @@ export default {
   gap: 8px;
 }
 
-.btn-edit, .btn-delete {
+.btn-edit,
+.btn-delete {
   padding: 6px 12px;
   border: none;
   border-radius: 6px;
@@ -490,8 +499,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-state p {
@@ -613,7 +626,8 @@ export default {
   margin-bottom: 20px;
 }
 
-.project-link, .github-link {
+.project-link,
+.github-link {
   padding: 10px 15px;
   border-radius: 8px;
   text-decoration: none;
@@ -631,11 +645,13 @@ export default {
   color: white;
 }
 
-.project-link:hover, .github-link:hover {
+.project-link:hover,
+.github-link:hover {
   opacity: 0.8;
 }
 
-.modal-tech h4, .modal-period h4 {
+.modal-tech h4,
+.modal-period h4 {
   color: #2c3e50;
   margin-bottom: 10px;
   font-size: 1.1rem;
@@ -665,7 +681,8 @@ export default {
   border-top: 1px solid #e9ecef;
 }
 
-.btn-modal-edit, .btn-modal-delete {
+.btn-modal-edit,
+.btn-modal-delete {
   flex: 1;
   padding: 12px;
   border: none;
@@ -685,7 +702,8 @@ export default {
   color: white;
 }
 
-.btn-modal-edit:hover, .btn-modal-delete:hover {
+.btn-modal-edit:hover,
+.btn-modal-delete:hover {
   opacity: 0.8;
 }
 

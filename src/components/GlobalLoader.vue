@@ -10,23 +10,25 @@
 </template>
 
 <script>
-import { computed } from 'vue'
-import { useStore } from 'vuex'
+import { computed } from "vue";
+import { useStore } from "vuex";
 
 export default {
-  name: 'GlobalLoader',
+  name: "GlobalLoader",
   setup() {
-    const store = useStore()
-    
-    const isLoading = computed(() => store.state.loading.isLoading)
-    const loadingText = computed(() => store.state.loading.loadingText || '로딩 중...')
-    
+    const store = useStore();
+
+    const isLoading = computed(() => store.state.loading.isLoading);
+    const loadingText = computed(
+      () => store.state.loading.loadingText || "로딩 중..."
+    );
+
     return {
       isLoading,
-      loadingText
-    }
-  }
-}
+      loadingText,
+    };
+  },
+};
 </script>
 
 <style scoped>
@@ -59,8 +61,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {

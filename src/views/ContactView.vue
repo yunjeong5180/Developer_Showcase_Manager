@@ -10,7 +10,7 @@
         <!-- 연락처 정보 -->
         <div class="contact-info">
           <h2>연락처 정보</h2>
-          
+
           <div class="info-card">
             <div class="info-icon">📧</div>
             <div class="info-content">
@@ -64,35 +64,35 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="name">이름 *</label>
-                <input 
-                  type="text" 
-                  id="name" 
-                  v-model="formData.name" 
+                <input
+                  type="text"
+                  id="name"
+                  v-model="formData.name"
                   required
                   placeholder="홍길동"
-                >
+                />
               </div>
               <div class="form-group">
                 <label for="email">이메일 *</label>
-                <input 
-                  type="email" 
-                  id="email" 
-                  v-model="formData.email" 
+                <input
+                  type="email"
+                  id="email"
+                  v-model="formData.email"
                   required
                   placeholder="your@email.com"
-                >
+                />
               </div>
             </div>
 
             <div class="form-group">
               <label for="subject">제목 *</label>
-              <input 
-                type="text" 
-                id="subject" 
-                v-model="formData.subject" 
+              <input
+                type="text"
+                id="subject"
+                v-model="formData.subject"
                 required
                 placeholder="문의 제목을 입력하세요"
-              >
+              />
             </div>
 
             <div class="form-group">
@@ -109,9 +109,9 @@
 
             <div class="form-group">
               <label for="message">메시지 *</label>
-              <textarea 
-                id="message" 
-                v-model="formData.message" 
+              <textarea
+                id="message"
+                v-model="formData.message"
                 required
                 rows="6"
                 placeholder="문의 내용을 상세히 작성해주세요"
@@ -135,15 +135,17 @@
       <section class="faq-section">
         <h2>자주 묻는 질문</h2>
         <div class="faq-list">
-          <div 
-            v-for="(faq, index) in faqs" 
+          <div
+            v-for="(faq, index) in faqs"
             :key="index"
             class="faq-item"
             :class="{ active: activeFaq === index }"
           >
             <div class="faq-question" @click="toggleFaq(index)">
               <h3>{{ faq.question }}</h3>
-              <span class="faq-toggle">{{ activeFaq === index ? '−' : '+' }}</span>
+              <span class="faq-toggle">{{
+                activeFaq === index ? "−" : "+"
+              }}</span>
             </div>
             <transition name="faq-answer">
               <div v-if="activeFaq === index" class="faq-answer">
@@ -159,92 +161,96 @@
 
 <script>
 export default {
-  name: 'ContactView',
+  name: "ContactView",
   data() {
     return {
       formData: {
-        name: '',
-        email: '',
-        subject: '',
-        category: '',
-        message: ''
+        name: "",
+        email: "",
+        subject: "",
+        category: "",
+        message: "",
       },
       isSubmitting: false,
       activeFaq: null,
       faqs: [
         {
-          question: 'MyCodit은 무료로 사용할 수 있나요?',
-          answer: '네, 기본 기능은 모두 무료로 사용하실 수 있습니다. 프리미엄 기능은 추후 출시 예정입니다.'
+          question: "MyCodit은 무료로 사용할 수 있나요?",
+          answer:
+            "네, 기본 기능은 모두 무료로 사용하실 수 있습니다. 프리미엄 기능은 추후 출시 예정입니다.",
         },
         {
-          question: '포트폴리오는 몇 개까지 만들 수 있나요?',
-          answer: '무제한으로 프로젝트를 등록하고 포트폴리오를 만들 수 있습니다.'
+          question: "포트폴리오는 몇 개까지 만들 수 있나요?",
+          answer:
+            "무제한으로 프로젝트를 등록하고 포트폴리오를 만들 수 있습니다.",
         },
         {
-          question: '데이터는 안전하게 보관되나요?',
-          answer: '모든 데이터는 암호화되어 안전하게 저장되며, 정기적으로 백업됩니다.'
+          question: "데이터는 안전하게 보관되나요?",
+          answer:
+            "모든 데이터는 암호화되어 안전하게 저장되며, 정기적으로 백업됩니다.",
         },
         {
-          question: '협업 기능은 어떻게 사용하나요?',
-          answer: '프로젝트에 팀원을 초대하여 함께 작업할 수 있으며, 실시간으로 진행 상황을 공유할 수 있습니다.'
+          question: "협업 기능은 어떻게 사용하나요?",
+          answer:
+            "프로젝트에 팀원을 초대하여 함께 작업할 수 있으며, 실시간으로 진행 상황을 공유할 수 있습니다.",
         },
         {
-          question: '기술 지원은 어떻게 받을 수 있나요?',
-          answer: '이메일이나 전화로 문의하시면 전문 지원팀이 도움을 드립니다.'
-        }
-      ]
-    }
+          question: "기술 지원은 어떻게 받을 수 있나요?",
+          answer: "이메일이나 전화로 문의하시면 전문 지원팀이 도움을 드립니다.",
+        },
+      ],
+    };
   },
   methods: {
     handleSubmit() {
-      if (this.isSubmitting) return
-      
-      this.isSubmitting = true
-      
+      if (this.isSubmitting) return;
+
+      this.isSubmitting = true;
+
       // 실제로는 여기서 API 호출
       setTimeout(() => {
-        alert('문의가 성공적으로 전송되었습니다!')
-        this.resetForm()
-        this.isSubmitting = false
-      }, 1500)
+        alert("문의가 성공적으로 전송되었습니다!");
+        this.resetForm();
+        this.isSubmitting = false;
+      }, 1500);
     },
     resetForm() {
       this.formData = {
-        name: '',
-        email: '',
-        subject: '',
-        category: '',
-        message: ''
-      }
+        name: "",
+        email: "",
+        subject: "",
+        category: "",
+        message: "",
+      };
     },
     toggleFaq(index) {
-      this.activeFaq = this.activeFaq === index ? null : index
-    }
-  }
-}
+      this.activeFaq = this.activeFaq === index ? null : index;
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>
-@use '@/shared/styles/variables' as *;
+@use "@/shared/styles/variables" as *;
 
 .contact-page {
   min-height: calc(100vh - 60px);
-  background: $gradient-light;  // 깨끗한 회색 그라디언트
+  background: $gradient-light; // 깨끗한 회색 그라디언트
 }
 
 .hero-section {
-  background: $gradient-primary;  // 차콜 블랙 그라디언트
+  background: $gradient-primary; // 차콜 블랙 그라디언트
   color: white;
   padding: 80px 20px;
   text-align: center;
-  
+
   .hero-title {
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 16px;
     animation: fadeInDown 0.8s ease;
   }
-  
+
   .hero-subtitle {
     font-size: 1.25rem;
     opacity: 0.9;
@@ -263,7 +269,7 @@ export default {
   grid-template-columns: 1fr 2fr;
   gap: 60px;
   margin-bottom: 80px;
-  
+
   @media (max-width: $breakpoint-lg) {
     grid-template-columns: 1fr;
     gap: 40px;
@@ -273,10 +279,10 @@ export default {
 .contact-info {
   h2 {
     font-size: 1.75rem;
-    color: $primary-color;  // 차콜 블랙
+    color: $primary-color; // 차콜 블랙
     margin-bottom: 30px;
   }
-  
+
   .info-card {
     background: white;
     border: 1px solid $gray-200;
@@ -287,48 +293,48 @@ export default {
     align-items: center;
     gap: 20px;
     transition: transform 0.3s ease, background 0.3s ease;
-    
+
     &:hover {
       transform: translateX(5px);
       background: $gray-50;
     }
-    
+
     .info-icon {
       font-size: 2rem;
-      color: $accent-color;  // 블루 아이콘
+      color: $accent-color; // 블루 아이콘
     }
-    
+
     .info-content {
       h3 {
-        color: $primary-color;  // 차콜 블랙
+        color: $primary-color; // 차콜 블랙
         font-size: 1.125rem;
         margin-bottom: 8px;
       }
-      
+
       p {
         color: $gray-600;
         margin: 4px 0;
       }
-      
+
       .sub-text {
         font-size: 0.875rem;
         color: $gray-500;
       }
     }
   }
-  
+
   .social-links {
     margin-top: 40px;
-    
+
     h3 {
-      color: $primary-color;  // 차콜 블랙으로 변경
+      color: $primary-color; // 차콜 블랙으로 변경
       margin-bottom: 20px;
     }
-    
+
     .social-icons {
       display: flex;
       gap: 15px;
-      
+
       .social-icon {
         width: 50px;
         height: 50px;
@@ -341,7 +347,7 @@ export default {
         font-size: 1.5rem;
         transition: all 0.3s ease;
         text-decoration: none;
-        
+
         &:hover {
           background: rgba(255, 255, 255, 0.2);
           transform: translateY(-3px);
@@ -356,7 +362,7 @@ export default {
   padding: 40px;
   border-radius: $border-radius-lg;
   box-shadow: $shadow-lg;
-  
+
   h2 {
     font-size: 1.75rem;
     color: $gray-900;
@@ -369,22 +375,22 @@ export default {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    
+
     @media (max-width: $breakpoint-md) {
       grid-template-columns: 1fr;
     }
   }
-  
+
   .form-group {
     margin-bottom: 24px;
-    
+
     label {
       display: block;
       color: $gray-700;
       font-weight: 600;
       margin-bottom: 8px;
     }
-    
+
     input,
     select,
     textarea {
@@ -394,30 +400,30 @@ export default {
       border-radius: $border-radius;
       font-size: 1rem;
       transition: all 0.3s ease;
-      
+
       &:focus {
         outline: none;
         border-color: $primary-color;
         box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
       }
-      
+
       &::placeholder {
         color: $gray-400;
       }
     }
-    
+
     textarea {
       resize: vertical;
       min-height: 120px;
     }
   }
-  
+
   .form-actions {
     display: flex;
     gap: 16px;
     justify-content: flex-end;
     margin-top: 32px;
-    
+
     button {
       padding: 12px 32px;
       border-radius: $border-radius;
@@ -426,26 +432,26 @@ export default {
       cursor: pointer;
       transition: all 0.3s ease;
       border: none;
-      
+
       &.btn-primary {
-        background: $gradient-primary;  // 차콜 블랙 그라디언트
-        color: white;  // 흰색 텍스트
-        
+        background: $gradient-primary; // 차콜 블랙 그라디언트
+        color: white; // 흰색 텍스트
+
         &:hover:not(:disabled) {
           transform: translateY(-2px);
           box-shadow: $shadow;
         }
-        
+
         &:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
       }
-      
+
       &.btn-secondary {
         background: $gray-200;
         color: $gray-700;
-        
+
         &:hover {
           background: $gray-300;
         }
@@ -459,26 +465,26 @@ export default {
   padding: 60px;
   border-radius: $border-radius-lg;
   box-shadow: $shadow;
-  
+
   h2 {
     font-size: 2rem;
     color: $gray-900;
     text-align: center;
     margin-bottom: 40px;
   }
-  
+
   .faq-list {
     max-width: 800px;
     margin: 0 auto;
   }
-  
+
   .faq-item {
     border-bottom: 1px solid $gray-200;
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     .faq-question {
       padding: 24px 0;
       display: flex;
@@ -486,44 +492,44 @@ export default {
       align-items: center;
       cursor: pointer;
       transition: color 0.3s ease;
-      
+
       &:hover {
         color: $primary-color;
       }
-      
+
       h3 {
         font-size: 1.125rem;
         color: $gray-900;
         font-weight: 600;
       }
-      
+
       .faq-toggle {
         font-size: 1.5rem;
         color: $primary-color;
         font-weight: 300;
       }
     }
-    
+
     &.active .faq-question h3 {
       color: $primary-color;
     }
   }
-  
+
   .faq-answer {
     padding: 0 0 24px 0;
-    
+
     p {
       color: $gray-600;
       line-height: 1.8;
     }
   }
-  
+
   .faq-answer-enter-active,
   .faq-answer-leave-active {
     transition: all 0.3s ease;
     overflow: hidden;
   }
-  
+
   .faq-answer-enter-from,
   .faq-answer-leave-to {
     opacity: 0;
@@ -556,16 +562,16 @@ export default {
 @media (max-width: $breakpoint-md) {
   .hero-section {
     padding: 60px 20px;
-    
+
     .hero-title {
       font-size: 2rem;
     }
-    
+
     .hero-subtitle {
       font-size: 1rem;
     }
   }
-  
+
   .faq-section {
     padding: 40px 20px;
   }

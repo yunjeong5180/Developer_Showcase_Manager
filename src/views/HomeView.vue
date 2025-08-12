@@ -5,9 +5,7 @@
         <h1 class="hero-title">
           <span class="gradient-text">Welcome to Codit</span>
         </h1>
-        <p class="hero-subtitle">
-          개발자를 위한 포트폴리오 플랫폼
-        </p>
+        <p class="hero-subtitle">개발자를 위한 포트폴리오 플랫폼</p>
         <p class="hero-description">
           나만의 포트폴리오를 만들고, 프로젝트를 관리하며, 성장을 기록하세요
         </p>
@@ -85,7 +83,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@use '@/shared/styles/variables' as *;
+@use "@/shared/styles/variables" as *;
 
 .home {
   background: $gray-100;
@@ -210,23 +208,37 @@ export default {
   height: 12px;
   border-radius: 50%;
 
-  &.red { background: #ff5f56; }
-  &.yellow { background: #ffbd2e; }
-  &.green { background: #27c93f; }
+  &.red {
+    background: #ff5f56;
+  }
+  &.yellow {
+    background: #ffbd2e;
+  }
+  &.green {
+    background: #27c93f;
+  }
 }
 
 .code-content {
   color: #abb2bf;
   padding: 20px;
   margin: 0;
-  font-family: 'Monaco', 'Courier New', monospace;
+  font-family: "Monaco", "Courier New", monospace;
   font-size: 14px;
   line-height: 1.6;
 
-  .keyword { color: #c678dd; }
-  .variable { color: #e06c75; }
-  .property { color: #e06c75; }
-  .string { color: #98c379; }
+  .keyword {
+    color: #c678dd;
+  }
+  .variable {
+    color: #e06c75;
+  }
+  .property {
+    color: #e06c75;
+  }
+  .string {
+    color: #98c379;
+  }
 }
 
 .features-section {

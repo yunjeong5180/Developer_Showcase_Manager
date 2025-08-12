@@ -10,7 +10,9 @@
       <div v-if="error" class="error-message">
         <h3>로그인 실패</h3>
         <p>{{ error }}</p>
-        <router-link to="/login" class="retry-btn">로그인 페이지로 돌아가기</router-link>
+        <router-link to="/login" class="retry-btn"
+          >로그인 페이지로 돌아가기</router-link
+        >
       </div>
     </div>
 
@@ -20,8 +22,12 @@
         <h3>{{ modalTitle }}</h3>
         <p>{{ modalMessage }}</p>
         <div class="modal-buttons">
-          <button @click="handleModalConfirm" class="modal-btn-primary">확인</button>
-          <button @click="handleModalCancel" class="modal-btn-secondary">취소</button>
+          <button @click="handleModalConfirm" class="modal-btn-primary">
+            확인
+          </button>
+          <button @click="handleModalCancel" class="modal-btn-secondary">
+            취소
+          </button>
         </div>
       </div>
     </div>
@@ -29,123 +35,135 @@
 </template>
 
 <script>
-import { supabase, authService } from '@/shared/services'
+import { supabase, authService } from "@/shared/services";
 
 export default {
-  name: 'AuthCallback',
+  name: "AuthCallback",
   data() {
     return {
       error: null,
       showModal: false,
-      modalTitle: '',
-      modalMessage: '',
-      modalRedirectTo: null
-    }
+      modalTitle: "",
+      modalMessage: "",
+      modalRedirectTo: null,
+    };
   },
   async mounted() {
     try {
-      console.log('AuthCallback 시작')
-      console.log('전체 URL:', window.location.href)
-      console.log('해시:', window.location.hash)
+      console.log("AuthCallback 시작");
+      console.log("전체 URL:", window.location.href);
+      console.log("해시:", window.location.hash);
 
       // URL 해시에서 파라미터 추출
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const type = hashParams.get('type')
-      const accessToken = hashParams.get('access_token')
-      const error = hashParams.get('error')
-      const errorCode = hashParams.get('error_code')
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const type = hashParams.get("type");
+      const accessToken = hashParams.get("access_token");
+      const error = hashParams.get("error");
+      const errorCode = hashParams.get("error_code");
 
-      console.log('URL 파라미터:', { 
-        type, 
+      console.log("URL 파라미터:", {
+        type,
         hasToken: !!accessToken,
         error,
-        errorCode 
-      })
+        errorCode,
+      });
 
       // 에러가 있는 경우 처리
       if (error) {
-        console.error('AuthCallback 에러:', error, errorCode)
-        let errorMessage = `인증 오류: ${error}`
-        if (errorCode === 'otp_expired') {
-          errorMessage = '비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.'
+        console.error("AuthCallback 에러:", error, errorCode);
+        let errorMessage = `인증 오류: ${error}`;
+        if (errorCode === "otp_expired") {
+          errorMessage =
+            "비밀번호 재설정 링크가 만료되었습니다. 새로운 링크를 요청해주세요.";
         }
-        this.showErrorModal('인증 오류', errorMessage, '/forgot-password')
-        return
+        this.showErrorModal("인증 오류", errorMessage, "/forgot-password");
+        return;
       }
 
       // 비밀번호 재설정 타입이면 즉시 리다이렉트 (세션 확인 없이)
-      if (type === 'recovery' && accessToken) {
-        console.log('비밀번호 재설정 타입 감지, 즉시 /reset-password로 리다이렉트')
+      if (type === "recovery" && accessToken) {
+        console.log(
+          "비밀번호 재설정 타입 감지, 즉시 /reset-password로 리다이렉트"
+        );
         // replace를 사용하여 히스토리를 남기지 않고 이동
         this.$router.replace({
-          path: '/reset-password',
-          hash: window.location.hash
-        })
-        return
+          path: "/reset-password",
+          hash: window.location.hash,
+        });
+        return;
       }
 
       // 일반 OAuth 로그인인 경우에만 세션 확인
-      const { data, error: sessionError } = await supabase.auth.getSession()
+      const { data, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
-        console.error('OAuth 콜백 오류:', sessionError)
-        this.error = sessionError.message
-        return
+        console.error("OAuth 콜백 오류:", sessionError);
+        this.error = sessionError.message;
+        return;
       }
 
       if (data.session) {
-        console.log('OAuth 세션 확인됨:', data.session.user.email)
+        console.log("OAuth 세션 확인됨:", data.session.user.email);
 
         // 🆕 소셜 로그인 사용자도 users 테이블에 마이그레이션
-        await authService.ensureUserInUsersTable(data.session.user)
+        await authService.ensureUserInUsersTable(data.session.user);
 
         // 일반 소셜 로그인 처리
         const userData = {
           email: data.session.user.email,
-          name: data.session.user.user_metadata?.full_name ||
+          name:
+            data.session.user.user_metadata?.full_name ||
             data.session.user.user_metadata?.name ||
-            data.session.user.email?.split('@')[0],
+            data.session.user.email?.split("@")[0],
           id: data.session.user.id,
-          provider: data.session.user.app_metadata?.provider || 'unknown',
-          avatar_url: data.session.user.user_metadata?.avatar_url
-        }
+          provider: data.session.user.app_metadata?.provider || "unknown",
+          avatar_url: data.session.user.user_metadata?.avatar_url,
+        };
 
-        localStorage.setItem('user', JSON.stringify(userData))
-        console.log('사용자 정보 저장 완료, 대시보드로 이동')
+        localStorage.setItem("user", JSON.stringify(userData));
+        console.log("사용자 정보 저장 완료, 대시보드로 이동");
 
         // 대시보드로 리디렉션
-        this.$router.push('/dashboard')
+        this.$router.push("/dashboard");
       } else {
-        console.log('세션이 없습니다. 로그인 페이지로 리디렉션합니다.')
-        this.showErrorModal('로그인 세션 오류', '로그인 세션을 찾을 수 없습니다. 로그인 페이지로 이동하시겠습니까?', '/login')
+        console.log("세션이 없습니다. 로그인 페이지로 리디렉션합니다.");
+        this.showErrorModal(
+          "로그인 세션 오류",
+          "로그인 세션을 찾을 수 없습니다. 로그인 페이지로 이동하시겠습니까?",
+          "/login"
+        );
       }
     } catch (error) {
-      console.error('OAuth 콜백 처리 예외:', error)
-      this.showErrorModal('로그인 오류', '로그인 처리 중 오류가 발생했습니다. 로그인 페이지로 이동하시겠습니까?', '/login')
+      console.error("OAuth 콜백 처리 예외:", error);
+      this.showErrorModal(
+        "로그인 오류",
+        "로그인 처리 중 오류가 발생했습니다. 로그인 페이지로 이동하시겠습니까?",
+        "/login"
+      );
     }
   },
   methods: {
     showErrorModal(title, message, redirectTo) {
-      this.modalTitle = title
-      this.modalMessage = message
-      this.modalRedirectTo = redirectTo
-      this.showModal = true
-      this.error = null
+      this.modalTitle = title;
+      this.modalMessage = message;
+      this.modalRedirectTo = redirectTo;
+      this.showModal = true;
+      this.error = null;
     },
 
     handleModalConfirm() {
-      this.showModal = false
+      this.showModal = false;
       if (this.modalRedirectTo) {
-        this.$router.push(this.modalRedirectTo)
+        this.$router.push(this.modalRedirectTo);
       }
     },
 
     handleModalCancel() {
-      this.showModal = false
-      this.modalRedirectTo = null
-    }
-  }
-}
+      this.showModal = false;
+      this.modalRedirectTo = null;
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -183,8 +201,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .callback-container h2 {
@@ -277,7 +299,8 @@ export default {
   justify-content: center;
 }
 
-.modal-btn-primary, .modal-btn-secondary {
+.modal-btn-primary,
+.modal-btn-secondary {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -327,7 +350,8 @@ export default {
     flex-direction: column;
   }
 
-  .modal-btn-primary, .modal-btn-secondary {
+  .modal-btn-primary,
+  .modal-btn-secondary {
     width: 100%;
     margin-bottom: 10px;
   }

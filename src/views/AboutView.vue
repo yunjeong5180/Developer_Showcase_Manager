@@ -10,8 +10,8 @@
         <div class="section-content">
           <h2>🎯 우리의 미션</h2>
           <p>
-            MyCodit은 개발자들이 자신의 프로젝트와 기술을 효과적으로 관리하고 
-            공유할 수 있는 플랫폼을 제공합니다. 개발자의 성장과 네트워킹을 
+            MyCodit은 개발자들이 자신의 프로젝트와 기술을 효과적으로 관리하고
+            공유할 수 있는 플랫폼을 제공합니다. 개발자의 성장과 네트워킹을
             지원하며, 최고의 포트폴리오 경험을 만들어갑니다.
           </p>
         </div>
@@ -50,7 +50,9 @@
             <div class="member-avatar">👨‍💻</div>
             <h3>김개발</h3>
             <p class="role">풀스택 개발자</p>
-            <p class="bio">5년 경력의 풀스택 개발자로 사용자 경험을 최우선으로 생각합니다</p>
+            <p class="bio">
+              5년 경력의 풀스택 개발자로 사용자 경험을 최우선으로 생각합니다
+            </p>
           </div>
           <div class="team-member">
             <div class="member-avatar">👩‍💻</div>
@@ -94,16 +96,16 @@
 
 <script>
 export default {
-  name: 'AboutView'
-}
+  name: "AboutView",
+};
 </script>
 
 <style lang="scss" scoped>
-@use '@/shared/styles/variables' as *;
+@use "@/shared/styles/variables" as *;
 
 .about-page {
   min-height: calc(100vh - 60px);
-  background: $gradient-light;  // 다른 페이지와 동일한 깨끗한 회색 그라디언트로 통일
+  background: $gradient-light; // 다른 페이지와 동일한 깨끗한 회색 그라디언트로 통일
 }
 
 .hero-section {
@@ -111,14 +113,14 @@ export default {
   color: white;
   padding: 80px 20px;
   text-align: center;
-  
+
   .hero-title {
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 16px;
     animation: fadeInDown 0.8s ease;
   }
-  
+
   .hero-subtitle {
     font-size: 1.25rem;
     opacity: 0.9;
@@ -134,7 +136,7 @@ export default {
 
 section {
   margin-bottom: 80px;
-  
+
   h2 {
     font-size: 2rem;
     color: $gray-900;
@@ -151,7 +153,7 @@ section {
     box-shadow: $shadow;
     max-width: 800px;
     margin: 0 auto;
-    
+
     p {
       font-size: 1.125rem;
       line-height: 1.8;
@@ -164,7 +166,7 @@ section {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 30px;
-  
+
   .feature-card {
     background: white;
     padding: 30px;
@@ -172,23 +174,23 @@ section {
     box-shadow: $shadow;
     text-align: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    
+
     &:hover {
       transform: translateY(-5px);
       box-shadow: $shadow-lg;
     }
-    
+
     .feature-icon {
       font-size: 3rem;
       margin-bottom: 20px;
     }
-    
+
     h3 {
       font-size: 1.25rem;
       color: $gray-900;
       margin-bottom: 12px;
     }
-    
+
     p {
       color: $gray-600;
       line-height: 1.6;
@@ -200,31 +202,31 @@ section {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 40px;
-  
+
   .team-member {
     background: white;
     padding: 40px;
     border-radius: $border-radius-lg;
     box-shadow: $shadow;
     text-align: center;
-    
+
     .member-avatar {
       font-size: 4rem;
       margin-bottom: 20px;
     }
-    
+
     h3 {
       font-size: 1.5rem;
       color: $gray-900;
       margin-bottom: 8px;
     }
-    
+
     .role {
       color: $primary-color;
       font-weight: 600;
       margin-bottom: 16px;
     }
-    
+
     .bio {
       color: $gray-600;
       line-height: 1.6;
@@ -236,21 +238,21 @@ section {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 30px;
-  
+
   .stat-card {
     background: white;
     padding: 30px;
     border-radius: $border-radius-lg;
     box-shadow: $shadow;
     text-align: center;
-    
+
     .stat-number {
       font-size: 2.5rem;
       font-weight: 700;
       color: $primary-color;
       margin-bottom: 8px;
     }
-    
+
     .stat-label {
       color: $gray-600;
       font-size: 1rem;
@@ -283,23 +285,23 @@ section {
 @media (max-width: $breakpoint-md) {
   .hero-section {
     padding: 60px 20px;
-    
+
     .hero-title {
       font-size: 2rem;
     }
-    
+
     .hero-subtitle {
       font-size: 1rem;
     }
   }
-  
+
   .content-container {
     padding: 40px 20px;
   }
-  
+
   section {
     margin-bottom: 60px;
-    
+
     h2 {
       font-size: 1.5rem;
       margin-bottom: 30px;

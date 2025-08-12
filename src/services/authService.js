@@ -1,4 +1,4 @@
-import { supabase } from '@/config/supabase'
+import { supabase } from "@/config/supabase";
 
 // 회원가입 함수
 export async function signUp(userData) {
@@ -6,24 +6,26 @@ export async function signUp(userData) {
     // 1. Supabase Auth로 인증 계정 생성
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: userData.email,
-      password: userData.password
+      password: userData.password,
     });
 
     if (authError) throw authError;
 
     // 2. users 테이블에 추가 정보 저장
     const { data: userRecord, error: insertError } = await supabase
-      .from('users')
-      .insert([{
-        email: userData.email,
-        name: userData.name,
-        profile_image_url: userData.profile_image_url || null,
-        one_liner: userData.one_liner || null,
-        bio: userData.bio || null,
-        github_url: userData.github_url || null,
-        linkedin_url: userData.linkedin_url || null,
-        personal_blog_url: userData.personal_blog_url || null
-      }])
+      .from("users")
+      .insert([
+        {
+          email: userData.email,
+          name: userData.name,
+          profile_image_url: userData.profile_image_url || null,
+          one_liner: userData.one_liner || null,
+          bio: userData.bio || null,
+          github_url: userData.github_url || null,
+          linkedin_url: userData.linkedin_url || null,
+          personal_blog_url: userData.personal_blog_url || null,
+        },
+      ])
       .select();
 
     if (insertError) throw insertError;
@@ -31,10 +33,10 @@ export async function signUp(userData) {
     return {
       success: true,
       auth: authData,
-      user: userRecord[0]
+      user: userRecord[0],
     };
   } catch (error) {
-    console.error('회원가입 오류:', error);
+    console.error("회원가입 오류:", error);
     return { success: false, error: error.message };
   }
 }
@@ -44,7 +46,7 @@ export async function signIn(email, password) {
   try {
     const { data, error } = await supabase.auth.signInWithPassword({
       email: email,
-      password: password
+      password: password,
     });
 
     if (error) throw error;
@@ -55,10 +57,10 @@ export async function signIn(email, password) {
     return {
       success: true,
       auth: data,
-      user: userInfo.success ? userInfo.user : null
+      user: userInfo.success ? userInfo.user : null,
     };
   } catch (error) {
-    console.error('로그인 오류:', error);
+    console.error("로그인 오류:", error);
     return { success: false, error: error.message };
   }
 }
@@ -70,7 +72,7 @@ export async function signOut() {
     if (error) throw error;
     return { success: true };
   } catch (error) {
-    console.error('로그아웃 오류:', error);
+    console.error("로그아웃 오류:", error);
     return { success: false, error: error.message };
   }
 }
@@ -79,15 +81,15 @@ export async function signOut() {
 export async function getUserByEmail(email) {
   try {
     const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email)
+      .from("users")
+      .select("*")
+      .eq("email", email)
       .single();
 
     if (error) throw error;
     return { success: true, user: data };
   } catch (error) {
-    console.error('사용자 조회 오류:', error);
+    console.error("사용자 조회 오류:", error);
     return { success: false, error: error.message };
   }
 }
@@ -96,15 +98,15 @@ export async function getUserByEmail(email) {
 export async function updateUser(id, updateData) {
   try {
     const { data, error } = await supabase
-      .from('users')
+      .from("users")
       .update(updateData)
-      .eq('id', id)
+      .eq("id", id)
       .select();
 
     if (error) throw error;
     return { success: true, user: data[0] };
   } catch (error) {
-    console.error('사용자 업데이트 오류:', error);
+    console.error("사용자 업데이트 오류:", error);
     return { success: false, error: error.message };
   }
 }

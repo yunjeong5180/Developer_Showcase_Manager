@@ -1,73 +1,163 @@
 <template>
-  <div class="dashboard">
-    <header class="dashboard-header">
-      <h1>🚀 My Codit 관리자</h1>
-      <p>포트폴리오를 효율적으로 관리하세요</p>
-    </header>
-
-    <div v-if="loading" class="loading-state">
-      <div class="loading-spinner"></div>
-      <p>대시보드를 불러오는 중...</p>
-    </div>
-
-    <div v-else-if="error" class="error-state">
-      <div class="error-icon">⚠️</div>
-      <h3>오류가 발생했습니다</h3>
-      <p>{{ error }}</p>
-      <button @click="loadDashboardData" class="btn-retry">다시 시도</button>
-    </div>
-
-    <div v-else class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.totalProjects }}</div>
-        <div class="stat-label">총 프로젝트</div>
+  <div class="admin-page dashboard">
+    <div class="admin-container">
+      <!-- 페이지 헤더 -->
+      <div class="page-header fade-in">
+        <h1>대시보드</h1>
+        <p>프로젝트와 포트폴리오를 한눈에 관리하세요</p>
       </div>
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.totalViews }}</div>
-        <div class="stat-label">총 조회수</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number">{{ stats.monthlyUpdates }}</div>
-        <div class="stat-label">이번 달 업데이트</div>
-      </div>
-    </div>
 
-    <div class="quick-actions">
-      <h2>빠른 작업</h2>
-      <div class="action-buttons">
-        <router-link to="/create-post" class="action-btn primary">
-          ✏️ 새 프로젝트 추가
+      <!-- 빠른 액션 버튼들 -->
+      <div class="quick-actions fade-in">
+        <router-link to="/admin/create-post" class="action-card">
+          <div class="action-icon">✏️</div>
+          <div class="action-content">
+            <h3>새 프로젝트</h3>
+            <p>프로젝트 추가하기</p>
+          </div>
         </router-link>
-        <router-link to="/post-list" class="action-btn">
-          📋 프로젝트 관리
+        <router-link to="/admin/profile" class="action-card">
+          <div class="action-icon">👤</div>
+          <div class="action-content">
+            <h3>프로필 편집</h3>
+            <p>내 정보 수정하기</p>
+          </div>
         </router-link>
-        <router-link to="/profile" class="action-btn">
-          👤 프로필 설정
+        <router-link to="/admin/post-list" class="action-card">
+          <div class="action-icon">📋</div>
+          <div class="action-content">
+            <h3>프로젝트 목록</h3>
+            <p>모든 프로젝트 보기</p>
+          </div>
         </router-link>
-        <a href="/portfolio/demo" class="action-btn portfolio-preview" target="_blank">
-          🌐 포트폴리오 미리보기
+        <a :href="portfolioUrl" target="_blank" class="action-card">
+          <div class="action-icon">🌐</div>
+          <div class="action-content">
+            <h3>포트폴리오</h3>
+            <p>내 포트폴리오 보기</p>
+          </div>
         </a>
-        <button @click="goToMyPortfolio" class="action-btn my-portfolio">
-          👨‍💻 내 포트폴리오 보기
-        </button>
       </div>
-    </div>
 
-    <div v-if="!loading" class="recent-activities">
-      <h2>최근 활동</h2>
-      <div class="activity-list">
-        <div 
-          v-if="recentActivities.length > 0" 
-          v-for="activity in recentActivities" 
-          :key="activity.id"
-          class="activity-item"
-        >
-          <span class="activity-time">{{ activity.timeAgo }}</span>
-          <span class="activity-text">{{ activity.description }}</span>
+      <!-- 통계 카드들 -->
+      <div class="stats-grid fade-in">
+        <div class="stat-card">
+          <div class="stat-icon">📂</div>
+          <div class="stat-value">{{ statistics.totalProjects || 0 }}</div>
+          <div class="stat-label">전체 프로젝트</div>
+          <div
+            class="stat-change positive"
+            v-if="statistics.projectsThisMonth > 0"
+          >
+            +{{ statistics.projectsThisMonth }} 이번 달
+          </div>
         </div>
-        <div v-else class="no-activities">
-          <p>아직 활동 내역이 없습니다.</p>
-          <p>프로젝트를 추가하거나 프로필을 수정해보세요!</p>
+        <div class="stat-card">
+          <div class="stat-icon">👁️</div>
+          <div class="stat-value">{{ statistics.totalViews || 0 }}</div>
+          <div class="stat-label">전체 조회수</div>
+          <div class="stat-change positive" v-if="statistics.viewsToday > 0">
+            +{{ statistics.viewsToday }} 오늘
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⭐</div>
+          <div class="stat-value">{{ statistics.featuredProjects || 0 }}</div>
+          <div class="stat-label">주요 프로젝트</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📅</div>
+          <div class="stat-value">{{ statistics.monthlyUpdates || 0 }}</div>
+          <div class="stat-label">이번 달 업데이트</div>
+        </div>
+      </div>
+
+      <!-- 최근 활동 & 프로젝트 개요 -->
+      <div class="content-grid">
+        <!-- 최근 활동 -->
+        <div class="card">
+          <div class="card-header">
+            <h3>🕐 최근 활동</h3>
+          </div>
+          <div v-if="recentActivities.length > 0" class="activity-list">
+            <div
+              v-for="activity in recentActivities"
+              :key="activity.id"
+              class="activity-item"
+            >
+              <div class="activity-icon">
+                {{ getActivityIcon(activity.type) }}
+              </div>
+              <div class="activity-content">
+                <p class="activity-description">{{ activity.description }}</p>
+                <span class="activity-time">{{
+                  formatDate(activity.created_at)
+                }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-else class="empty-state">
+            <div class="empty-icon">📭</div>
+            <p>아직 활동 내역이 없습니다</p>
+          </div>
+        </div>
+
+        <!-- 프로젝트 개요 -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📊 프로젝트 개요</h3>
+          </div>
+          <div v-if="projectOverview.length > 0" class="project-overview">
+            <div class="overview-chart">
+              <div
+                v-for="category in projectOverview"
+                :key="category.name"
+                class="chart-bar"
+              >
+                <div class="bar-label">{{ category.name }}</div>
+                <div class="bar-container">
+                  <div
+                    class="bar-fill"
+                    :style="{ width: getPercentage(category.count) + '%' }"
+                  >
+                    <span class="bar-value">{{ category.count }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="empty-state">
+            <div class="empty-icon">📈</div>
+            <p>프로젝트 데이터가 없습니다</p>
+            <router-link to="/admin/create-post" class="btn btn-primary btn-sm">
+              첫 프로젝트 만들기
+            </router-link>
+          </div>
+        </div>
+      </div>
+
+      <!-- 빠른 링크 섹션 -->
+      <div class="card quick-links-card">
+        <div class="card-header">
+          <h3>🔗 빠른 링크</h3>
+        </div>
+        <div class="quick-links">
+          <a href="https://github.com" target="_blank" class="link-item">
+            <span class="link-icon">🐙</span>
+            <span>GitHub</span>
+          </a>
+          <a href="https://vercel.com" target="_blank" class="link-item">
+            <span class="link-icon">▲</span>
+            <span>Vercel</span>
+          </a>
+          <a href="https://supabase.com" target="_blank" class="link-item">
+            <span class="link-icon">🗄️</span>
+            <span>Supabase</span>
+          </a>
+          <a href="/portfolio" target="_blank" class="link-item">
+            <span class="link-icon">🎨</span>
+            <span>포트폴리오 데모</span>
+          </a>
         </div>
       </div>
     </div>
@@ -75,347 +165,304 @@
 </template>
 
 <script>
-import { statisticsAPI } from '@/services/statisticsService';
-import { supabase } from '@/config/supabase';
+import { getDashboardStatistics } from "@/services/statisticsService";
 
 export default {
-  name: "DashboardPage",
+  name: "Dashboard",
   data() {
     return {
-      stats: {
+      statistics: {
         totalProjects: 0,
         totalViews: 0,
-        monthlyUpdates: 0
+        monthlyUpdates: 0,
+        featuredProjects: 0,
+        projectsThisMonth: 0,
+        viewsToday: 0,
       },
       recentActivities: [],
-      loading: true,
-      error: null
+      projectOverview: [],
+      isLoading: false,
+      portfolioUrl: "",
     };
   },
-  async created() {
+  async mounted() {
     await this.loadDashboardData();
+    this.setPortfolioUrl();
   },
   methods: {
     async loadDashboardData() {
-      this.loading = true;
-      this.error = null;
-      
+      this.isLoading = true;
       try {
-        // 대시보드 통계 데이터 가져오기
-        const [statsResponse, activitiesResponse] = await Promise.all([
-          statisticsAPI.getDashboardStats(),
-          statisticsAPI.getRecentActivities(5)
-        ]);
-        
-        if (statsResponse.success) {
-          this.stats = {
-            totalProjects: statsResponse.data.totalProjects,
-            totalViews: statsResponse.data.totalViews,
-            monthlyUpdates: statsResponse.data.monthlyUpdates
-          };
-        } else {
-          console.error('통계 데이터 로드 실패:', statsResponse.error);
+        const result = await getDashboardStatistics();
+        if (result.success) {
+          this.statistics = result.data;
+          this.recentActivities = result.data.recentActivities || [];
+          this.projectOverview = result.data.projectCategories || [];
         }
-        
-        if (activitiesResponse.success) {
-          this.recentActivities = activitiesResponse.data.slice(0, 3);
-        } else {
-          console.error('최근 활동 로드 실패:', activitiesResponse.error);
-        }
-        
       } catch (error) {
-        this.error = '대시보드 데이터를 불러오는 중 오류가 발생했습니다.';
-        console.error('대시보드 데이터 로드 예외:', error);
+        console.error("대시보드 데이터 로드 실패:", error);
       } finally {
-        this.loading = false;
+        this.isLoading = false;
       }
     },
 
-    async goToMyPortfolio() {
-      try {
-        // 현재 사용자 정보 가져오기
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError || !user) {
-          alert('로그인이 필요합니다.');
-          return;
-        }
-
-        // users 테이블에서 사용자 정보 조회
-        const { data: userData, error: userDataError } = await supabase
-          .from('users')
-          .select('id, name')
-          .eq('auth_user_id', user.id)
-          .single();
-
-        if (userDataError || !userData) {
-          alert('사용자 정보를 찾을 수 없습니다.');
-          console.error('사용자 정보 조회 오류:', userDataError);
-          return;
-        }
-
-        // 사용자별 포트폴리오 페이지로 이동
-        const portfolioUrl = `/portfolio/${encodeURIComponent(userData.name)}/${userData.id}`;
-        window.open(portfolioUrl, '_blank');
-        
-      } catch (error) {
-        console.error('포트폴리오 이동 오류:', error);
-        alert('포트폴리오 페이지로 이동하는 중 오류가 발생했습니다.');
+    setPortfolioUrl() {
+      const user = this.$store.state.auth.profile;
+      if (user && user.nickname) {
+        this.portfolioUrl = `/portfolio/${user.nickname}`;
+      } else {
+        this.portfolioUrl = "/portfolio";
       }
-    }
-  }
+    },
+
+    getActivityIcon(type) {
+      const icons = {
+        project_created: "🆕",
+        project_updated: "✏️",
+        project_deleted: "🗑️",
+        profile_updated: "👤",
+        login: "🔐",
+      };
+      return icons[type] || "📌";
+    },
+
+    formatDate(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      const now = new Date();
+      const diff = now - date;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+
+      if (hours < 1) {
+        const minutes = Math.floor(diff / (1000 * 60));
+        return `${minutes}분 전`;
+      } else if (hours < 24) {
+        return `${hours}시간 전`;
+      } else {
+        const days = Math.floor(hours / 24);
+        return `${days}일 전`;
+      }
+    },
+
+    getPercentage(count) {
+      if (this.projectOverview.length === 0) return 0;
+      const maxCount = Math.max(...this.projectOverview.map((c) => c.count));
+      return maxCount > 0 ? (count / maxCount) * 100 : 0;
+    },
+  },
 };
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@use "@/shared/styles/variables" as *;
+@import "@/shared/styles/admin-common";
+
 .dashboard {
-  padding: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.dashboard-header {
-  text-align: center;
-  margin-bottom: 40px;
-}
-
-.dashboard-header h1 {
-  color: #2c3e50;
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-}
-
-.dashboard-header p {
-  color: #7f8c8d;
-  font-size: 1.2rem;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-  margin-bottom: 40px;
-}
-
-.stat-card {
-  background: white;
-  padding: 30px 20px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-}
-
-.stat-card:hover {
-  transform: translateY(-5px);
-}
-
-.stat-number {
-  font-size: 2.5rem;
-  font-weight: bold;
-  color: #42b883;
-  margin-bottom: 10px;
-}
-
-.stat-label {
-  color: #7f8c8d;
-  font-size: 1rem;
-}
-
-.quick-actions {
-  margin-bottom: 40px;
-}
-
-.quick-actions h2 {
-  color: #2c3e50;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.action-btn {
-  padding: 15px 25px;
-  border-radius: 8px;
-  text-decoration: none;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  border: 2px solid #e9ecef;
-  color: #495057;
-}
-
-.action-btn.primary {
-  background: #42b883;
-  color: white;
-  border-color: #42b883;
-}
-
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.action-btn.primary:hover {
-  background: #369870;
-}
-
-.action-btn.portfolio-preview {
-  background: #6f42c1;
-  color: white;
-  border-color: #6f42c1;
-}
-
-.action-btn.portfolio-preview:hover {
-  background: #5a359a;
-  border-color: #5a359a;
-}
-
-.action-btn.my-portfolio {
-  background: #e74c3c;
-  color: white;
-  border-color: #e74c3c;
-}
-
-.action-btn.my-portfolio:hover {
-  background: #c0392b;
-  border-color: #c0392b;
-}
-
-.recent-activities h2 {
-  color: #2c3e50;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
-}
-
-.activity-list {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.activity-item {
-  display: flex;
-  gap: 15px;
-  padding: 15px 0;
-  border-bottom: 1px solid #f8f9fa;
-}
-
-.activity-item:last-child {
-  border-bottom: none;
-}
-
-.activity-time {
-  color: #7f8c8d;
-  font-size: 0.9rem;
-  min-width: 80px;
-}
-
-.activity-text {
-  color: #495057;
-}
-
-.no-activities {
-  text-align: center;
-  padding: 40px 20px;
-  color: #6c757d;
-}
-
-.no-activities p {
-  margin: 0 0 10px 0;
-}
-
-/* 로딩 상태 */
-.loading-state {
-  text-align: center;
-  padding: 80px 20px;
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #42b883;
-  border-radius: 50%;
-  margin: 0 auto 20px;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-state p {
-  color: #6c757d;
-  font-size: 1.1rem;
-}
-
-/* 오류 상태 */
-.error-state {
-  text-align: center;
-  padding: 80px 20px;
-}
-
-.error-icon {
-  font-size: 4rem;
-  margin-bottom: 20px;
-}
-
-.error-state h3 {
-  color: #dc3545;
-  margin-bottom: 10px;
-}
-
-.error-state p {
-  color: #6c757d;
-  margin-bottom: 30px;
-}
-
-.btn-retry {
-  background: #42b883;
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.btn-retry:hover {
-  background: #369870;
-}
-
-/* 반응형 */
-@media (max-width: 768px) {
-  .dashboard {
-    padding: 20px 15px;
+  .quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
   }
 
-  .dashboard-header h1 {
-    font-size: 2rem;
+  .action-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+
+    &:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(10, 10, 10, 0.1);
+
+      .action-icon {
+        transform: scale(1.1) rotate(5deg);
+      }
+    }
+
+    .action-icon {
+      font-size: 2.5rem;
+      transition: transform 0.3s ease;
+      color: #0a0a0a;
+    }
+
+    .action-content {
+      h3 {
+        color: #212529;
+        font-size: 1.2rem;
+        margin-bottom: 5px;
+        font-weight: 600;
+      }
+
+      p {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin: 0;
+      }
+    }
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
   }
 
-  .action-buttons {
-    flex-direction: column;
+  .content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+
+    @media (max-width: $breakpoint-lg) {
+      grid-template-columns: 1fr;
+    }
   }
 
-  .activity-item {
-    flex-direction: column;
-    gap: 5px;
+  .activity-list {
+    .activity-item {
+      display: flex;
+      gap: 15px;
+      padding: 15px 0;
+      border-bottom: 1px solid $gray-100;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .activity-icon {
+        font-size: 1.5rem;
+      }
+
+      .activity-content {
+        flex: 1;
+
+        .activity-description {
+          color: #495057;
+          margin-bottom: 5px;
+          font-weight: 500;
+        }
+
+        .activity-time {
+          color: #adb5bd;
+          font-size: 0.85rem;
+        }
+      }
+    }
   }
 
-  .activity-time {
-    min-width: auto;
-    font-weight: 600;
+  .project-overview {
+    .overview-chart {
+      .chart-bar {
+        margin-bottom: 20px;
+
+        .bar-label {
+          color: #495057;
+          font-weight: 600;
+          margin-bottom: 8px;
+          font-size: 0.95rem;
+        }
+
+        .bar-container {
+          background: #f8f9fa;
+          border-radius: 20px;
+          height: 35px;
+          position: relative;
+          overflow: hidden;
+          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+
+          .bar-fill {
+            background: #0a0a0a;
+            height: 100%;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+
+            &::after {
+              content: "";
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.3),
+                transparent
+              );
+              animation: shimmer 2s infinite;
+            }
+
+            .bar-value {
+              color: white;
+              font-weight: 600;
+              font-size: 0.9rem;
+              text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+              position: relative;
+              z-index: 1;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.dashboard {
+  .quick-links-card {
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+
+      .link-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        text-decoration: none;
+        color: #6c757d;
+        border: 2px solid transparent;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: white;
+          color: #0a0a0a;
+          border-color: #0a0a0a;
+          transform: translateY(-2px);
+          box-shadow: 0 2px 10px rgba(10, 10, 10, 0.1);
+        }
+
+        .link-icon {
+          font-size: 1.2rem;
+        }
+      }
+    }
   }
 }
 </style>

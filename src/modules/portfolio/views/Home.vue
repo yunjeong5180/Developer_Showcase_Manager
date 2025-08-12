@@ -5,7 +5,9 @@
       <div class="hero-content">
         <h1>안녕하세요, 양윤정입니다</h1>
         <p>웹 개발을 배우고 있는 열정적인 개발자입니다</p>
-        <router-link to="/projects" class="cta-button">프로젝트 보기</router-link>
+        <router-link to="/projects" class="cta-button"
+          >프로젝트 보기</router-link
+        >
       </div>
     </section>
 
@@ -15,10 +17,17 @@
         <h2 class="section-title fade-in">Welcome</h2>
         <div class="intro-content fade-in">
           <p>안녕하세요! 저는 웹 개발에 열정을 가진 비전공자 개발자입니다.</p>
-          <p>HTML, CSS, JavaScript부터 시작해서 Java, Spring Boot까지 차근차근 배워나가고 있습니다.</p>
+          <p>
+            HTML, CSS, JavaScript부터 시작해서 Java, Spring Boot까지 차근차근
+            배워나가고 있습니다.
+          </p>
           <div class="intro-buttons">
-            <router-link to="/about" class="btn btn-primary">더 알아보기</router-link>
-            <router-link to="/contact" class="btn btn-secondary">연락하기</router-link>
+            <router-link to="/about" class="btn btn-primary"
+              >더 알아보기</router-link
+            >
+            <router-link to="/contact" class="btn btn-secondary"
+              >연락하기</router-link
+            >
           </div>
         </div>
       </div>
@@ -34,31 +43,31 @@
 // - Store: import store from '@/store/index-unified'
 
 export default {
-  name: 'Home',
+  name: "Home",
   mounted() {
     // 스크롤 애니메이션 초기화
-    this.observeElements()
+    this.observeElements();
   },
   methods: {
     observeElements() {
       const options = {
         threshold: 0.1,
-        rootMargin: '0px 0px -100px 0px'
-      }
+        rootMargin: "0px 0px -100px 0px",
+      };
 
       const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
+        entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            entry.target.classList.add('visible')
+            entry.target.classList.add("visible");
           }
-        })
-      }, options)
+        });
+      }, options);
 
-      const fadeElements = document.querySelectorAll('.fade-in')
-      fadeElements.forEach(el => observer.observe(el))
-    }
-  }
-}
+      const fadeElements = document.querySelectorAll(".fade-in");
+      fadeElements.forEach((el) => observer.observe(el));
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -78,7 +87,7 @@ export default {
 }
 
 .hero::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -89,8 +98,13 @@ export default {
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 .hero-content {
@@ -148,16 +162,16 @@ export default {
   .hero h1 {
     font-size: 2.5rem;
   }
-  
+
   .hero p {
     font-size: 1rem;
   }
-  
+
   .intro-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .btn {
     width: 200px;
   }

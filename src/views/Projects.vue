@@ -46,12 +46,12 @@ export default {
   data() {
     return {
       // 임시 데이터
-    }
+    };
   },
   mounted() {
-    console.log('프로젝트 페이지 로드됨')
-  }
-}
+    console.log("프로젝트 페이지 로드됨");
+  },
+};
 </script>
 
 <style scoped>
@@ -139,17 +139,21 @@ export default {
 .back-btn {
   display: inline-block;
   padding: 12px 25px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #0a0a0a;
   color: white;
   text-decoration: none;
   border-radius: 10px;
+  border: 1px solid #1a1a1a;
   font-weight: 600;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
 .back-btn:hover {
+  background: #1a1a1a;
+  border-color: #2a2a2a;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
 }
 
 /* 반응형 */

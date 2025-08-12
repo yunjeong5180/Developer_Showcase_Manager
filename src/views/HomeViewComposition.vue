@@ -42,8 +42,8 @@
       <div class="container">
         <h2 class="section-title">Why Choose Codit?</h2>
         <div class="features-grid">
-          <div 
-            v-for="feature in features" 
+          <div
+            v-for="feature in features"
             :key="feature.id"
             class="feature-card"
             @click="handleFeatureClick(feature)"
@@ -71,106 +71,108 @@
 
 <script>
 // Composition API 사용
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useStore } from 'vuex'
+import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
+import { useRouter } from "vue-router";
+import { useStore } from "vuex";
 
 export default {
   name: "HomeViewComposition",
-  
+
   // setup 함수가 Composition API의 진입점
   setup() {
     // Router와 Store 인스턴스
-    const router = useRouter()
-    const store = useStore()
-    
+    const router = useRouter();
+    const store = useStore();
+
     // 반응형 데이터 (ref는 단일 값, reactive는 객체)
-    const title = ref('Welcome to Codit')
-    const subtitle = ref('개발자를 위한 포트폴리오 플랫폼')
-    const description = ref('나만의 포트폴리오를 만들고, 프로젝트를 관리하며, 성장을 기록하세요')
-    
+    const title = ref("Welcome to Codit");
+    const subtitle = ref("개발자를 위한 포트폴리오 플랫폼");
+    const description = ref(
+      "나만의 포트폴리오를 만들고, 프로젝트를 관리하며, 성장을 기록하세요"
+    );
+
     // 개발자 정보 (reactive로 객체 관리)
     const developerInfo = reactive({
-      name: 'Your Name',
-      skills: ['Vue.js', 'React', 'Node.js'],
-      portfolioUrl: 'codit.dev/yourname',
-      passion: true
-    })
-    
+      name: "Your Name",
+      skills: ["Vue.js", "React", "Node.js"],
+      portfolioUrl: "codit.dev/yourname",
+      passion: true,
+    });
+
     // 기능 목록
     const features = ref([
       {
         id: 1,
-        icon: '📋',
-        title: '프로젝트 관리',
-        description: '모든 프로젝트를 한 곳에서 체계적으로 관리하세요'
+        icon: "📋",
+        title: "프로젝트 관리",
+        description: "모든 프로젝트를 한 곳에서 체계적으로 관리하세요",
       },
       {
         id: 2,
-        icon: '🎨',
-        title: '커스텀 포트폴리오',
-        description: '나만의 스타일로 포트폴리오를 꾸며보세요'
+        icon: "🎨",
+        title: "커스텀 포트폴리오",
+        description: "나만의 스타일로 포트폴리오를 꾸며보세요",
       },
       {
         id: 3,
-        icon: '📊',
-        title: '성장 추적',
-        description: '개발자로서의 성장 과정을 기록하고 분석하세요'
+        icon: "📊",
+        title: "성장 추적",
+        description: "개발자로서의 성장 과정을 기록하고 분석하세요",
       },
       {
         id: 4,
-        icon: '🔗',
-        title: '간편한 공유',
-        description: '하나의 링크로 포트폴리오를 쉽게 공유하세요'
-      }
-    ])
-    
+        icon: "🔗",
+        title: "간편한 공유",
+        description: "하나의 링크로 포트폴리오를 쉽게 공유하세요",
+      },
+    ]);
+
     // 선택된 기능
-    const selectedFeature = ref(null)
-    
+    const selectedFeature = ref(null);
+
     // CTA 섹션 데이터
-    const ctaTitle = ref('지금 시작하세요')
-    const ctaDescription = ref('무료로 포트폴리오를 만들고 관리해보세요')
-    const ctaButtonText = ref('무료로 시작하기')
-    
+    const ctaTitle = ref("지금 시작하세요");
+    const ctaDescription = ref("무료로 포트폴리오를 만들고 관리해보세요");
+    const ctaButtonText = ref("무료로 시작하기");
+
     // Computed 속성 (계산된 값)
-    const developerName = computed(() => developerInfo.name)
-    const skills = computed(() => developerInfo.skills)
-    const portfolioUrl = computed(() => developerInfo.portfolioUrl)
-    const passion = computed(() => developerInfo.passion)
-    
+    const developerName = computed(() => developerInfo.name);
+    const skills = computed(() => developerInfo.skills);
+    const portfolioUrl = computed(() => developerInfo.portfolioUrl);
+    const passion = computed(() => developerInfo.passion);
+
     // Methods (메서드)
     const handleFeatureClick = (feature) => {
-      selectedFeature.value = feature
-      console.log('선택된 기능:', feature.title)
-      
+      selectedFeature.value = feature;
+      console.log("선택된 기능:", feature.title);
+
       // Vuex store에 알림 표시
-      store.dispatch('showNotification', {
+      store.dispatch("showNotification", {
         message: `${feature.title} 기능을 선택했습니다`,
-        type: 'info'
-      })
-    }
-    
+        type: "info",
+      });
+    };
+
     const handleGetStarted = () => {
-      console.log('시작하기 버튼 클릭')
-      router.push('/signup')
-    }
-    
+      console.log("시작하기 버튼 클릭");
+      router.push("/signup");
+    };
+
     // 라이프사이클 훅
     onMounted(() => {
-      console.log('HomeView 컴포넌트가 마운트되었습니다')
-      
+      console.log("HomeView 컴포넌트가 마운트되었습니다");
+
       // 예시: API 호출이나 초기화 작업
-      loadUserPreferences()
-    })
-    
+      loadUserPreferences();
+    });
+
     onUnmounted(() => {
-      console.log('HomeView 컴포넌트가 언마운트되었습니다')
-      
+      console.log("HomeView 컴포넌트가 언마운트되었습니다");
+
       // 예시: 이벤트 리스너 제거나 정리 작업
-      cleanup()
-    })
-    
+      cleanup();
+    });
+
     // 헬퍼 함수들
     const loadUserPreferences = async () => {
       // 사용자 설정 로드 (예시)
@@ -178,14 +180,14 @@ export default {
         // const preferences = await api.getPreferences()
         // developerInfo.name = preferences.name || 'Your Name'
       } catch (error) {
-        console.error('설정 로드 실패:', error)
+        console.error("설정 로드 실패:", error);
       }
-    }
-    
+    };
+
     const cleanup = () => {
       // 정리 작업
-    }
-    
+    };
+
     // setup에서 템플릿에 노출할 항목들을 반환
     return {
       // 데이터
@@ -201,17 +203,17 @@ export default {
       ctaTitle,
       ctaDescription,
       ctaButtonText,
-      
+
       // 메서드
       handleFeatureClick,
-      handleGetStarted
-    }
-  }
-}
+      handleGetStarted,
+    };
+  },
+};
 </script>
 
 <style lang="scss" scoped>
-@use '@/shared/styles/variables' as *;
+@use "@/shared/styles/variables" as *;
 
 .home {
   background: $gray-100;
@@ -338,23 +340,37 @@ export default {
   height: 12px;
   border-radius: 50%;
 
-  &.red { background: #ff5f56; }
-  &.yellow { background: #ffbd2e; }
-  &.green { background: #27c93f; }
+  &.red {
+    background: #ff5f56;
+  }
+  &.yellow {
+    background: #ffbd2e;
+  }
+  &.green {
+    background: #27c93f;
+  }
 }
 
 .code-content {
   color: #abb2bf;
   padding: 20px;
   margin: 0;
-  font-family: 'Monaco', 'Courier New', monospace;
+  font-family: "Monaco", "Courier New", monospace;
   font-size: 14px;
   line-height: 1.6;
 
-  .keyword { color: #c678dd; }
-  .variable { color: #e06c75; }
-  .property { color: #e06c75; }
-  .string { color: #98c379; }
+  .keyword {
+    color: #c678dd;
+  }
+  .variable {
+    color: #e06c75;
+  }
+  .property {
+    color: #e06c75;
+  }
+  .string {
+    color: #98c379;
+  }
 }
 
 .features-section {
@@ -398,7 +414,7 @@ export default {
     box-shadow: $shadow;
     background: white;
   }
-  
+
   &.active {
     background: white;
     box-shadow: $shadow;

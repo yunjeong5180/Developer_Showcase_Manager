@@ -38,7 +38,11 @@ export default defineConfig({
   },
   server: {
     port: 8080,
-    open: true
+    open: true,
+    hmr: {
+      port: 8080,
+      host: 'localhost'
+    }
   },
   build: {
     outDir: 'dist',

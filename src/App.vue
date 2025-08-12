@@ -2,7 +2,10 @@
   <div id="app">
     <!-- 알림 컴포넌트 -->
     <transition name="notification">
-      <div v-if="notification.show" :class="['notification', `notification-${notification.type}`]">
+      <div
+        v-if="notification.show"
+        :class="['notification', `notification-${notification.type}`]"
+      >
         {{ notification.message }}
       </div>
     </transition>
@@ -17,30 +20,38 @@
           </router-link>
         </template>
         <template v-else>
-          <router-link to="/" class="nav-brand">
-            🚀 Codit
-          </router-link>
+          <router-link to="/" class="nav-brand"> 🚀 Codit </router-link>
         </template>
 
         <div class="nav-right-group">
           <div class="nav-menu">
             <template v-if="isAuthenticated">
               <!-- 로그인 후 메뉴 -->
-              <router-link to="/admin/create-post" class="nav-link">프로젝트 작성</router-link>
-              <router-link to="/admin/projects" class="nav-link">프로젝트 관리</router-link>
-              <router-link to="/admin/post-list" class="nav-link">프로젝트 목록</router-link>
+              <router-link to="/admin/create-post" class="nav-link"
+                >프로젝트 작성</router-link
+              >
+              <router-link to="/admin/projects" class="nav-link"
+                >프로젝트 관리</router-link
+              >
+              <router-link to="/admin/post-list" class="nav-link"
+                >프로젝트 목록</router-link
+              >
               <router-link to="/admin/profile" class="nav-link">
-                {{ userProfile?.nickname || userProfile?.name || '프로필' }}
+                {{ userProfile?.nickname || userProfile?.name || "프로필" }}
               </router-link>
               <button @click="handleLogout" class="logout-btn">로그아웃</button>
             </template>
             <template v-else>
               <!-- 로그인 전 메뉴 -->
-              <router-link to="/portfolio" class="nav-link">포트폴리오</router-link>
+              <router-link to="/portfolio" class="nav-link"
+                >포트폴리오</router-link
+              >
               <router-link to="/about" class="nav-link">소개</router-link>
               <router-link to="/contact" class="nav-link">문의</router-link>
               <router-link to="/login" class="login-btn">로그인</router-link>
-              <router-link to="/signup" class="signup-btn">회원가입</router-link>
+              <router-link to="/signup" class="signup-btn"
+                >회원가입</router-link
+              >
             </template>
           </div>
         </div>
@@ -53,102 +64,122 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
-import { getSupabaseStatus } from '@/shared/services/authService'
+import { mapGetters, mapActions } from "vuex";
+import { getSupabaseStatus } from "@/shared/services/authService";
 
 export default {
-  name: 'App',
+  name: "App",
   computed: {
-    ...mapGetters(['notification']),
-    ...mapGetters('auth', ['currentUser', 'userProfile', 'isAuthenticated', 'authLoading']),
-    
+    ...mapGetters(["notification"]),
+    ...mapGetters("auth", [
+      "currentUser",
+      "userProfile",
+      "isAuthenticated",
+      "authLoading",
+    ]),
+
     showNavigation() {
       const hideNavRoutes = [
-        '/login',
-        '/signup',
-        '/forgot-password',
-        '/reset-password',
-        '/auth/callback'
-      ]
-      return !hideNavRoutes.includes(this.$route.path)
-    }
+        "/login",
+        "/signup",
+        "/forgot-password",
+        "/reset-password",
+        "/auth/callback",
+      ];
+      return !hideNavRoutes.includes(this.$route.path);
+    },
   },
   watch: {
     isAuthenticated(newVal) {
-      console.log('인증 상태 변경:', newVal)
-      console.log('현재 사용자:', this.currentUser)
-      console.log('프로필 정보:', this.userProfile)
-    }
+      console.log("인증 상태 변경:", newVal);
+      console.log("현재 사용자:", this.currentUser);
+      console.log("프로필 정보:", this.userProfile);
+    },
   },
   methods: {
-    ...mapActions('auth', ['initAuth', 'signOut']),
-    
+    ...mapActions("auth", ["initAuth", "signOut"]),
+
     async handleLogout() {
       // 로그아웃 시 모든 세션 데이터 강제 삭제
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && (key.includes('supabase') || key.includes('sb-'))) {
+        if (key && (key.includes("supabase") || key.includes("sb-"))) {
           keysToRemove.push(key);
         }
       }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-      
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+
       // sessionStorage도 초기화
       sessionStorage.clear();
-      
-      await this.signOut()
-      this.$router.push('/login')
-    }
+
+      await this.signOut();
+      this.$router.push("/login");
+    },
   },
   async created() {
     // Supabase 인증 리스너를 먼저 설정
-    const { supabase } = await import('@/config/supabase')
+    const { supabase } = await import("@/config/supabase");
     if (supabase) {
       // 초기 세션 확인 (중복 방지)
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        this.$store.commit('auth/SET_USER', session.user)
-        // 프로필은 한 번만 로드
-        this.$store.dispatch('auth/loadUserProfile')
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+        if (error && error.message.includes("Invalid Refresh Token")) {
+          // 유효하지 않은 refresh token 제거
+          console.log("만료된 refresh token 제거 중...");
+          await supabase.auth.signOut();
+        } else if (session) {
+          this.$store.commit("auth/SET_USER", session.user);
+          // 프로필은 한 번만 로드
+          this.$store.dispatch("auth/loadUserProfile");
+        }
+      } catch (err) {
+        console.error("세션 확인 중 오류:", err);
       }
-      
+
       // 이후 변경사항만 리스너로 처리
       supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email)
-        if (event === 'SIGNED_IN' && session) {
+        console.log("Auth state changed:", event, session?.user?.email);
+        if (event === "SIGNED_IN" && session) {
           // 로그인 성공 시 store 업데이트
-          this.$store.commit('auth/SET_USER', session.user)
+          this.$store.commit("auth/SET_USER", session.user);
           // 프로필 로드 완료까지 대기
-          await this.$store.dispatch('auth/loadUserProfile')
-          console.log('프로필 로드 완료, 현재 프로필:', this.userProfile)
-        } else if (event === 'SIGNED_OUT') {
+          await this.$store.dispatch("auth/loadUserProfile");
+          console.log("프로필 로드 완료, 현재 프로필:", this.userProfile);
+        } else if (event === "SIGNED_OUT") {
           // 로그아웃 시 store 초기화
-          this.$store.commit('auth/CLEAR_AUTH')
+          this.$store.commit("auth/CLEAR_AUTH");
         }
         // INITIAL_SESSION 이벤트는 제거 (getSession으로 대체)
-      })
+      });
     }
-    
-    console.log('초기 인증 상태 확인 완료')
+
+    console.log("초기 인증 상태 확인 완료");
   },
   mounted() {
     // Supabase 연결 상태 확인
-    const supabaseStatus = getSupabaseStatus()
+    const supabaseStatus = getSupabaseStatus();
     if (!supabaseStatus.isConfigured) {
-      console.warn('⚠️ Supabase 설정 안내:')
-      console.warn('1. .env.development 파일을 생성하세요')
-      console.warn('2. .env.example 파일을 참고하여 Supabase URL과 익명 키를 설정하세요')
-      console.warn('3. 로컬 모드로 실행 중입니다 (데이터는 브라우저에만 저장됩니다)')
+      console.warn("⚠️ Supabase 설정 안내:");
+      console.warn("1. .env.development 파일을 생성하세요");
+      console.warn(
+        "2. .env.example 파일을 참고하여 Supabase URL과 익명 키를 설정하세요"
+      );
+      console.warn(
+        "3. 로컬 모드로 실행 중입니다 (데이터는 브라우저에만 저장됩니다)"
+      );
     } else {
-      console.log('✅ Supabase 연결 설정 완료:', supabaseStatus.url)
+      console.log("✅ Supabase 연결 설정 완료:", supabaseStatus.url);
     }
-  }
-}
+  },
+};
 </script>
 
 <style lang="scss">
-@use '@/shared/styles/variables' as *;
+@use "@/shared/styles/variables" as *;
 
 * {
   margin: 0;
@@ -176,22 +207,22 @@ body {
   box-shadow: $shadow;
   z-index: 2000;
   transition: all 0.3s ease;
-  
+
   &-success {
     background: $success-color;
     color: white;
   }
-  
+
   &-error {
     background: $danger-color;
     color: white;
   }
-  
+
   &-warning {
     background: $warning-color;
     color: $gray-900;
   }
-  
+
   &-info {
     background: $info-color;
     color: white;
@@ -240,9 +271,9 @@ body {
   color: white;
   text-decoration: none;
   transition: opacity 0.3s ease;
-  
+
   &:hover {
-    color: white;  // 호버 시에도 흰색 유지
+    color: white; // 호버 시에도 흰색 유지
     opacity: 0.8;
   }
 }
@@ -266,16 +297,16 @@ body {
   padding: $spacing-sm $spacing-md;
   border-radius: $border-radius-lg;
   transition: all 0.3s ease;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: white;  // 호버 시에도 흰색 유지
+    color: white; // 호버 시에도 흰색 유지
     transform: translateY(-1px);
   }
-  
+
   &.router-link-active {
     background: rgba(255, 255, 255, 0.2);
-    color: white;  // 활성 상태에서도 흰색 유지
+    color: white; // 활성 상태에서도 흰색 유지
     font-weight: 600;
   }
 }
@@ -304,10 +335,10 @@ body {
   transition: all 0.3s ease;
   text-decoration: none;
   display: inline-block;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.2);
-    color: white;  // 호버 시에도 흰색 유지
+    color: white; // 호버 시에도 흰색 유지
     transform: translateY(-1px);
     box-shadow: $shadow-sm;
   }
@@ -316,10 +347,10 @@ body {
 .signup-btn {
   background: rgba(255, 255, 255, 0.9);
   color: $primary-dark;
-  
+
   &:hover {
     background: white;
-    color: $primary-dark;  // 회원가입 버튼은 검정색 유지
+    color: $primary-dark; // 회원가입 버튼은 검정색 유지
   }
 }
 
@@ -330,7 +361,7 @@ body {
     height: auto;
     padding: $spacing-sm $spacing-md;
   }
-  
+
   .nav-right-group {
     flex-direction: column;
     gap: $spacing-sm;
@@ -344,12 +375,12 @@ body {
     flex-wrap: wrap;
     justify-content: center;
   }
-  
+
   .nav-link {
     padding: $spacing-xs $spacing-sm;
     font-size: $font-size-sm;
   }
-  
+
   .user-menu {
     border-top: 1px solid rgba(255, 255, 255, 0.2);
     padding-top: $spacing-sm;

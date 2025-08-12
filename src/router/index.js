@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from "vue-router";
 import Login from "../views/Login.vue";
 import Dashboard from "../views/Dashboard.vue";
 import Projects from "../views/Projects.vue";
@@ -11,7 +11,8 @@ import TwoFactorAuth from "../views/TwoFactorAuth.vue";
 // 새로 추가되는 컴포넌트들
 import CreatePost from "../views/CreatePost.vue";
 import PostList from "../views/PostList.vue";
-import { supabase } from '@/config/supabase';
+import ClearSession from "../views/ClearSession.vue";
+import { supabase } from "@/config/supabase";
 
 // 메인 페이지 컴포넌트들
 import HomeView from "../views/HomeView.vue";
@@ -22,79 +23,85 @@ import PortfolioUser from "../modules/portfolio/views/PortfolioUser.vue";
 
 // 인증 확인 함수
 async function requireAuth(to, from, next) {
-  console.log('인증 가드 실행:', to.path);
+  console.log("인증 가드 실행:", to.path);
 
   try {
     // Supabase가 설정되지 않은 경우 로컬 모드로 처리
     if (!supabase) {
-      console.log('Supabase 미설정 - 로컬 모드로 인증 체크');
+      console.log("Supabase 미설정 - 로컬 모드로 인증 체크");
       // 로컬 스토리지에서 사용자 확인
-      const localUser = localStorage.getItem('currentUser');
+      const localUser = localStorage.getItem("currentUser");
       if (localUser) {
         return next();
       } else {
-        return next('/login');
+        return next("/login");
       }
     }
-    
+
     // Supabase 세션 확인
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     if (session && session.user) {
-      console.log('세션 유효:', session.user.email);
+      console.log("세션 유효:", session.user.email);
       next(); // 인증됨, 계속 진행
     } else {
-      console.log('세션 없음, 로그인 페이지로 리디렉션');
+      console.log("세션 없음, 로그인 페이지로 리디렉션");
       // 로컬 스토리지 정리
-      localStorage.removeItem('user');
-      localStorage.removeItem('rememberUser');
-      localStorage.removeItem('userEmail');
+      localStorage.removeItem("user");
+      localStorage.removeItem("rememberUser");
+      localStorage.removeItem("userEmail");
 
-      next('/admin/login'); // 관리자 로그인 페이지로 리디렉션
+      next("/admin/login"); // 관리자 로그인 페이지로 리디렉션
     }
   } catch (error) {
-    console.error('인증 확인 오류:', error);
-    next('/admin/login');
+    console.error("인증 확인 오류:", error);
+    next("/admin/login");
   }
 }
 
 // 이미 로그인된 사용자가 로그인 페이지 접근 시 처리
 async function redirectIfAuthenticated(to, from, next) {
-  console.log('로그인 페이지 접근 확인:', to.path);
+  console.log("로그인 페이지 접근 확인:", to.path);
 
   try {
     // 비밀번호 재설정에서 온 경우 세션 체크 무시
-    if (from.path === '/reset-password') {
-      console.log('비밀번호 재설정에서 온 접근, 세션 체크 무시하고 로그인 페이지 표시');
+    if (from.path === "/reset-password") {
+      console.log(
+        "비밀번호 재설정에서 온 접근, 세션 체크 무시하고 로그인 페이지 표시"
+      );
       next();
       return;
     }
 
     // Supabase가 설정되지 않은 경우 로컬 모드로 처리
     if (!supabase) {
-      console.log('Supabase 미설정 - 로컬 모드');
-      const localUser = localStorage.getItem('currentUser');
+      console.log("Supabase 미설정 - 로컬 모드");
+      const localUser = localStorage.getItem("currentUser");
       if (localUser) {
-        console.log('로컬 사용자 로그인됨, 대시보드로 리디렉션');
-        next('/admin/dashboard');
+        console.log("로컬 사용자 로그인됨, 대시보드로 리디렉션");
+        next("/admin/dashboard");
       } else {
-        console.log('로컬 사용자 없음, 로그인 페이지 표시');
+        console.log("로컬 사용자 없음, 로그인 페이지 표시");
         next();
       }
       return;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
     if (session && session.user) {
-      console.log('이미 로그인됨, 대시보드로 리디렉션');
-      next('/admin/dashboard');
+      console.log("이미 로그인됨, 대시보드로 리디렉션");
+      next("/admin/dashboard");
     } else {
-      console.log('로그인 안됨, 로그인 페이지 표시');
+      console.log("로그인 안됨, 로그인 페이지 표시");
       next();
     }
   } catch (error) {
-    console.error('로그인 상태 확인 오류:', error);
+    console.error("로그인 상태 확인 오류:", error);
     next();
   }
 }
@@ -153,7 +160,7 @@ const routes = [
   // ✅ 하위 호환성을 위한 register 경로 추가 (선택사항)
   {
     path: "/admin/register",
-    redirect: "/admin/signup"
+    redirect: "/admin/signup",
   },
   {
     path: "/admin/forgot-password",
@@ -211,6 +218,12 @@ const routes = [
     beforeEnter: requireAuth,
   },
   {
+    path: "/clear-session",
+    name: "ClearSession",
+    component: ClearSession,
+    // 세션 클리어 페이지는 인증 없이 접근 가능
+  },
+  {
     path: "/:pathMatch(.*)*",
     name: "NotFound",
     redirect: "/", // 잘못된 경로는 홈으로
@@ -219,8 +232,8 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes
-})
+  routes,
+});
 
 // 전역 네비게이션 가드
 router.beforeEach((to, from, next) => {

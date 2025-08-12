@@ -1,25 +1,34 @@
 <template>
-  <nav id="navbar" :class="{ 'scrolled': isScrolled }">
+  <nav id="navbar" :class="{ scrolled: isScrolled }">
     <div class="nav-container">
       <router-link to="/" class="logo">Portfolio</router-link>
       <ul class="nav-links">
         <li>
-          <router-link to="/" :class="{ 'active': $route.path === '/' }">
+          <router-link to="/" :class="{ active: $route.path === '/' }">
             홈
           </router-link>
         </li>
         <li>
-          <router-link to="/about" :class="{ 'active': $route.path === '/about' }">
+          <router-link
+            to="/about"
+            :class="{ active: $route.path === '/about' }"
+          >
             소개
           </router-link>
         </li>
         <li>
-          <router-link to="/projects" :class="{ 'active': $route.path === '/projects' }">
+          <router-link
+            to="/projects"
+            :class="{ active: $route.path === '/projects' }"
+          >
             프로젝트
           </router-link>
         </li>
         <li>
-          <router-link to="/contact" :class="{ 'active': $route.path === '/contact' }">
+          <router-link
+            to="/contact"
+            :class="{ active: $route.path === '/contact' }"
+          >
             연락처
           </router-link>
         </li>
@@ -29,7 +38,7 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from "vue";
 
 // Import 가이드라인:
 // - Supabase: import { supabase } from '@/shared/services'
@@ -38,27 +47,27 @@ import { ref, onMounted, onUnmounted } from 'vue'
 // - Store: import store from '@/store/index-unified'
 
 export default {
-  name: 'Navigation',
+  name: "Navigation",
   setup() {
-    const isScrolled = ref(false)
+    const isScrolled = ref(false);
 
     const handleScroll = () => {
-      isScrolled.value = window.scrollY > 10
-    }
+      isScrolled.value = window.scrollY > 10;
+    };
 
     onMounted(() => {
-      window.addEventListener('scroll', handleScroll)
-    })
+      window.addEventListener("scroll", handleScroll);
+    });
 
     onUnmounted(() => {
-      window.removeEventListener('scroll', handleScroll)
-    })
+      window.removeEventListener("scroll", handleScroll);
+    });
 
     return {
-      isScrolled
-    }
-  }
-}
+      isScrolled,
+    };
+  },
+};
 </script>
 
 <style scoped>
@@ -114,7 +123,7 @@ nav.scrolled {
 }
 
 .nav-links a::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 0;
   height: 2px;
@@ -138,7 +147,7 @@ nav.scrolled {
   .nav-links {
     gap: 1rem;
   }
-  
+
   .nav-container {
     padding: 0 1rem;
   }

@@ -5,31 +5,31 @@
 
 const portfolioRoutes = [
   {
-    path: '/portfolio',
-    name: 'PortfolioList',
-    component: () => import('@/modules/portfolio/views/Projects.vue')
+    path: "/portfolio",
+    name: "PortfolioList",
+    component: () => import("@/modules/portfolio/views/Projects.vue"),
   },
   {
-    path: '/portfolio/:username',
-    name: 'PortfolioUser',
-    component: () => import('@/modules/portfolio/views/PortfolioUser.vue'),
-    props: true
+    path: "/portfolio/:username",
+    name: "PortfolioUser",
+    component: () => import("@/modules/portfolio/views/PortfolioUser.vue"),
+    props: true,
   },
   {
-    path: '/portfolio/demo',
-    name: 'PortfolioDemo',
-    component: () => import('@/modules/portfolio/views/PortfolioDemo.vue')
+    path: "/portfolio/demo",
+    name: "PortfolioDemo",
+    component: () => import("@/modules/portfolio/views/PortfolioDemo.vue"),
   },
   {
-    path: '/about',
-    name: 'About',
-    component: () => import('@/modules/portfolio/views/About.vue')
+    path: "/about",
+    name: "About",
+    component: () => import("@/modules/portfolio/views/About.vue"),
   },
   {
-    path: '/contact',
-    name: 'Contact',
-    component: () => import('@/modules/portfolio/views/Contact.vue')
-  }
-]
+    path: "/contact",
+    name: "Contact",
+    component: () => import("@/modules/portfolio/views/Contact.vue"),
+  },
+];
 
-export default portfolioRoutes
+export default portfolioRoutes;

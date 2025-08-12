@@ -5,7 +5,7 @@
       :src="src"
       :alt="alt"
       class="lazy-image"
-      :class="{ 'loaded': isImageLoaded }"
+      :class="{ loaded: isImageLoaded }"
       @load="onImageLoad"
       @error="onImageError"
     />
@@ -16,85 +16,85 @@
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from "vue";
 
 export default {
-  name: 'LazyImage',
+  name: "LazyImage",
   props: {
     src: {
       type: String,
-      required: true
+      required: true,
     },
     alt: {
       type: String,
-      default: ''
+      default: "",
     },
     threshold: {
       type: Number,
-      default: 0.1
-    }
+      default: 0.1,
+    },
   },
   setup(props) {
-    const imageContainer = ref(null)
-    const isLoaded = ref(false)
-    const isImageLoaded = ref(false)
-    let observer = null
+    const imageContainer = ref(null);
+    const isLoaded = ref(false);
+    const isImageLoaded = ref(false);
+    let observer = null;
 
     const loadImage = () => {
-      isLoaded.value = true
-    }
+      isLoaded.value = true;
+    };
 
     const onImageLoad = () => {
-      isImageLoaded.value = true
-    }
+      isImageLoaded.value = true;
+    };
 
     const onImageError = (event) => {
       // 에러 발생시 기본 이미지로 대체
-      event.target.src = '/placeholder-image.jpg'
-    }
+      event.target.src = "/placeholder-image.jpg";
+    };
 
     onMounted(() => {
       // Intersection Observer 설정
-      if ('IntersectionObserver' in window) {
+      if ("IntersectionObserver" in window) {
         observer = new IntersectionObserver(
           (entries) => {
-            entries.forEach(entry => {
+            entries.forEach((entry) => {
               if (entry.isIntersecting) {
-                loadImage()
-                observer.unobserve(entry.target)
+                loadImage();
+                observer.unobserve(entry.target);
               }
-            })
+            });
           },
           {
             threshold: props.threshold,
-            rootMargin: '50px'
+            rootMargin: "50px",
           }
-        )
+        );
 
         if (imageContainer.value) {
-          observer.observe(imageContainer.value)
+          observer.observe(imageContainer.value);
         }
       } else {
         // Intersection Observer를 지원하지 않는 브라우저는 즉시 로드
-        loadImage()
+        loadImage();
       }
-    })
+    });
 
     onUnmounted(() => {
       if (observer && imageContainer.value) {
-        observer.unobserve(imageContainer.value)
+        observer.unobserve(imageContainer.value);
       }
-    })
+    });
 
     return {
       imageContainer,
       isLoaded,
       isImageLoaded,
       onImageLoad,
-      onImageError
-    }
-  }
-}
+      onImageError,
+    };
+  },
+};
 </script>
 
 <style scoped>
@@ -127,12 +127,7 @@ export default {
 .skeleton-loader {
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    #f0f0f0 25%,
-    #e0e0e0 50%,
-    #f0f0f0 75%
-  );
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
   animation: loading 1.5s infinite;
 }
