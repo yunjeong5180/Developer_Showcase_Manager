@@ -100,10 +100,16 @@ const app = createApp(App)
 // Register FontAwesome component globally
 app.component('font-awesome-icon', FontAwesomeIcon)
 
+// 글로벌 에러 핸들러 설정
+import { setupGlobalErrorHandler } from '@/utils/errorHandler'
+
 // Use plugins
 app.use(router)
 app.use(store)
 app.use(vuetify)
+
+// 에러 핸들러 설정 (store 초기화 후)
+setupGlobalErrorHandler(app, store)
 
 // Mount app
 app.mount('#app')

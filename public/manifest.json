@@ -1,0 +1,36 @@
+{
+  "name": "My Codit Manager",
+  "short_name": "Codit",
+  "description": "개발자를 위한 포트폴리오 관리 시스템",
+  "theme_color": "#0a0a0a",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "categories": ["productivity", "developer", "portfolio"],
+  "icons": [
+    {
+      "src": "/icon-placeholder.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "대시보드",
+      "short_name": "Dashboard",
+      "description": "관리자 대시보드로 이동",
+      "url": "/admin/dashboard",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "프로젝트 추가",
+      "short_name": "Add Project",
+      "description": "새 프로젝트 추가",
+      "url": "/admin/projects/create",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ]
+}

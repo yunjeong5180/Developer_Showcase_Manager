@@ -2,7 +2,7 @@
 
 [build]
   # 빌드 명령
-  command = "npm run build:railway"
+  command = "npm run build"
   
   # 빌드 결과물 디렉토리
   publish = "dist"
@@ -26,40 +26,47 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
     
-    # 캐싱 헤더 (정적 자산)
-    Cache-Control = '''
-      public,
-      max-age=31536000,
-      immutable
-    '''
+    # PWA 헤더
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
 
 [[headers]]
   for = "/index.html"
   
   [headers.values]
     # HTML은 캐싱하지 않음
-    Cache-Control = '''
-      no-cache,
-      no-store,
-      must-revalidate
-    '''
+    Cache-Control = "no-cache, no-store, must-revalidate"
 
-# 환경 변수 (예시)
-[build.environment]
-  VUE_APP_API_URL = "https://api.example.com"
+[[headers]]
+  for = "/assets/*"
+  
+  [headers.values]
+    # 정적 자산은 1년간 캐싱
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/sw.js"
+  
+  [headers.values]
+    # Service Worker는 캐싱하지 않음
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# 환경 변수는 Netlify 대시보드에서 설정
+# Site settings → Environment variables에서 설정하세요
   
 # 배포 미리보기 설정
 [context.deploy-preview]
-  command = "npm run build:railway"
+  command = "npm run build"
   
 # 브랜치 배포 설정
 [context.branch-deploy]
-  command = "npm run build:railway"
+  command = "npm run build"
   
 # 프로덕션 배포 설정
 [context.production]
-  command = "npm run build:railway"
+  command = "npm run build"
   
   [context.production.environment]
     NODE_ENV = "production"

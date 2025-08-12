@@ -4,6 +4,7 @@ import { createStore } from 'vuex'
 import auth from './modules/auth'
 import projects from './modules/projects'
 import portfolio from './modules/portfolio'
+import loading from './modules/loading'
 
 export default createStore({
   state: {
@@ -44,6 +45,7 @@ export default createStore({
   modules: {
     auth,
     projects,
-    portfolio
+    portfolio,
+    loading
   }
 })

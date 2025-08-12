@@ -225,7 +225,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/shared/styles/variables.scss';
+@use '@/shared/styles/variables' as *;
 
 .contact-page {
   min-height: calc(100vh - 60px);

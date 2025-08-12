@@ -213,7 +213,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/shared/styles/variables.scss';
+@use '@/shared/styles/variables' as *;
 
 .portfolio-page {
   min-height: 100vh;

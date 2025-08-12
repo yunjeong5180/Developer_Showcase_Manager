@@ -49,8 +49,8 @@
         </div>
 
         <button type="submit" class="login-btn" :disabled="loading">
-          <span v-if="loading">로그인 중...</span>
-          <span v-else>로그인</span>
+          <span class="btn-text" v-if="loading">로그인 중...</span>
+          <span class="btn-text" v-else>로그인</span>
         </button>
       </form>
 
@@ -438,7 +438,7 @@ export default {
 .login-btn {
   width: 100%;
   padding: 15px;
-  background: $gradient-primary;  /* 차콜 블랙 그라디언트 */
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);  /* 차콜 블랙 그라디언트 */
   color: white;
   border: none;
   border-radius: 10px;
@@ -446,17 +446,44 @@ export default {
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.login-btn:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .login-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .login-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  background: linear-gradient(135deg, #4a4a4a 0%, #5a5a5a 100%);
+}
+
+.btn-text {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .social-login-section {
@@ -485,26 +512,27 @@ export default {
 }
 
 .github-btn {
-  background: #24292e;
-  border: 2px solid transparent;
+  background: #1a1a1a;
+  border: 2px solid #2a2a2a;
 }
 
 .github-btn:hover:not(:disabled) {
-  background: #1a1e22;
+  background: #0a0a0a;
+  border-color: #0a0a0a;
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(36, 41, 46, 0.4);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
 .google-btn {
   background: white;
-  border: 2px solid #dadce0;
+  border: 2px solid #e5e5e5;
 }
 
 .google-btn:hover:not(:disabled) {
-  background: #f8f9fa;
-  border-color: #c1c7cd;
+  background: #fafafa;
+  border-color: #d0d0d0;
   transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .social-btn:disabled {

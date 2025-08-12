@@ -140,9 +140,10 @@
         <button
           type="submit"
           class="signup-btn"
-          :disabled="isLoading || !isFormValid"
+          :disabled="isLoading"
         >
-          {{ isLoading ? '가입 중...' : '회원가입' }}
+          <span class="btn-text" v-if="isLoading">가입 중...</span>
+          <span class="btn-text" v-else>회원가입</span>
         </button>
 
         <!-- 성공/실패 메시지 -->
@@ -260,8 +261,6 @@ export default {
         !this.errors.email &&
         !this.errors.password &&
         !this.errors.confirmPassword &&
-        this.nicknameAvailable &&
-        this.emailAvailable &&
         this.isPasswordStrong &&
         this.passwordsMatch
     },
@@ -470,20 +469,28 @@ export default {
         return
       }
 
+      // 닉네임 중복 확인이 안된 경우 자동으로 확인
       if (!this.nicknameAvailable) {
-        this.message = {
-          text: '닉네임 중복 확인을 완료해주세요',
-          type: 'error'
+        await this.checkNicknameDuplicate()
+        if (!this.nicknameAvailable) {
+          this.message = {
+            text: '이미 사용 중인 닉네임입니다',
+            type: 'error'
+          }
+          return
         }
-        return
       }
 
+      // 이메일 중복 확인이 안된 경우 자동으로 확인
       if (!this.emailAvailable) {
-        this.message = {
-          text: '이메일 중복 확인을 완료해주세요',
-          type: 'error'
+        await this.checkEmailDuplicate()
+        if (!this.emailAvailable) {
+          this.message = {
+            text: '이미 가입된 이메일입니다',
+            type: 'error'
+          }
+          return
         }
-        return
       }
 
       this.isLoading = true
@@ -608,7 +615,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/shared/styles/variables.scss';
+@use '@/shared/styles/variables' as *;
 .signup-container {
   min-height: 100vh;
   display: flex;
@@ -772,7 +779,7 @@ export default {
 
 .signup-btn {
   width: 100%;
-  background: $gradient-primary;  /* 차콜 블랙 그라디언트 */
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);  /* 차콜 블랙 그라디언트 */
   color: white;
   border: none;
   padding: 15px;
@@ -782,17 +789,44 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.signup-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.signup-btn:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .signup-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .signup-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  background: linear-gradient(135deg, #4a4a4a 0%, #5a5a5a 100%);
+}
+
+.btn-text {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .message {
@@ -888,7 +922,7 @@ export default {
 }
 
 .modal-btn-primary {
-  background: $gradient-primary;  /* 차콜 블랙 그라디언트 */
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);  /* 차콜 블랙 그라디언트 */
   color: white;
 }
 

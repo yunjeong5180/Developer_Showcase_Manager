@@ -313,7 +313,7 @@ const profileAPI = {
       const response = await getUserByEmail(user.email);
       return response;
     } catch (error) {
-      console.error('프로필 조회 오류:', error);
+      // console.error('프로필 조회 오류:', error);
       return { success: false, error: error.message };
     }
   },
@@ -341,7 +341,7 @@ const profileAPI = {
       const response = await updateUser(userData.id, profileData);
       return response;
     } catch (error) {
-      console.error('프로필 업데이트 오류:', error);
+      // console.error('프로필 업데이트 오류:', error);
       return { success: false, error: error.message };
     }
   }
@@ -392,7 +392,7 @@ export default {
     async loadUserProfile() {
       try {
         this.isLoading = true;
-        console.log('프로필 페이지 로드 시작');
+        // console.log('프로필 페이지 로드 시작');
 
         // 사용자 프로필 정보 조회
         const result = await profileAPI.getCurrentUserProfile();
@@ -416,9 +416,9 @@ export default {
             skills: userData.skills || []
           };
           
-          console.log('프로필 데이터 로드 완료:', this.profileForm);
+          // console.log('프로필 데이터 로드 완료:', this.profileForm);
         } else {
-          console.warn('프로필 데이터 조회 실패:', result.error);
+          // console.warn('프로필 데이터 조회 실패:', result.error);
           this.message = {
             text: result.error || '프로필 정보를 불러올 수 없습니다.',
             type: 'error'
@@ -426,7 +426,7 @@ export default {
         }
 
       } catch (error) {
-        console.error('프로필 로드 오류:', error);
+        // console.error('프로필 로드 오류:', error);
         this.message = {
           text: '프로필 정보를 불러오는 중 오류가 발생했습니다.',
           type: 'error'
@@ -456,7 +456,7 @@ export default {
         this.profileImageFile = file
 
       } catch (error) {
-        console.error('이미지 처리 오류:', error)
+        // console.error('이미지 처리 오류:', error)
         this.message = {
           text: '이미지 처리 중 오류가 발생했습니다.',
           type: 'error'
@@ -658,20 +658,20 @@ export default {
       this.message = { text: '', type: '' }
 
       try {
-        console.log('프로필 저장 시작')
+        // console.log('프로필 저장 시작')
 
         let profileImageUrl = this.profileForm.profileImage;
 
         // 1. 이미지 업로드 (새 이미지가 있는 경우)
         if (this.profileImageFile) {
-          console.log('이미지 업로드 중...')
+          // console.log('이미지 업로드 중...')
           const uploadResult = await imageAPI.uploadImage(this.profileImageFile, 'profile-images');
 
           if (uploadResult.success) {
             profileImageUrl = uploadResult.data.url;
-            console.log('이미지 업로드 성공:', profileImageUrl)
+            // console.log('이미지 업로드 성공:', profileImageUrl)
           } else {
-            console.warn('이미지 업로드 실패:', uploadResult.error);
+            // console.warn('이미지 업로드 실패:', uploadResult.error);
             // 이미지 업로드 실패해도 프로필은 저장 진행
           }
         }
@@ -693,7 +693,7 @@ export default {
         };
 
         // 3. 프로필 정보 업데이트
-        console.log('프로필 정보 업데이트 중...', profileData)
+        // console.log('프로필 정보 업데이트 중...', profileData)
         const updateResult = await profileAPI.updateProfile(profileData);
 
         if (updateResult.success) {

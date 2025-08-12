@@ -148,7 +148,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import '@/shared/styles/variables.scss';
+@use '@/shared/styles/variables' as *;
 
 * {
   margin: 0;

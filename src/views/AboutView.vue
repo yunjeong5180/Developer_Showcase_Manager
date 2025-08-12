@@ -99,7 +99,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/shared/styles/variables.scss';
+@use '@/shared/styles/variables' as *;
 
 .about-page {
   min-height: calc(100vh - 60px);

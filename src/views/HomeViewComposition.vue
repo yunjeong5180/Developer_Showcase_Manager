@@ -211,7 +211,7 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '@/shared/styles/variables.scss';
+@use '@/shared/styles/variables' as *;
 
 .home {
   background: $gray-100;

@@ -22,6 +22,13 @@ export default defineConfig({
       }
     }
   ],
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler' // Use modern API to avoid deprecation warnings
+      }
+    }
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

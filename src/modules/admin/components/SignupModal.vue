@@ -30,7 +30,15 @@
       </h2>
 
       <!-- 모달 메시지 -->
-      <p class="modal-message" v-html="modalConfig.message">
+      <p class="modal-message">
+        <template v-if="mode === 'forgotPassword'">
+          <strong>{{ email }}</strong>은 아직 회원가입되지 않은 이메일입니다.<br>
+          비밀번호 재설정을 위해서는 먼저 <strong>My Codit</strong>에 가입해주세요!
+        </template>
+        <template v-else>
+          <strong>{{ email }}</strong>은 아직 <strong>My Codit</strong>에<br>
+          가입되지 않은 이메일입니다.
+        </template>
       </p>
 
       <!-- 혜택 리스트 (로그인 모드에서만 표시) -->
@@ -123,8 +131,7 @@ export default {
         return {
           icon: '🔒',
           title: '등록되지 않은 이메일',
-          message: `<strong>${this.email}</strong>은 아직 회원가입되지 않은 이메일입니다.<br>
-                   비밀번호 재설정을 위해서는 먼저 <strong>My Codit</strong>에 가입해주세요!`,
+          message: '', // 템플릿에서 직접 처리
           primaryButtonIcon: '📝',
           primaryButtonText: '회원가입하기',
           cancelButtonText: '나중에 하기',
@@ -136,9 +143,7 @@ export default {
         return {
           icon: '🚀',
           title: '아직 계정이 없으신가요?',
-          message: `입력하신 이메일로 등록된 계정을 찾을 수 없습니다.<br>
-                   <strong>My Codit</strong>에 가입하여<br>
-                   포트폴리오를 관리해보세요!`,
+          message: '', // 템플릿에서 직접 처리
           primaryButtonIcon: '✨',
           primaryButtonText: '지금 회원가입하기',
           cancelButtonText: '나중에 하기',
