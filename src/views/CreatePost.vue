@@ -329,8 +329,8 @@
 </template>
 
 <script>
-import { projectAPI } from "@/shared/services/projectService";
-import { imageAPI } from "@/shared/services/imageService";
+import { projectService } from "@/shared/services";
+import { imageService } from "@/shared/services";
 
 export default {
   name: "CreatePost",
@@ -406,7 +406,7 @@ export default {
   methods: {
     async loadProject() {
       try {
-        const result = await projectAPI.getProject(this.projectId);
+        const result = await projectService.getProject(this.projectId);
         if (result.success) {
           const project = result.data;
           this.form = {
@@ -516,18 +516,18 @@ export default {
           description: this.form.description.trim(),
           start_date: this.form.startDate || null,
           end_date: this.form.endDate || null,
-          technologies: this.form.technologies,
+          tech_stack: this.form.technologies,
           github_url: this.form.githubUrl || null,
-          live_url: this.form.liveUrl || null,
+          demo_url: this.form.liveUrl || null,
           category: this.form.category || null,
           is_featured: this.form.isFeatured,
         };
 
         let result;
         if (this.isEditMode) {
-          result = await projectAPI.updateProject(this.projectId, projectData);
+          result = await projectService.updateProject(this.projectId, projectData);
         } else {
-          result = await projectAPI.createProject(projectData);
+          result = await projectService.createProject(projectData);
         }
 
         if (result.success) {
@@ -535,7 +535,7 @@ export default {
 
           // 이미지 업로드
           if (this.imageFiles.length > 0) {
-            await imageAPI.uploadProjectImages(this.imageFiles, projectId);
+            await imageService.uploadProjectImages(this.imageFiles, projectId);
           }
 
           // 성공 메시지 및 리다이렉트

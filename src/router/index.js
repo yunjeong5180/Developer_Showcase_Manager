@@ -10,7 +10,7 @@ import ResetPassword from "../views/ResetPassword.vue";
 import TwoFactorAuth from "../views/TwoFactorAuth.vue";
 // 새로 추가되는 컴포넌트들
 import CreatePost from "../views/CreatePost.vue";
-import PostList from "../views/PostList.vue";
+import PostList from "../modules/admin/views/PostList.vue";
 import ClearSession from "../views/ClearSession.vue";
 import { supabase } from "@/config/supabase";
 
@@ -215,6 +215,12 @@ const routes = [
   {
     path: "/admin/create-post",
     name: "CreatePost",
+    component: CreatePost,
+    beforeEnter: requireAuth,
+  },
+  {
+    path: "/admin/edit-post/:id",
+    name: "EditPost",
     component: CreatePost,
     beforeEnter: requireAuth,
   },

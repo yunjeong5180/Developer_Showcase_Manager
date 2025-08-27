@@ -431,8 +431,13 @@ export const authAPI = {
         }
 
         // 4. 🚨 핵심: 회원가입 성공 후 즉시 로그아웃하여 자동 로그인 방지
+        // 하지만 auth_user_id 업데이트가 DB에 반영될 시간을 줘야 함
         if (authData.user) {
           console.log("회원가입 성공, 자동 로그인 방지를 위해 로그아웃 실행");
+          
+          // DB 업데이트가 완전히 반영되도록 잠시 대기
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
           await supabase.auth.signOut();
 
           // localStorage에서 모든 Supabase 관련 항목 삭제

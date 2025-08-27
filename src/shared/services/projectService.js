@@ -184,6 +184,7 @@ export const projectAPI = {
       }
 
       console.log(`프로젝트 목록 조회 성공: ${projects.length}개 프로젝트`);
+      console.log("조회된 프로젝트 데이터:", projects);
       return {
         success: true,
         error: null,

@@ -123,21 +123,26 @@ export default {
     },
   },
   async created() {
-    // Supabase 인증 리스너를 먼저 설정
+    // Supabase 인증 리스너 설정
     const { supabase } = await import("@/config/supabase");
     if (supabase) {
-      // 초기 세션 확인 - 자동 로그인 방지
+      // sessionStorage를 사용해서 새로고침인지 확인
+      const isPageRefresh = sessionStorage.getItem('isPageRefresh');
+      
+      // 세션 확인
       try {
         const {
           data: { session },
           error,
         } = await supabase.auth.getSession();
+        
         if (error && error.message.includes("Invalid Refresh Token")) {
           // 유효하지 않은 refresh token 제거
           console.log("만료된 refresh token 제거 중...");
           await supabase.auth.signOut();
-        } else if (session) {
-          console.log("세션 복원 중:", session.user.email);
+        } else if (session && isPageRefresh === 'true') {
+          // 새로고침인 경우에만 세션 복원
+          console.log("페이지 새로고침 - 세션 복원 중:", session.user.email);
           
           // 세션 만료 시간 확인
           const expiresAt = session.expires_at ? new Date(session.expires_at * 1000) : null;
@@ -153,7 +158,14 @@ export default {
             this.$store.commit("auth/SET_USER", session.user);
             await this.$store.dispatch("auth/loadUserProfile");
           }
+        } else if (session && !isPageRefresh) {
+          // 첫 방문이나 서버 재시작 시 - 세션 제거
+          console.log("서버 재시작 감지 - 자동 로그인 방지");
+          await supabase.auth.signOut();
         }
+        
+        // 페이지 로드 완료 표시
+        sessionStorage.setItem('isPageRefresh', 'true');
       } catch (err) {
         console.error("세션 확인 중 오류:", err);
       }
@@ -170,8 +182,9 @@ export default {
         } else if (event === "SIGNED_OUT") {
           // 로그아웃 시 store 초기화
           this.$store.commit("auth/CLEAR_AUTH");
+          // 세션 스토리지 초기화
+          sessionStorage.removeItem('isPageRefresh');
         }
-        // INITIAL_SESSION 이벤트는 제거 (getSession으로 대체)
       });
     }
 

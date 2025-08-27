@@ -7,7 +7,8 @@ export function getSupabaseStatus() {
 }
 
 // 이메일 중복 체크 (로컬 모드 지원)
-export async function checkEmailDuplicate(email) {
+export async function checkEmailDuplicate(email) 
+{
   // Supabase가 설정되지 않은 경우 로컬 모드
   if (!isSupabaseEnabled()) {
     console.log("Supabase 미설정 - 로컬 모드로 실행");
@@ -20,7 +21,8 @@ export async function checkEmailDuplicate(email) {
 
   try {
     // supabase가 null인 경우 로컬 모드로 처리
-    if (!supabase) {
+    if (!supabase) 
+      {
       return { data: { exists: false }, error: null };
     }
 

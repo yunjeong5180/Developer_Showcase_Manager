@@ -71,11 +71,34 @@ const actions = {
     console.log("프로필 로드 시작:", state.user.id);
 
     try {
-      const { data: profile, error } = await supabase
+      // 먼저 auth_user_id로 조회
+      let { data: profile, error } = await supabase
         .from("users")
         .select("*")
         .eq("auth_user_id", state.user.id)
         .single();
+
+      // auth_user_id로 못 찾으면 이메일로 조회 (회원가입 직후 상황 대응)
+      if (error && error.code === "PGRST116") {
+        console.log("auth_user_id로 조회 실패, 이메일로 재시도");
+        const emailResult = await supabase
+          .from("users")
+          .select("*")
+          .eq("email", state.user.email)
+          .single();
+        
+        profile = emailResult.data;
+        error = emailResult.error;
+        
+        // 이메일로 찾았고 auth_user_id가 없으면 업데이트
+        if (profile && !profile.auth_user_id) {
+          console.log("auth_user_id 누락된 프로필 발견, 업데이트 실행");
+          await supabase
+            .from("users")
+            .update({ auth_user_id: state.user.id })
+            .eq("id", profile.id);
+        }
+      }
 
       if (error) {
         console.error("프로필 조회 에러:", error);
