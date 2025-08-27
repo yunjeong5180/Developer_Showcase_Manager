@@ -2,8 +2,9 @@
   <div class="signup-container">
     <div class="signup-card">
       <div class="signup-header">
-        <h2>📝 회원가입</h2>
-        <p>Developer Showcase Manager에 오신 것을 환영합니다!</p>
+        <router-link to="/" class="logo-link">
+          <h1 class="brand-logo">Codit</h1>
+        </router-link>
       </div>
 
       <form @submit.prevent="handleSignUp" class="signup-form">
@@ -14,12 +15,14 @@
             type="text"
             id="name"
             v-model="formData.name"
-            :class="{ 'error': errors.name }"
+            :class="{ error: errors.name }"
             :disabled="isLoading"
             placeholder="실명을 입력하세요"
             required
-          >
-          <span v-if="errors.name" class="error-message">{{ errors.name }}</span>
+          />
+          <span v-if="errors.name" class="error-message">{{
+            errors.name
+          }}</span>
         </div>
 
         <!-- 닉네임 입력 -->
@@ -29,19 +32,31 @@
             type="text"
             id="nickname"
             v-model="formData.nickname"
-            :class="{ 'error': errors.nickname }"
+            :class="{ error: errors.nickname }"
             :disabled="isLoading"
             placeholder="2-20자의 닉네임을 입력하세요"
             @blur="checkNicknameDuplicate"
             required
-          >
+          />
           <!-- 닉네임 입력 전 안내 -->
-          <div v-if="!formData.nickname && !nicknameAvailable" class="field-info">
-            <small>영문, 한글, 숫자, 언더스코어(_), 하이픈(-), 작은따옴표(') 사용 가능 (2-20자)</small>
+          <div
+            v-if="!formData.nickname && !nicknameAvailable"
+            class="field-info"
+          >
+            <small
+              >영문, 한글, 숫자, 언더스코어(_), 하이픈(-), 작은따옴표(') 사용
+              가능 (2-20자)</small
+            >
           </div>
-          <span v-if="errors.nickname" class="error-message">{{ errors.nickname }}</span>
-          <div v-if="nicknameChecking" class="field-checking">닉네임 중복 확인 중...</div>
-          <div v-if="nicknameAvailable" class="field-success">사용 가능한 닉네임입니다</div>
+          <span v-if="errors.nickname" class="error-message">{{
+            errors.nickname
+          }}</span>
+          <div v-if="nicknameChecking" class="field-checking">
+            닉네임 중복 확인 중...
+          </div>
+          <div v-if="nicknameAvailable" class="field-success">
+            사용 가능한 닉네임입니다
+          </div>
         </div>
 
         <!-- 이메일 입력 -->
@@ -51,19 +66,25 @@
             type="email"
             id="email"
             v-model="formData.email"
-            :class="{ 'error': errors.email }"
+            :class="{ error: errors.email }"
             :disabled="isLoading"
             placeholder="example@email.com"
             @blur="checkEmailDuplicate"
             required
-          >
+          />
           <!-- 🆕 이메일이 자동 입력되었을 때 안내 -->
           <div v-if="isEmailAutoFilled" class="field-info">
             <small>✨ 로그인 시 입력한 이메일이 자동으로 입력되었습니다</small>
           </div>
-          <span v-if="errors.email" class="error-message">{{ errors.email }}</span>
-          <div v-if="emailChecking" class="field-checking">이메일 중복 확인 중...</div>
-          <div v-if="emailAvailable" class="field-success">사용 가능한 이메일입니다</div>
+          <span v-if="errors.email" class="error-message">{{
+            errors.email
+          }}</span>
+          <div v-if="emailChecking" class="field-checking">
+            이메일 중복 확인 중...
+          </div>
+          <div v-if="emailAvailable" class="field-success">
+            사용 가능한 이메일입니다
+          </div>
         </div>
 
         <!-- 비밀번호 입력 -->
@@ -73,50 +94,71 @@
             type="password"
             id="password"
             v-model="formData.password"
-            :class="{ 'error': errors.password }"
+            :class="{ error: errors.password }"
             :disabled="isLoading"
             placeholder="비밀번호를 입력하세요"
             @input="validatePassword"
             @focus="passwordFocused = true"
             @blur="passwordFocused = false"
             required
-          >
+          />
 
           <!-- 비밀번호가 없고 모든 요구사항이 충족되지 않았을 때만 힌트 표시 -->
-          <div v-if="!formData.password && !isPasswordStrong" class="password-hint">
+          <div
+            v-if="!formData.password && !isPasswordStrong"
+            class="password-hint"
+          >
             8자 이상, 영문 대/소문자, 숫자, 특수문자 포함
           </div>
 
           <!-- 비밀번호 입력 중이고 아직 완성되지 않았을 때만 상세 요구사항 표시 -->
-          <div v-if="formData.password && passwordFocused && !isPasswordStrong" class="password-requirements">
-            <div class="requirement" :class="{ 'met': passwordChecks.length }">
-              <span class="check-icon">{{ passwordChecks.length ? '✓' : '○' }}</span>
+          <div
+            v-if="formData.password && passwordFocused && !isPasswordStrong"
+            class="password-requirements"
+          >
+            <div class="requirement" :class="{ met: passwordChecks.length }">
+              <span class="check-icon">{{
+                passwordChecks.length ? "✓" : "○"
+              }}</span>
               8자 이상
             </div>
-            <div class="requirement" :class="{ 'met': passwordChecks.uppercase }">
-              <span class="check-icon">{{ passwordChecks.uppercase ? '✓' : '○' }}</span>
+            <div class="requirement" :class="{ met: passwordChecks.uppercase }">
+              <span class="check-icon">{{
+                passwordChecks.uppercase ? "✓" : "○"
+              }}</span>
               영문 대문자 포함
             </div>
-            <div class="requirement" :class="{ 'met': passwordChecks.lowercase }">
-              <span class="check-icon">{{ passwordChecks.lowercase ? '✓' : '○' }}</span>
+            <div class="requirement" :class="{ met: passwordChecks.lowercase }">
+              <span class="check-icon">{{
+                passwordChecks.lowercase ? "✓" : "○"
+              }}</span>
               영문 소문자 포함
             </div>
-            <div class="requirement" :class="{ 'met': passwordChecks.number }">
-              <span class="check-icon">{{ passwordChecks.number ? '✓' : '○' }}</span>
+            <div class="requirement" :class="{ met: passwordChecks.number }">
+              <span class="check-icon">{{
+                passwordChecks.number ? "✓" : "○"
+              }}</span>
               숫자 포함
             </div>
-            <div class="requirement" :class="{ 'met': passwordChecks.special }">
-              <span class="check-icon">{{ passwordChecks.special ? '✓' : '○' }}</span>
+            <div class="requirement" :class="{ met: passwordChecks.special }">
+              <span class="check-icon">{{
+                passwordChecks.special ? "✓" : "○"
+              }}</span>
               특수문자 포함
             </div>
           </div>
 
           <!-- 비밀번호가 완성되었을 때 성공 메시지 표시 -->
-          <div v-if="formData.password && isPasswordStrong" class="field-success">
+          <div
+            v-if="formData.password && isPasswordStrong"
+            class="field-success"
+          >
             강력한 비밀번호입니다
           </div>
 
-          <span v-if="errors.password" class="error-message">{{ errors.password }}</span>
+          <span v-if="errors.password" class="error-message">{{
+            errors.password
+          }}</span>
         </div>
 
         <!-- 비밀번호 확인 -->
@@ -126,23 +168,27 @@
             type="password"
             id="confirmPassword"
             v-model="formData.confirmPassword"
-            :class="{ 'error': errors.confirmPassword }"
+            :class="{ error: errors.confirmPassword }"
             :disabled="isLoading"
             placeholder="비밀번호를 다시 입력하세요"
             @input="validatePasswordConfirm"
             required
+          />
+          <span v-if="errors.confirmPassword" class="error-message">{{
+            errors.confirmPassword
+          }}</span>
+          <div
+            v-if="passwordsMatch && formData.confirmPassword"
+            class="field-success"
           >
-          <span v-if="errors.confirmPassword" class="error-message">{{ errors.confirmPassword }}</span>
-          <div v-if="passwordsMatch && formData.confirmPassword" class="field-success">비밀번호가 일치합니다</div>
+            비밀번호가 일치합니다
+          </div>
         </div>
 
         <!-- 회원가입 버튼 -->
-        <button
-          type="submit"
-          class="signup-btn"
-          :disabled="isLoading || !isFormValid"
-        >
-          {{ isLoading ? '가입 중...' : '회원가입' }}
+        <button type="submit" class="signup-btn" :disabled="isLoading">
+          <span class="btn-text" v-if="isLoading">가입 중...</span>
+          <span class="btn-text" v-else>회원가입</span>
         </button>
 
         <!-- 성공/실패 메시지 -->
@@ -153,7 +199,8 @@
 
       <!-- 로그인 링크 -->
       <div class="login-link">
-        <p>이미 계정이 있으신가요?
+        <p>
+          이미 계정이 있으신가요?
           <router-link to="/login">로그인하기</router-link>
         </p>
       </div>
@@ -165,8 +212,12 @@
         <h3>{{ modalTitle }}</h3>
         <p>{{ modalMessage }}</p>
         <div class="modal-buttons">
-          <button @click="handleModalConfirm" class="modal-btn-primary">확인</button>
-          <button @click="handleModalCancel" class="modal-btn-secondary">취소</button>
+          <button @click="handleModalConfirm" class="modal-btn-primary">
+            확인
+          </button>
+          <button @click="handleModalCancel" class="modal-btn-secondary">
+            취소
+          </button>
         </div>
       </div>
     </div>
@@ -174,24 +225,24 @@
 </template>
 
 <script>
-import { authAPI } from '@/config/supabase'
-import { authUtils } from '@/config/auth'  // 🔧 수정: @/utils/auth → @/config/auth
+import { authAPI } from "@/config/supabase";
+import { authUtils } from "@/config/auth"; // 🔧 수정: @/utils/auth → @/config/auth
 
 export default {
-  name: 'SignUp',
+  name: "SignUp",
   data() {
     return {
       formData: {
-        name: '',
-        nickname: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
+        name: "",
+        nickname: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
       },
       errors: {},
       message: {
-        text: '',
-        type: ''
+        text: "",
+        type: "",
       },
       isLoading: false,
 
@@ -210,7 +261,7 @@ export default {
         uppercase: false,
         lowercase: false,
         number: false,
-        special: false
+        special: false,
       },
 
       // 🆕 이메일 자동 입력 상태
@@ -218,39 +269,40 @@ export default {
 
       // 모달 상태
       showModal: false,
-      modalTitle: '',
-      modalMessage: '',
-      modalRedirectTo: null
-    }
+      modalTitle: "",
+      modalMessage: "",
+      modalRedirectTo: null,
+    };
   },
 
   // 🆕 마운트 시 이메일 자동 입력 처리
   mounted() {
-    console.log('Signup 페이지 마운트, 쿼리 확인:', this.$route.query)
+    console.log("Signup 페이지 마운트, 쿼리 확인:", this.$route.query);
 
     // 쿼리 파라미터에서 이메일 자동 입력
-    const emailQuery = this.$route.query.email
+    const emailQuery = this.$route.query.email;
     if (emailQuery) {
-      console.log('이메일 자동 입력:', emailQuery)
+      console.log("이메일 자동 입력:", emailQuery);
 
-      this.formData.email = emailQuery
-      this.isEmailAutoFilled = true
+      this.formData.email = emailQuery;
+      this.isEmailAutoFilled = true;
 
       // 이메일이 자동 입력되었으면 중복 확인도 실행
       this.$nextTick(() => {
-        this.checkEmailDuplicate()
-      })
+        this.checkEmailDuplicate();
+      });
 
       // 5초 후 자동 입력 안내 메시지 숨김
       setTimeout(() => {
-        this.isEmailAutoFilled = false
-      }, 5000)
+        this.isEmailAutoFilled = false;
+      }, 5000);
     }
   },
 
   computed: {
     isFormValid() {
-      return this.formData.name &&
+      return (
+        this.formData.name &&
         this.formData.nickname &&
         this.formData.email &&
         this.formData.password &&
@@ -260,199 +312,229 @@ export default {
         !this.errors.email &&
         !this.errors.password &&
         !this.errors.confirmPassword &&
-        this.nicknameAvailable &&
-        this.emailAvailable &&
         this.isPasswordStrong &&
         this.passwordsMatch
+      );
     },
 
     isPasswordStrong() {
-      return Object.values(this.passwordChecks).every(check => check === true)
+      return Object.values(this.passwordChecks).every(
+        (check) => check === true
+      );
     },
 
     passwordsMatch() {
-      return this.formData.password && this.formData.confirmPassword &&
+      return (
+        this.formData.password &&
+        this.formData.confirmPassword &&
         this.formData.password === this.formData.confirmPassword
-    }
+      );
+    },
   },
 
   methods: {
     // 이름 유효성 검사
     validateName() {
-      this.errors.name = ""
+      this.errors.name = "";
 
       if (!authUtils.validateName(this.formData.name)) {
-        this.errors.name = "이름은 2자 이상 입력해주세요"
-        return false
+        this.errors.name = "이름은 2자 이상 입력해주세요";
+        return false;
       }
 
-      return true
+      return true;
     },
 
     // 닉네임 유효성 검사 - 🔧 수정: 새로운 validateNickname 함수 사용
     validateNickname() {
-      this.errors.nickname = ""
+      this.errors.nickname = "";
 
       if (!this.formData.nickname.trim()) {
-        this.errors.nickname = "닉네임을 입력해주세요"
-        return false
+        this.errors.nickname = "닉네임을 입력해주세요";
+        return false;
       }
 
       // 🔧 수정: authUtils.validateNickname이 객체를 반환하므로 수정
-      const nicknameValidation = authUtils.validateNickname(this.formData.nickname)
+      const nicknameValidation = authUtils.validateNickname(
+        this.formData.nickname
+      );
       if (!nicknameValidation.isValid) {
-        this.errors.nickname = nicknameValidation.error
-        return false
+        this.errors.nickname = nicknameValidation.error;
+        return false;
       }
 
-      return true
+      return true;
     },
 
     // 이메일 유효성 검사
     validateEmail() {
-      this.errors.email = ""
+      this.errors.email = "";
 
       if (!this.formData.email.trim()) {
-        this.errors.email = "이메일을 입력해주세요"
-        return false
+        this.errors.email = "이메일을 입력해주세요";
+        return false;
       }
 
       if (!authUtils.validateEmail(this.formData.email)) {
-        this.errors.email = "올바른 이메일 형식을 입력해주세요"
-        return false
+        this.errors.email = "올바른 이메일 형식을 입력해주세요";
+        return false;
       }
 
-      return true
+      return true;
     },
 
     // 비밀번호 유효성 검사 - 🔧 수정: authUtils.validateStrongPassword 사용
     validatePassword() {
-      this.errors.password = ""
+      this.errors.password = "";
 
-      const password = this.formData.password
+      const password = this.formData.password;
 
       // 길이 확인 (8자 이상)
-      this.passwordChecks.length = password.length >= 8
+      this.passwordChecks.length = password.length >= 8;
 
       // 대문자 확인
-      this.passwordChecks.uppercase = /[A-Z]/.test(password)
+      this.passwordChecks.uppercase = /[A-Z]/.test(password);
 
       // 소문자 확인
-      this.passwordChecks.lowercase = /[a-z]/.test(password)
+      this.passwordChecks.lowercase = /[a-z]/.test(password);
 
       // 숫자 확인
-      this.passwordChecks.number = /[0-9]/.test(password)
+      this.passwordChecks.number = /[0-9]/.test(password);
 
       // 특수문자 확인
-      this.passwordChecks.special = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+      this.passwordChecks.special = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(
+        password
+      );
 
       // 🔧 수정: authUtils의 강화된 비밀번호 검증 사용
       if (!authUtils.validateStrongPassword(password)) {
-        this.errors.password = "비밀번호 요구사항을 모두 충족해야 합니다"
-        return false
+        this.errors.password = "비밀번호 요구사항을 모두 충족해야 합니다";
+        return false;
       }
 
-      return true
+      return true;
     },
 
     // 비밀번호 확인 유효성 검사
     validatePasswordConfirm() {
-      this.errors.confirmPassword = ""
+      this.errors.confirmPassword = "";
 
       if (!this.formData.confirmPassword) {
-        this.errors.confirmPassword = "비밀번호 확인을 입력해주세요"
-        return false
+        this.errors.confirmPassword = "비밀번호 확인을 입력해주세요";
+        return false;
       }
 
       if (this.formData.password !== this.formData.confirmPassword) {
-        this.errors.confirmPassword = "비밀번호가 일치하지 않습니다"
-        return false
+        this.errors.confirmPassword = "비밀번호가 일치하지 않습니다";
+        return false;
       }
 
-      return true
+      return true;
     },
 
     // 🔄 실제 DB 연동 닉네임 중복 확인
     async checkNicknameDuplicate() {
-      if (!this.validateNickname()) return
+      if (!this.validateNickname()) return;
 
-      this.nicknameChecking = true
-      this.nicknameAvailable = false
+      this.nicknameChecking = true;
+      this.nicknameAvailable = false;
 
       try {
-        console.log('닉네임 중복 확인:', this.formData.nickname.trim())
+        console.log("닉네임 중복 확인:", this.formData.nickname.trim());
 
         // 실제 Supabase에서 닉네임 중복 확인
-        const { data, error } = await authAPI.checkNicknameDuplicate(this.formData.nickname.trim())
+        const { data, error } = await authAPI.checkNicknameDuplicate(
+          this.formData.nickname.trim()
+        );
 
         if (error) {
-          console.error('닉네임 중복 확인 오류:', error)
-          this.errors.nickname = "닉네임 확인 중 오류가 발생했습니다"
-          this.nicknameAvailable = false
+          console.error("닉네임 중복 확인 오류:", error);
+          this.errors.nickname = "닉네임 확인 중 오류가 발생했습니다";
+          this.nicknameAvailable = false;
         } else if (data.exists) {
-          this.errors.nickname = "이미 사용 중인 닉네임입니다"
-          this.nicknameAvailable = false
+          this.errors.nickname = "이미 사용 중인 닉네임입니다";
+          this.nicknameAvailable = false;
         } else {
-          this.errors.nickname = ""
-          this.nicknameAvailable = true
+          this.errors.nickname = "";
+          this.nicknameAvailable = true;
         }
 
-        console.log('닉네임 확인 완료:', this.formData.nickname.trim(), '사용가능:', this.nicknameAvailable)
-
+        console.log(
+          "닉네임 확인 완료:",
+          this.formData.nickname.trim(),
+          "사용가능:",
+          this.nicknameAvailable
+        );
       } catch (error) {
-        console.error('닉네임 중복 확인 예외:', error)
-        this.errors.nickname = "닉네임 확인 중 오류가 발생했습니다"
-        this.nicknameAvailable = false
+        console.error("닉네임 중복 확인 예외:", error);
+        this.errors.nickname = "닉네임 확인 중 오류가 발생했습니다";
+        this.nicknameAvailable = false;
       } finally {
-        this.nicknameChecking = false
+        this.nicknameChecking = false;
       }
     },
 
     // 🔄 실제 DB 연동 이메일 중복 확인
     async checkEmailDuplicate() {
-      if (!this.validateEmail()) return
+      if (!this.validateEmail()) return;
 
-      this.emailChecking = true
-      this.emailAvailable = false
+      this.emailChecking = true;
+      this.emailAvailable = false;
 
       try {
-        console.log('이메일 중복 확인:', this.formData.email.trim())
+        console.log("이메일 중복 확인:", this.formData.email.trim());
 
         // 실제 Supabase에서 이메일 중복 확인
-        const { data, error } = await authAPI.checkEmailDuplicate(this.formData.email.trim())
+        const { data, error } = await authAPI.checkEmailDuplicate(
+          this.formData.email.trim()
+        );
 
         if (error) {
-          console.error('이메일 중복 확인 오류:', error)
-          this.errors.email = "이메일 확인 중 오류가 발생했습니다"
-          this.emailAvailable = false
+          console.error("이메일 중복 확인 오류:", error);
+          this.errors.email = "이메일 확인 중 오류가 발생했습니다";
+          this.emailAvailable = false;
         } else if (data.exists) {
-          this.errors.email = "이미 가입된 이메일입니다"
-          this.emailAvailable = false
+          if (data.forbidden) {
+            this.errors.email = "사용할 수 없는 이메일입니다";
+          } else {
+            this.errors.email = "이미 가입된 이메일입니다";
+          }
+          this.emailAvailable = false;
         } else {
-          this.errors.email = ""
-          this.emailAvailable = true
+          this.errors.email = "";
+          this.emailAvailable = true;
         }
 
-        console.log('이메일 확인 완료:', this.formData.email.trim(), '사용가능:', this.emailAvailable)
-
+        console.log(
+          "이메일 확인 완료:",
+          this.formData.email.trim(),
+          "사용가능:",
+          this.emailAvailable
+        );
       } catch (error) {
-        console.error('이메일 중복 확인 예외:', error)
-        this.errors.email = "이메일 확인 중 오류가 발생했습니다"
-        this.emailAvailable = false
+        console.error("이메일 중복 확인 예외:", error);
+        this.errors.email = "이메일 확인 중 오류가 발생했습니다";
+        this.emailAvailable = false;
       } finally {
-        this.emailChecking = false
+        this.emailChecking = false;
       }
     },
 
     // 폼 유효성 검사
     validateForm() {
-      const nameValid = this.validateName()
-      const nicknameValid = this.validateNickname()
-      const emailValid = this.validateEmail()
-      const passwordValid = this.validatePassword()
-      const confirmPasswordValid = this.validatePasswordConfirm()
+      const nameValid = this.validateName();
+      const nicknameValid = this.validateNickname();
+      const emailValid = this.validateEmail();
+      const passwordValid = this.validatePassword();
+      const confirmPasswordValid = this.validatePasswordConfirm();
 
-      return nameValid && nicknameValid && emailValid && passwordValid && confirmPasswordValid
+      return (
+        nameValid &&
+        nicknameValid &&
+        emailValid &&
+        passwordValid &&
+        confirmPasswordValid
+      );
     },
 
     // 🔥 회원가입 처리 - 이메일 추적 기능 포함
@@ -460,157 +542,205 @@ export default {
       // 유효성 검사
       if (!this.validateForm()) {
         this.message = {
-          text: '입력 정보를 확인해주세요',
-          type: 'error'
-        }
-        return
+          text: "입력 정보를 확인해주세요",
+          type: "error",
+        };
+        return;
       }
 
+      // 닉네임 중복 확인이 안된 경우 자동으로 확인
       if (!this.nicknameAvailable) {
-        this.message = {
-          text: '닉네임 중복 확인을 완료해주세요',
-          type: 'error'
+        await this.checkNicknameDuplicate();
+        if (!this.nicknameAvailable) {
+          this.message = {
+            text: "이미 사용 중인 닉네임입니다",
+            type: "error",
+          };
+          return;
         }
-        return
       }
 
+      // 이메일 중복 확인이 안된 경우 자동으로 확인
       if (!this.emailAvailable) {
-        this.message = {
-          text: '이메일 중복 확인을 완료해주세요',
-          type: 'error'
+        await this.checkEmailDuplicate();
+        if (!this.emailAvailable) {
+          this.message = {
+            text: "이미 가입된 이메일입니다",
+            type: "error",
+          };
+          return;
         }
-        return
       }
 
-      this.isLoading = true
-      this.message = { text: '', type: '' }
+      this.isLoading = true;
+      this.message = { text: "", type: "" };
 
       try {
-        console.log('회원가입 시도:', {
+        console.log("회원가입 시도:", {
           name: this.formData.name,
           nickname: this.formData.nickname,
-          email: this.formData.email
-        })
+          email: this.formData.email,
+        });
 
         // 🔒 RLS 정책으로 인해 사전 중복 확인 불가, 회원가입 시 확인
-        console.log('회원가입 진행 (중복 확인은 회원가입 시 처리)')
+        console.log("회원가입 진행 (중복 확인은 회원가입 시 처리)");
 
         // 🚀 실제 회원가입 (한 번만!)
         const result = await authAPI.signUp({
           name: this.formData.name.trim(),
           nickname: this.formData.nickname.trim(),
           email: this.formData.email.toLowerCase().trim(),
-          password: this.formData.password
-        })
+          password: this.formData.password,
+        });
 
         if (result.success) {
           // 폼 초기화
-          this.resetForm()
+          this.resetForm();
 
           // 모달로 사용자에게 선택권 제공
-          this.showSuccessModal('회원가입 완료', '회원가입이 완료되었습니다! 로그인 페이지로 이동하시겠습니까?', '/login')
+          this.showSuccessModal(
+            "회원가입 완료",
+            "회원가입이 완료되었습니다! 로그인 페이지로 이동하시겠습니까?",
+            "/login"
+          );
         } else {
           this.message = {
             text: this.getErrorMessage(result.error),
-            type: 'error'
-          }
+            type: "error",
+          };
         }
       } catch (error) {
         this.message = {
-          text: '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.',
-          type: 'error'
-        }
-        console.error('SignUp Error:', error)
+          text: "회원가입 중 오류가 발생했습니다. 다시 시도해주세요.",
+          type: "error",
+        };
+        console.error("SignUp Error:", error);
       } finally {
-        this.isLoading = false
+        this.isLoading = false;
       }
     },
 
     // 폼 초기화
     resetForm() {
       this.formData = {
-        name: '',
-        nickname: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-      }
-      this.errors = {}
-      this.nicknameAvailable = false
-      this.emailAvailable = false
-      this.isEmailAutoFilled = false
+        name: "",
+        nickname: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      };
+      this.errors = {};
+      this.nicknameAvailable = false;
+      this.emailAvailable = false;
+      this.isEmailAutoFilled = false;
       this.passwordChecks = {
         length: false,
         uppercase: false,
         lowercase: false,
         number: false,
-        special: false
-      }
+        special: false,
+      };
     },
 
     // 에러 메시지 변환
     getErrorMessage(error) {
       switch (error) {
-        case 'User already registered':
-          return "이미 가입된 이메일입니다"
-        case 'Password should be at least 6 characters':
-          return "비밀번호는 최소 6자 이상이어야 합니다"
-        case 'Invalid email':
-          return "올바른 이메일 형식이 아닙니다"
+        case "User already registered":
+          return "이미 가입된 이메일입니다";
+        case "Password should be at least 6 characters":
+          return "비밀번호는 최소 6자 이상이어야 합니다";
+        case "Invalid email":
+          return "올바른 이메일 형식이 아닙니다";
         default:
-          return `회원가입 실패: ${error}`
+          return `회원가입 실패: ${error}`;
       }
     },
 
     showSuccessModal(title, message, redirectTo) {
-      this.modalTitle = title
-      this.modalMessage = message
-      this.modalRedirectTo = redirectTo
-      this.showModal = true
-      this.message = { text: '', type: '' }
+      this.modalTitle = title;
+      this.modalMessage = message;
+      this.modalRedirectTo = redirectTo;
+      this.showModal = true;
+      this.message = { text: "", type: "" };
     },
 
     handleModalConfirm() {
-      this.showModal = false
+      this.showModal = false;
       if (this.modalRedirectTo) {
-        this.$router.push(this.modalRedirectTo)
+        this.$router.push(this.modalRedirectTo);
       }
     },
 
     handleModalCancel() {
-      this.showModal = false
-      this.modalRedirectTo = null
-    }
+      this.showModal = false;
+      this.modalRedirectTo = null;
+    },
   },
 
   watch: {
     // 닉네임 변경 시 중복 확인 상태 초기화
-    'formData.nickname'() {
-      this.nicknameAvailable = false
-      this.errors.nickname = ""
+    "formData.nickname"() {
+      this.nicknameAvailable = false;
+      this.errors.nickname = "";
     },
 
     // 이메일 변경 시 중복 확인 상태 초기화
-    'formData.email'() {
-      this.emailAvailable = false
-      this.errors.email = ""
+    "formData.email"() {
+      this.emailAvailable = false;
+      this.errors.email = "";
       // 🆕 이메일이 수동으로 변경되면 자동 입력 안내 숨김
-      if (!this.$route.query.email || this.formData.email !== this.$route.query.email) {
-        this.isEmailAutoFilled = false
+      if (
+        !this.$route.query.email ||
+        this.formData.email !== this.$route.query.email
+      ) {
+        this.isEmailAutoFilled = false;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@use "@/shared/styles/variables" as *;
 .signup-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: $gradient-light; /* 깨끗한 회색 그라디언트 */
   padding: 20px;
+  position: relative;
+}
+
+.back-to-home {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  color: #6c757d;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+  
+  &:hover {
+    color: #2c3e50;
+  }
+}
+
+.logo-link {
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 10px;
+  
+  .brand-logo {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin: 0;
+    transition: transform 0.3s ease;
+    
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
 }
 
 .signup-card {
@@ -767,7 +897,11 @@ export default {
 
 .signup-btn {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(
+    135deg,
+    #0a0a0a 0%,
+    #1a1a1a 100%
+  ); /* 차콜 블랙 그라디언트 */
   color: white;
   border: none;
   padding: 15px;
@@ -777,17 +911,44 @@ export default {
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.signup-btn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.signup-btn:hover:not(:disabled)::before {
+  opacity: 1;
 }
 
 .signup-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .signup-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+  background: linear-gradient(135deg, #4a4a4a 0%, #5a5a5a 100%);
+}
+
+.btn-text {
+  color: white;
+  font-weight: 600;
+  font-size: 1.1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .message {
@@ -872,7 +1033,8 @@ export default {
   justify-content: center;
 }
 
-.modal-btn-primary, .modal-btn-secondary {
+.modal-btn-primary,
+.modal-btn-secondary {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -883,7 +1045,11 @@ export default {
 }
 
 .modal-btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(
+    135deg,
+    #0a0a0a 0%,
+    #1a1a1a 100%
+  ); /* 차콜 블랙 그라디언트 */
   color: white;
 }
 
@@ -925,7 +1091,8 @@ export default {
     flex-direction: column;
   }
 
-  .modal-btn-primary, .modal-btn-secondary {
+  .modal-btn-primary,
+  .modal-btn-secondary {
     width: 100%;
     margin-bottom: 10px;
   }
