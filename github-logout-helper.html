@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub 로그인 테스트 헬퍼</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #2d3748;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 10px;
+        }
+        .section h2 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #e53e3e;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        .btn-github {
+            background: #24292e;
+            color: white;
+        }
+        .btn-github:hover {
+            background: #1a1e22;
+            transform: translateY(-2px);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 1px solid #fc8181;
+        }
+        .info-box {
+            background: #e6fffa;
+            border: 1px solid #81e6d9;
+            color: #234e52;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        code {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .links {
+            margin-top: 20px;
+        }
+        .links a {
+            display: inline-block;
+            margin-right: 15px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 GitHub 로그인 테스트 헬퍼</h1>
+        
+        <div class="info-box">
+            <strong>📌 사용 방법:</strong><br>
+            1. GitHub 자동 로그인 문제가 있을 때 이 페이지를 사용하세요<br>
+            2. "완전 클리어" 버튼으로 모든 세션을 제거할 수 있습니다<br>
+            3. 테스트 후 새 시크릿 창에서 로그인을 테스트하세요
+        </div>
+
+        <div class="section">
+            <h2>🔧 빠른 도구</h2>
+            <div class="button-group">
+                <button class="btn-danger" onclick="clearAll()">🗑️ 완전 클리어</button>
+                <button class="btn-primary" onclick="clearSupabase()">🔐 Supabase 세션만</button>
+                <button class="btn-github" onclick="clearGitHub()">🐙 GitHub 세션만</button>
+                <button class="btn-success" onclick="checkStatus()">✅ 상태 확인</button>
+            </div>
+            <div id="status-message"></div>
+        </div>
+
+        <div class="section">
+            <h2>🔗 테스트 링크</h2>
+            <div class="links">
+                <a href="/login" target="_blank">로그인 페이지</a>
+                <a href="/clear-session" target="_blank">세션 클리어 페이지</a>
+                <a href="/admin/dashboard" target="_blank">대시보드</a>
+                <a href="https://github.com/logout" target="_blank">GitHub 로그아웃</a>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>💡 추가 팁</h2>
+            <ul>
+                <li>시크릿/프라이빗 브라우징 모드를 사용하면 완전히 독립된 세션으로 테스트할 수 있습니다</li>
+                <li>Chrome DevTools > Application > Storage에서 수동으로 데이터를 확인/삭제할 수 있습니다</li>
+                <li>GitHub OAuth 앱 설정에서 인증을 취소할 수도 있습니다: 
+                    <a href="https://github.com/settings/applications" target="_blank">GitHub 설정</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function showStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+        }
+
+        function clearAll() {
+            try {
+                // localStorage 클리어
+                localStorage.clear();
+                
+                // sessionStorage 클리어
+                sessionStorage.clear();
+                
+                // 쿠키 클리어
+                document.cookie.split(';').forEach(cookie => {
+                    const eqPos = cookie.indexOf('=');
+                    const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+                    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
+                    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=${window.location.hostname}`;
+                    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.${window.location.hostname}`;
+                });
+                
+                // IndexedDB 클리어
+                if ('indexedDB' in window) {
+                    indexedDB.databases().then(databases => {
+                        databases.forEach(db => {
+                            indexedDB.deleteDatabase(db.name);
+                        });
+                    });
+                }
+                
+                showStatus('✅ 모든 세션과 데이터가 클리어되었습니다!', 'success');
+            } catch (error) {
+                showStatus(`❌ 오류 발생: ${error.message}`, 'error');
+            }
+        }
+
+        function clearSupabase() {
+            try {
+                // Supabase 관련 키만 삭제
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('supabase') || key.includes('auth') || key.includes('sb-'))) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                
+                showStatus('✅ Supabase 세션이 클리어되었습니다!', 'success');
+            } catch (error) {
+                showStatus(`❌ 오류 발생: ${error.message}`, 'error');
+            }
+        }
+
+        function clearGitHub() {
+            try {
+                // GitHub OAuth 관련 데이터 삭제
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key && (key.includes('github') || key.includes('oauth'))) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                
+                // OAuth 관련 쿠키 삭제
+                document.cookie = 'sb-access-token=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                document.cookie = 'sb-refresh-token=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+                
+                showStatus('✅ GitHub 세션이 클리어되었습니다! GitHub 웹사이트에서도 로그아웃하는 것을 권장합니다.', 'success');
+            } catch (error) {
+                showStatus(`❌ 오류 발생: ${error.message}`, 'error');
+            }
+        }
+
+        function checkStatus() {
+            const status = {
+                localStorage: localStorage.length,
+                sessionStorage: sessionStorage.length,
+                cookies: document.cookie.split(';').filter(c => c.trim()).length,
+                supabaseKeys: []
+            };
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && (key.includes('supabase') || key.includes('auth'))) {
+                    status.supabaseKeys.push(key);
+                }
+            }
+            
+            let message = `📊 현재 상태:\n`;
+            message += `- localStorage: ${status.localStorage}개 항목\n`;
+            message += `- sessionStorage: ${status.sessionStorage}개 항목\n`;
+            message += `- 쿠키: ${status.cookies}개\n`;
+            message += `- Supabase 키: ${status.supabaseKeys.length}개`;
+            
+            if (status.supabaseKeys.length > 0) {
+                message += ` (${status.supabaseKeys.join(', ')})`;
+            }
+            
+            showStatus(message, 'success');
+        }
+    </script>
+</body>
+</html>
