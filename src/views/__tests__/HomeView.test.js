@@ -34,7 +34,7 @@ describe("HomeView.vue", () => {
         stubs: ["router-link"],
       },
     });
-    const signupLink = wrapper.find('[to="/signup"]');
+    const signupLink = wrapper.find('[to="/admin/signup"]');
     expect(signupLink.exists()).toBe(true);
   });
 
