@@ -126,8 +126,10 @@ export default {
     // Supabase 인증 리스너 설정
     const { supabase } = await import("@/config/supabase");
     if (supabase) {
-      // sessionStorage를 사용해서 새로고침인지 확인
-      const isPageRefresh = sessionStorage.getItem('isPageRefresh');
+      // 서버 시작 시간을 sessionStorage에 저장 (새로고침 시 유지됨)
+      const serverStartKey = 'serverStartTime';
+      const lastServerStart = sessionStorage.getItem(serverStartKey);
+      const currentTime = Date.now();
       
       // 세션 확인
       try {
@@ -140,34 +142,62 @@ export default {
           // 유효하지 않은 refresh token 제거
           console.log("만료된 refresh token 제거 중...");
           await supabase.auth.signOut();
-        } else if (session && isPageRefresh === 'true') {
-          // 새로고침인 경우에만 세션 복원
-          console.log("페이지 새로고침 - 세션 복원 중:", session.user.email);
+        } else if (session) {
+          // 서버 재시작 감지: 마지막 서버 시작 시간이 없거나 5초 이상 차이나면 서버 재시작으로 간주
+          const isServerRestart = !lastServerStart || (currentTime - parseInt(lastServerStart)) > 5000;
           
-          // 세션 만료 시간 확인
-          const expiresAt = session.expires_at ? new Date(session.expires_at * 1000) : null;
-          const now = new Date();
-          
-          if (expiresAt && expiresAt <= now) {
-            // 만료된 세션은 제거
-            console.log("만료된 세션 제거");
+          if (isServerRestart) {
+            // 서버 재시작 시 무조건 로그아웃
+            console.log("서버 재시작 감지 - 자동 로그아웃 실행");
+            
+            // 모든 인증 관련 데이터 제거
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+              const key = localStorage.key(i);
+              if (key && (key.includes("supabase") || key.includes("sb-"))) {
+                keysToRemove.push(key);
+              }
+            }
+            keysToRemove.forEach((key) => localStorage.removeItem(key));
+            
+            // Supabase 로그아웃
             await supabase.auth.signOut();
+            
+            // Store 초기화
+            this.$store.commit("auth/CLEAR_AUTH");
+            
+            // 서버 시작 시간 업데이트
+            sessionStorage.setItem(serverStartKey, currentTime.toString());
           } else {
-            // 유효한 세션이면 store에 저장하여 로그인 상태 유지
-            console.log("유효한 세션 복원");
-            this.$store.commit("auth/SET_USER", session.user);
-            await this.$store.dispatch("auth/loadUserProfile");
+            // 일반 새로고침 - 세션 유지
+            console.log("페이지 새로고침 - 세션 유지:", session.user.email);
+            
+            // 세션 만료 시간 확인
+            const expiresAt = session.expires_at ? new Date(session.expires_at * 1000) : null;
+            const now = new Date();
+            
+            if (expiresAt && expiresAt <= now) {
+              // 만료된 세션은 제거
+              console.log("만료된 세션 제거");
+              await supabase.auth.signOut();
+            } else {
+              // 유효한 세션이면 store에 저장하여 로그인 상태 유지
+              console.log("유효한 세션 복원");
+              this.$store.commit("auth/SET_USER", session.user);
+              await this.$store.dispatch("auth/loadUserProfile");
+            }
+            
+            // 서버 시작 시간 업데이트 (새로고침 시에도 현재 시간으로)
+            sessionStorage.setItem(serverStartKey, currentTime.toString());
           }
-        } else if (session && !isPageRefresh) {
-          // 첫 방문이나 서버 재시작 시 - 세션 제거
-          console.log("서버 재시작 감지 - 자동 로그인 방지");
-          await supabase.auth.signOut();
+        } else {
+          // 로그인되지 않은 상태 - 서버 시작 시간만 기록
+          sessionStorage.setItem(serverStartKey, currentTime.toString());
         }
-        
-        // 페이지 로드 완료 표시
-        sessionStorage.setItem('isPageRefresh', 'true');
       } catch (err) {
         console.error("세션 확인 중 오류:", err);
+        // 오류 발생 시에도 서버 시작 시간 기록
+        sessionStorage.setItem(serverStartKey, currentTime.toString());
       }
 
       // 이후 변경사항만 리스너로 처리
@@ -182,8 +212,6 @@ export default {
         } else if (event === "SIGNED_OUT") {
           // 로그아웃 시 store 초기화
           this.$store.commit("auth/CLEAR_AUTH");
-          // 세션 스토리지 초기화
-          sessionStorage.removeItem('isPageRefresh');
         }
       });
     }
