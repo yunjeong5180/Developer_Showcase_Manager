@@ -1,0 +1,15 @@
+﻿테스트 환경 정보
+
+항목,개발 환경,운영 환경
+OS,Windows/Mac/Linux,Linux
+브라우저,"Chrome, Firefox, Safari, Edge","Chrome, Firefox, Safari, Edge"
+Node.js,v18.x,v18.x
+Vue.js,v3.x,v3.x
+데이터베이스,Supabase (PostgreSQL),Supabase (PostgreSQL)
+배포 플랫폼,localhost,Railway
+
+테스트 도구
+단위 테스트,"Jest, Vue Test Utils"
+E2E 테스트,Cypress (계획)
+성능 테스트,Lighthouse
+접근성 테스트,axe DevTools
