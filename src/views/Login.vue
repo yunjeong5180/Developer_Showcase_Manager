@@ -39,7 +39,7 @@
             로그인 상태 유지
           </label>
 
-          <router-link to="/forgot-password" class="forgot-password">
+          <router-link to="/admin/forgot-password" class="forgot-password">
             비밀번호를 잊으셨나요?
           </router-link>
         </div>
@@ -79,7 +79,7 @@
 
       <div class="signup-link">
         계정이 없으신가요?
-        <router-link to="/signup">회원가입</router-link>
+        <router-link to="/admin/signup">회원가입</router-link>
       </div>
     </div>
 

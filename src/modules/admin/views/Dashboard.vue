@@ -35,13 +35,13 @@
     <div class="quick-actions">
       <h2>빠른 작업</h2>
       <div class="action-buttons">
-        <router-link to="/create-post" class="action-btn primary">
+        <router-link to="/admin/create-post" class="action-btn primary">
           ✏️ 새 프로젝트 추가
         </router-link>
-        <router-link to="/post-list" class="action-btn">
+        <router-link to="/admin/post-list" class="action-btn">
           📋 프로젝트 관리
         </router-link>
-        <router-link to="/profile" class="action-btn">
+        <router-link to="/admin/profile" class="action-btn">
           👤 프로필 설정
         </router-link>
         <a

@@ -201,7 +201,7 @@
       <div class="login-link">
         <p>
           이미 계정이 있으신가요?
-          <router-link to="/login">로그인하기</router-link>
+          <router-link to="/admin/login">로그인하기</router-link>
         </p>
       </div>
     </div>

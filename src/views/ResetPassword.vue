@@ -57,7 +57,7 @@
 
       <!-- 네비게이션 -->
       <div class="navigation-links">
-        <router-link to="/login">← 로그인으로 돌아가기</router-link>
+        <router-link to="/admin/login">← 로그인으로 돌아가기</router-link>
       </div>
     </div>
 

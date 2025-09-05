@@ -93,11 +93,11 @@
       </form>
 
       <div class="back-to-login">
-        <router-link to="/login">← 로그인으로 돌아가기</router-link>
+        <router-link to="/admin/login">← 로그인으로 돌아가기</router-link>
       </div>
 
       <div class="signup-link">
-        계정이 없으신가요? <router-link to="/signup">회원가입</router-link>
+        계정이 없으신가요? <router-link to="/admin/signup">회원가입</router-link>
       </div>
     </div>
 

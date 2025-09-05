@@ -22,7 +22,7 @@ import PortfolioDemo from "../modules/portfolio/views/PortfolioDemo.vue";
 import PortfolioUser from "../modules/portfolio/views/PortfolioUser.vue";
 
 // 인증 확인 함수
-async function requireAuth(to, from, next) {
+const requireAuth = async (to, from, next) => {
   console.log("인증 가드 실행:", to.path);
 
   try {
@@ -32,10 +32,11 @@ async function requireAuth(to, from, next) {
       // 로컬 스토리지에서 사용자 확인
       const localUser = localStorage.getItem("currentUser");
       if (localUser) {
-        return next();
+        next();
       } else {
-        return next("/login");
+        next("/admin/login");
       }
+      return;
     }
 
     // Supabase 세션 확인
@@ -59,10 +60,10 @@ async function requireAuth(to, from, next) {
     console.error("인증 확인 오류:", error);
     next("/admin/login");
   }
-}
+};
 
 // 이미 로그인된 사용자가 로그인 페이지 접근 시 처리
-async function redirectIfAuthenticated(to, from, next) {
+const redirectIfAuthenticated = async (to, from, next) => {
   console.log("로그인 페이지 접근 확인:", to.path);
 
   try {
@@ -117,7 +118,7 @@ async function redirectIfAuthenticated(to, from, next) {
     console.error("로그인 상태 확인 오류:", error);
     next();
   }
-}
+};
 
 const routes = [
   {

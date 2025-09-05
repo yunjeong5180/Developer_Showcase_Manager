@@ -3,7 +3,7 @@
     <div class="nav-container">
       <!-- 로고/브랜드 -->
       <div class="nav-brand">
-        <router-link to="/dashboard" class="brand-link">
+        <router-link to="/admin/dashboard" class="brand-link">
           🚀 My Codit
         </router-link>
       </div>
@@ -23,7 +23,7 @@
       <ul class="nav-menu" :class="{ active: isMobileMenuOpen }">
         <li class="nav-item">
           <router-link
-            to="/dashboard"
+            to="/admin/dashboard"
             class="nav-link"
             @click="closeMobileMenu"
           >
@@ -32,7 +32,7 @@
         </li>
         <li class="nav-item">
           <router-link
-            to="/create-post"
+            to="/admin/create-post"
             class="nav-link"
             @click="closeMobileMenu"
           >
@@ -41,7 +41,7 @@
         </li>
         <li class="nav-item">
           <router-link
-            to="/post-list"
+            to="/admin/post-list"
             class="nav-link"
             @click="closeMobileMenu"
           >
@@ -49,7 +49,7 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/profile" class="nav-link" @click="closeMobileMenu">
+          <router-link to="/admin/profile" class="nav-link" @click="closeMobileMenu">
             👤 프로필 관리
           </router-link>
         </li>
@@ -101,7 +101,7 @@ export default {
         localStorage.clear();
         sessionStorage.clear();
 
-        this.$router.push("/login");
+        this.$router.push("/admin/login");
       }
     },
   },

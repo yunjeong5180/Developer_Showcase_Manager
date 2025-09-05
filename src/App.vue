@@ -59,7 +59,7 @@
     </nav>
 
     <!-- 라우터 뷰 -->
-    <router-view />
+    <router-view :key="$route.fullPath" />
   </div>
 </template>
 
